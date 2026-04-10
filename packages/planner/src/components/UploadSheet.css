@@ -1,0 +1,208 @@
+/* ── Backdrop ── */
+.upload-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* ── Sheet panel ── */
+.upload-sheet {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-surface);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  animation: upload-sheet-up 0.25s ease;
+}
+
+@keyframes upload-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.upload-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+
+/* ── Header ── */
+.upload-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.upload-sheet-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.upload-sheet-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.upload-sheet-close:hover { color: var(--text-primary); }
+
+/* ── Body ── */
+.upload-sheet-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 80px;
+}
+
+/* ── File picker zone ── */
+.upload-sheet-file-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.upload-sheet-file-zone:hover:not(.upload-sheet-file-zone--disabled) {
+  border-color: var(--forest);
+}
+
+.upload-sheet-file-zone--disabled { opacity: 0.5; cursor: default; }
+
+.upload-sheet-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.upload-sheet-file-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.upload-sheet-filename {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  padding: 0 16px;
+  word-break: break-all;
+}
+
+/* ── Spinner ── */
+.upload-sheet-spinner-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.upload-sheet-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--forest);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error ── */
+.upload-sheet-error {
+  font-size: 13px;
+  color: var(--red);
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* ── Result summary ── */
+.upload-sheet-result-heading {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--forest);
+}
+
+.upload-sheet-subject-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.upload-sheet-subject-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--forest-pale);
+}
+
+/* ── Footer ── */
+.upload-sheet-footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.upload-sheet-cancel {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.upload-sheet-cancel:hover { border-color: var(--forest); color: var(--forest); }
+
+.upload-sheet-import-btn,
+.upload-sheet-apply-btn {
+  flex: 2;
+  background: var(--forest);
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.upload-sheet-import-btn:hover:not(:disabled),
+.upload-sheet-apply-btn:hover { background: var(--forest-light); }
+
+.upload-sheet-import-btn:disabled { opacity: 0.4; cursor: default; }

@@ -1,0 +1,41 @@
+.planner {
+  min-height: 100vh;
+}
+
+/* Pushes body content below the 80px fixed header (48px row 1 + 32px row 2). */
+.planner-body {
+  margin-top: 80px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.planner-main {
+  padding: 16px 20px 80px; /* bottom clears floating elements */
+}
+
+.planner-subjects {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.planner-add-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.planner-add-btn:hover {
+  border-color: var(--forest);
+  color: var(--forest);
+}

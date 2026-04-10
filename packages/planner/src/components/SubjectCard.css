@@ -1,0 +1,107 @@
+.subject-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s, opacity 0.2s;
+}
+
+.subject-card:hover {
+  border-color: var(--forest-light);
+  box-shadow: 0 4px 16px rgba(45, 90, 61, 0.12);
+  transform: translateY(-1px);
+}
+
+.subject-card--done {
+  opacity: 0.6;
+}
+
+.subject-card--done .subject-card-lesson {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* ── Top row: subject label + flag ── */
+.subject-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.subject-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.subject-card-flag-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.subject-card-flag-btn--active { color: var(--gold); }
+
+.subject-card-flag-btn:hover:not(.subject-card-flag-btn--active) {
+  color: var(--text-secondary);
+}
+
+/* ── Lesson + note ── */
+.subject-card-lesson {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.subject-card-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.subject-card-note {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-top: 5px;
+}
+
+/* ── Footer: done toggle ── */
+.subject-card-footer {
+  margin-top: 12px;
+}
+
+.subject-card-done-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.subject-card-done-btn--active {
+  background: var(--forest-pale);
+  border-color: var(--forest);
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.subject-card-done-btn:hover:not(.subject-card-done-btn--active) {
+  border-color: var(--forest);
+  color: var(--forest);
+}
