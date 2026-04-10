@@ -54,9 +54,22 @@ All package.json entries use exact versions — no ^ or ~ prefixes.
   publish = "dist"
 
 [[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/planner/*"
+  to = "/planner/index.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+Order is required: /api/* and /planner/* must precede /* or the
+dashboard catch-all swallows them. Never reorder these blocks.
 
 ---
 
@@ -91,27 +104,46 @@ weekId format: "2026-08-17" (Monday of that week)
 
 ## File structure — planner tool
 packages/planner/src/
-├── main.jsx                     # app entry, routing only (~30 lines)
+├── main.jsx                     # app entry, mounts App (~18 lines)
+├── App.jsx                      # wiring only: auth + hooks → PlannerLayout (~47 lines)
+├── planner.css                  # global resets for planner (~17 lines)
 ├── firebase/
-│   ├── init.js                  # Firebase config init (~20 lines)
-│   ├── auth.js                  # sign-in/sign-out hooks (~40 lines)
-│   └── planner.js               # all Firestore reads/writes (~80 lines)
+│   └── planner.js               # all Firestore reads/writes (~48 lines)
+│   # NO init.js or auth.js here — import db/auth/useAuth from @homeschool/shared
 ├── hooks/
-│   ├── useWeek.js               # week navigation state (~50 lines)
-│   ├── useSubjects.js           # subject list logic (~50 lines)
-│   └── usePdfImport.js          # file upload + API call (~60 lines)
+│   ├── useWeek.js               # week navigation state (~32 lines)
+│   ├── useSubjects.js           # subject list + day data subscriptions (~53 lines)
+│   ├── usePdfImport.js          # file upload + Netlify Function call (~48 lines)
+│   └── usePlannerUI.js          # all local UI state, keeps App.jsx thin (~21 lines)
 ├── components/
-│   ├── Header.jsx               # sticky header + nav (~60 lines)
-│   ├── DayStrip.jsx             # day tab selector (~40 lines)
-│   ├── SubjectCard.jsx          # single lesson card (~60 lines)
-│   ├── EditSheet.jsx            # bottom sheet editor (~80 lines)
-│   ├── UploadSheet.jsx          # PDF import sheet (~80 lines)
-│   └── AddSubjectSheet.jsx      # add subject sheet (~60 lines)
+│   ├── PlannerLayout.jsx        # full page layout, all sheets, toggle handlers (~111 lines)
+│   ├── PlannerLayout.css        # layout shell styles (~42 lines)
+│   ├── Header.jsx               # 2-row 80px fixed header (~52 lines)
+│   ├── Header.css               # header styles (~123 lines)
+│   ├── DayStrip.jsx             # sticky day tab selector (~21 lines)
+│   ├── DayStrip.css             # day strip styles (~47 lines)
+│   ├── SubjectCard.jsx          # lesson card with done/flag toggles (~46 lines)
+│   ├── SubjectCard.css          # card styles (~88 lines)
+│   ├── EditSheet.jsx            # bottom sheet: lesson/note editor (~67 lines)
+│   ├── EditSheet.css            # edit sheet styles (~128 lines)
+│   ├── UploadSheet.jsx          # PDF import: picker → spinner → result (~80 lines)
+│   ├── UploadSheet.css          # upload sheet styles (~155 lines)
+│   ├── AddSubjectSheet.jsx      # preset grid + custom input (~65 lines)
+│   └── AddSubjectSheet.css      # add sheet styles (~115 lines)
 └── constants/
-    ├── subjects.js              # quick-pick lists (~30 lines)
-    ├── days.js                  # day labels, dates, index maps
-    ├── routes.js                # all URL paths
-    └── firestore.js             # Firestore path builders
+    ├── subjects.js              # SUBJECT_PRESETS array (~19 lines)
+    ├── days.js                  # DAY_NAMES, DAY_SHORT, date helpers (~46 lines)
+    ├── routes.js                # ROUTES object (~5 lines)
+    └── firestore.js             # Firestore path builder functions (~18 lines)
+
+## Planner-specific layout decisions
+- Header is 2 rows: Row 1 (48px) = logo + week nav + actions;
+  Row 2 (32px) = student selector pills. Total: 80px.
+- planner-body margin-top: 80px to clear the fixed header
+- DayStrip is sticky at top: 80px, z-index: 50
+- All bottom sheets use slide-up animation from translateY(100%)
+- Each sheet has its own overlay class (not shared) to avoid CSS conflicts
+- safe-area-inset-bottom applied to all sheets for iPhone home bar
 
 ---
 
@@ -187,21 +219,22 @@ Before closing, do both of these:
 ---
 
 ## Tools status
-- dashboard       → Phase 1 — not started
-- planner         → Phase 1 — not started
+- dashboard       → Phase 1 — complete, deployed
+- planner         → Phase 1 — complete (code done, not yet merged to main)
 - reward-tracker  → exists, needs migrating into monorepo structure
 
 ## Phase tracking — planner
-Phase 1 (current):
-  1. Firebase init + Auth
-  2. Firestore read/write layer
-  3. Netlify Function — parse-schedule
-  4. PWA config
-  5. Weekly board + day strip
-  6. Subject cards + edit sheet
-  7. PDF import flow
-  8. Add Subject sheet
-  9. Swap Days
+Phase 1 — COMPLETE (all code on branch claude/read-claude-docs-er59m):
+  ✓ 1. Firebase/Firestore layer (firebase/planner.js)
+  ✓ 2. Netlify Function — parse-schedule
+  ✓ 3. Config files (package.json, vite.config.js, index.html)
+  ✓ 4. Hooks (useWeek, useSubjects, usePdfImport, usePlannerUI)
+  ✓ 5. App entry (main.jsx, App.jsx, planner.css)
+  ✓ 6. PlannerLayout + Header + DayStrip
+  ✓ 7. SubjectCard + EditSheet
+  ✓ 8. AddSubjectSheet + UploadSheet
+  ✓ 9. Deploy config (netlify.toml redirects, dashboard outDir)
+  — Swap Days: not built (confirm with Rob before starting)
 
 Phase 2 (do not build yet):
   - Auto-roll flagged lessons to next week
