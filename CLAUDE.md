@@ -394,3 +394,10 @@ Never create feature branches.
 After each confirmed working step, commit and push directly to main.
 Netlify auto-deploys on every push to main.
 Do not open pull requests. Do not create branches named claude/* or feature/*.
+
+## Netlify build — final confirmed config
+- No base directory
+- Command: npm install && npm run build (runs from repo root)
+- Publish: dist
+- Root package.json runs --workspaces --if-present to build all packages
+- Do not change this without Rob's explicit instruction
