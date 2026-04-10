@@ -1,7 +1,7 @@
 [build]
   base = "packages/dashboard"
   command = "npm install && npm run build"
-  publish = "packages/dashboard/dist"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"
