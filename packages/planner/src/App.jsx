@@ -15,9 +15,9 @@ export default function App() {
   const { weekId, weekDates, prevWeek, nextWeek } = useWeek();
   const ui = usePlannerUI();
   const {
-    subjects, weekData, loading: subjectsLoading,
+    subjects, dayData, loading: subjectsLoading,
     updateCell, addSubject, removeSubject,
-  } = useSubjects(user?.uid, weekId, ui.student);
+  } = useSubjects(user?.uid, weekId, ui.student, ui.day);
   const pdfImport = usePdfImport();
 
   // Unauthenticated users go back to the dashboard sign-in.
@@ -35,7 +35,7 @@ export default function App() {
       prevWeek={prevWeek}
       nextWeek={nextWeek}
       subjects={subjects}
-      weekData={weekData}
+      dayData={dayData}
       subjectsLoading={subjectsLoading}
       updateCell={updateCell}
       addSubject={addSubject}

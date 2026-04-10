@@ -1,53 +1,42 @@
 import { useState, useEffect } from 'react';
 import {
-  subscribeSubjectList,
-  saveSubjectList,
-  subscribeDayData,
+  subscribeDaySubjects,
   updateCell as dbUpdateCell,
+  deleteCell as dbDeleteCell,
 } from '../firebase/planner.js';
 
-// Manages subject list + week day data for one student.
-// weekData shape: { [subject]: { [dayIndex: 0-4]: { lesson, note, done, flag } } }
-export function useSubjects(uid, weekId, student) {
-  const [subjects, setSubjects] = useState([]);
-  const [weekData, setWeekData] = useState({});
-  const [loading, setLoading]   = useState(true);
+// Manages subjects and cell data for one specific day.
+// Subjects are implicit: a subject exists on a day only when its cell doc exists.
+// dayData shape: { [subject]: { lesson, note, done, flag } }
+export function useSubjects(uid, weekId, student, day) {
+  const [dayData, setDayData] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  // Subscribe to the student's subject list.
+  // Subscribe to all subject cells for the current day.
+  // Rebuilds whenever uid, weekId, student, or day changes.
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
-    const unsub = subscribeSubjectList(uid, student, list => {
-      setSubjects(list);
+    const unsub = subscribeDaySubjects(uid, weekId, student, day, data => {
+      setDayData(data);
       setLoading(false);
     });
-    return () => { unsub(); setSubjects([]); setLoading(true); };
-  }, [uid, student]);
+    return () => { unsub(); setDayData({}); setLoading(true); };
+  }, [uid, weekId, student, day]);
 
-  // When subjects or week changes, rebuild all day-data subscriptions.
-  // Each snapshot fires independently and merges into weekData.
-  useEffect(() => {
-    if (!uid || !subjects.length) { setWeekData({}); return; }
-    const unsubs = subjects.map(subject =>
-      subscribeDayData(uid, weekId, student, subject, days =>
-        setWeekData(prev => ({ ...prev, [subject]: days }))
-      )
-    );
-    return () => { unsubs.forEach(fn => fn()); setWeekData({}); };
-  }, [uid, weekId, student, subjects]);
-
-  // Appends to the subject list only. Never creates cell documents.
-  // Cell documents are created exclusively when a cell is explicitly saved (updateCell).
+  // Creating a cell IS adding that subject to the current day.
   function addSubject(subject) {
-    return saveSubjectList(uid, student, [...subjects, subject]);
+    return dbUpdateCell(uid, weekId, student, subject, day,
+      { lesson: '', note: '', done: false, flag: false });
   }
 
+  // Deleting a cell removes the subject from the current day only.
   function removeSubject(subject) {
-    return saveSubjectList(uid, student, subjects.filter(s => s !== subject));
+    return dbDeleteCell(uid, weekId, student, day, subject);
   }
 
-  // Trims text fields before writing so whitespace-only values from schedule
-  // imports never create phantom cell documents in Firestore.
+  // dayIndex param kept so PDF import can write to any day, not just current.
+  // Trims text fields to prevent phantom cells from whitespace values.
   function updateCell(subject, dayIndex, data) {
     const cleaned = {
       ...data,
@@ -57,5 +46,6 @@ export function useSubjects(uid, weekId, student) {
     return dbUpdateCell(uid, weekId, student, subject, dayIndex, cleaned);
   }
 
-  return { subjects, weekData, loading, updateCell, addSubject, removeSubject };
+  const subjects = Object.keys(dayData);
+  return { subjects, dayData, loading, updateCell, addSubject, removeSubject };
 }
