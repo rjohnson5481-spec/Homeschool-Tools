@@ -5,7 +5,7 @@ export const TOOLS = [
     name: 'Weekly Planner',
     description: 'Plan and track weekly lessons for Orion and Malachi.',
     icon: 'PL',
-    href: '/planner',
+    href: '/planner/',
     available: true,
   },
   {
