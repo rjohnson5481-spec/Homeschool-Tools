@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { signInWithGoogle } from '@homeschool/shared';
-import { SCHOOL_NAME, SCHOOL_TAGLINE } from '../constants/school';
+import logo from '@homeschool/shared/assets/logo.png';
 import './SignIn.css';
 
 export default function SignIn() {
@@ -18,9 +18,14 @@ export default function SignIn() {
   return (
     <div className="signin">
       <div className="signin-card">
-        <div className="signin-logo">ILA</div>
-        <h1 className="signin-name">{SCHOOL_NAME}</h1>
-        <p className="signin-tagline">{SCHOOL_TAGLINE}</p>
+        <img src={logo} alt="ILA" className="signin-logo" />
+        <div className="signin-school">
+          <span className="signin-school-line1">
+            IRON &amp; <span className="signin-school-accent">LIGHT</span>
+          </span>
+          <span className="signin-school-line2">JOHNSON ACADEMY</span>
+          <span className="signin-school-tagline">Faith · Knowledge · Strength</span>
+        </div>
         <button className="signin-btn" onClick={handleSignIn}>
           Sign in with Google
         </button>

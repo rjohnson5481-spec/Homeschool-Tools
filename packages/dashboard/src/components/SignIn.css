@@ -11,51 +11,66 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 40px 32px;
+  padding: 32px 24px;
   max-width: 360px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(34, 37, 46, .08);
 }
 
 .signin-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #c9a84c, #e8c97a);
-  color: #1a3020;
-  font-size: 16px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  display: block;
   margin: 0 auto 20px;
-  letter-spacing: 0.05em;
 }
 
-.signin-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  line-height: 1.2;
+/* ── School name — two-line stack ── */
+.signin-school {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 28px;
 }
 
-.signin-tagline {
+.signin-school-line1 {
   font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.signin-school-accent { color: var(--gold); }
+
+.signin-school-line2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.signin-school-tagline {
+  font-size: 11px;
+  font-weight: 300;
   color: var(--text-muted);
-  font-style: italic;
-  margin-bottom: 32px;
-  line-height: 1.5;
+  margin-top: 4px;
+  line-height: 1;
 }
 
 .signin-btn {
   width: 100%;
-  background: var(--forest);
+  background: var(--ink);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
+  border-radius: 10px;
+  padding: 13px 24px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -64,7 +79,7 @@
 }
 
 .signin-btn:hover {
-  background: var(--forest-light);
+  background: var(--ink-light);
 }
 
 .signin-error {

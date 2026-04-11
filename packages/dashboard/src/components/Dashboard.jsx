@@ -8,6 +8,7 @@ export default function Dashboard() {
     <div className="dashboard">
       <Header />
       <main className="dashboard-main">
+        <p className="tool-section-label">Tools</p>
         <div className="tool-grid">
           {TOOLS.map(tool => (
             <ToolCard key={tool.id} {...tool} />

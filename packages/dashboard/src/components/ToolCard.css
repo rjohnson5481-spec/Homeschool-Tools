@@ -6,9 +6,9 @@
 .tool-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 13px;
   padding: 22px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(34, 37, 46, .07);
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -17,8 +17,8 @@
 }
 
 .tool-card-link:hover .tool-card {
-  border-color: var(--forest-light);
-  box-shadow: 0 4px 16px rgba(45, 90, 61, 0.12);
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(34, 37, 46, .10);
   transform: translateY(-2px);
 }
 
@@ -31,8 +31,8 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: var(--forest-pale);
-  color: var(--forest);
+  background: var(--gold-pale);
+  color: var(--gold);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -57,7 +57,8 @@
 
 .tool-card-desc {
   font-size: 13px;
-  color: var(--text-secondary);
+  font-weight: 300;
+  color: var(--text-muted);
   line-height: 1.45;
 }
 
@@ -67,12 +68,11 @@
   right: 12px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 3px 7px;
+  color: var(--gold-light);
+  background: var(--ink);
+  border-radius: 10px;
+  padding: 2px 8px;
   white-space: nowrap;
 }
