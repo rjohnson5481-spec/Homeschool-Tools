@@ -16,3 +16,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+
+# Visual Polish Session 1 - force rebuild
