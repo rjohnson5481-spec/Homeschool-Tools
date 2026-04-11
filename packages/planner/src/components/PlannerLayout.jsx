@@ -247,10 +247,16 @@ export default function PlannerLayout({
               <button className="undo-sick-close" onClick={() => setShowUndoSickDay(false)}>✕</button>
             </div>
             <div className="undo-sick-body">
-              <p className="undo-sick-msg">
-                This will shift all lessons back one day. Lessons on Monday will
-                move to Friday of the previous week.
-              </p>
+              {day === 4 ? (
+                <p className="undo-sick-msg">
+                  Sick day marker removed. Friday lessons were permanently deleted
+                  and cannot be restored.
+                </p>
+              ) : (
+                <p className="undo-sick-msg">
+                  This will shift lessons back one day for the days they were shifted.
+                </p>
+              )}
             </div>
             <div className="undo-sick-footer">
               <button className="undo-sick-cancel" onClick={() => setShowUndoSickDay(false)}>Cancel</button>
