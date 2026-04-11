@@ -6,6 +6,8 @@ import {
   deleteWeek as dbDeleteWeek,
   readCell as dbReadCell,
   writeSickDay as dbWriteSickDay,
+  readSickDay as dbReadSickDay,
+  deleteSickDay as dbDeleteSickDay,
   subscribeSickDays,
 } from '../firebase/planner.js';
 import { getWeekDates, toWeekId } from '../constants/days.js';
@@ -117,6 +119,32 @@ export function useSubjects(uid, weekId, student, day) {
     await dbWriteSickDay(uid, dateString, student, selectedSubjects);
   }
 
+  // Reverses a sick day cascade for the current day.
+  // Reads subjectsShifted from the sick day marker, builds each subject's chain
+  // from D+1 forward, writes each cell one day back, deletes last source cell,
+  // then deletes the sick day marker so the red dot is removed.
+  async function performUndoSickDay() {
+    const dateString = toWeekId(getWeekDates(weekId)[day]);
+    const sickDayData = await dbReadSickDay(uid, dateString);
+    if (!sickDayData) return;
+
+    await Promise.all((sickDayData.subjectsShifted ?? []).map(async subject => {
+      const chain = [];
+      for (let d = day + 1; d <= 4; d++) {
+        const data = await dbReadCell(uid, weekId, student, d, subject);
+        if (!data) break;
+        chain.push({ dayIndex: d, data });
+      }
+      if (chain.length === 0) return;
+      for (const { dayIndex, data } of chain) {
+        await dbUpdateCell(uid, weekId, student, subject, dayIndex - 1, data);
+      }
+      await dbDeleteCell(uid, weekId, student, chain[chain.length - 1].dayIndex, subject);
+    }));
+
+    await dbDeleteSickDay(uid, dateString);
+  }
+
   // Set of day indices (0-4) that are sick days for the current student this week.
   const weekDates = getWeekDates(weekId);
   const sickDayIndices = new Set(
@@ -132,6 +160,6 @@ export function useSubjects(uid, weekId, student, day) {
     subjects, dayData, loading,
     updateCell, addSubject, removeSubject,
     importCell, deleteWeek, wipeWeek,
-    performSickDay, sickDayIndices,
+    performSickDay, performUndoSickDay, sickDayIndices,
   };
 }

@@ -17,7 +17,7 @@ export default function App() {
   const {
     subjects, dayData, loading: subjectsLoading,
     updateCell, addSubject, removeSubject, importCell, deleteWeek, wipeWeek,
-    performSickDay, sickDayIndices,
+    performSickDay, performUndoSickDay, sickDayIndices,
   } = useSubjects(user?.uid, weekId, ui.student, ui.day);
   const pdfImport = usePdfImport();
 
@@ -46,6 +46,7 @@ export default function App() {
       deleteWeek={deleteWeek}
       wipeWeek={wipeWeek}
       performSickDay={performSickDay}
+      performUndoSickDay={performUndoSickDay}
       sickDayIndices={sickDayIndices}
       pdfImport={pdfImport}
       {...ui}

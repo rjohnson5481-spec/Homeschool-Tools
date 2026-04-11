@@ -17,7 +17,7 @@ export default function PlannerLayout({
   weekDates, prevWeek, nextWeek,
   subjects, dayData, subjectsLoading, updateCell, addSubject,
   importCell, jumpToWeek, deleteWeek, wipeWeek,
-  performSickDay, sickDayIndices,
+  performSickDay, performUndoSickDay, sickDayIndices,
   pdfImport,
   student, setStudent,
   day, setDay,
@@ -26,6 +26,7 @@ export default function PlannerLayout({
   showAddSubject, setShowAddSubject,
   showMonthPicker, setShowMonthPicker,
   showSickDay, setShowSickDay,
+  showUndoSickDay, setShowUndoSickDay,
 }) {
   function handleToggleDone(subject) {
     const cell = dayData[subject] ?? {};
@@ -51,6 +52,11 @@ export default function PlannerLayout({
   async function handleSickDayConfirm(selectedSubjects) {
     await performSickDay(selectedSubjects);
     setShowSickDay(false);
+  }
+
+  async function handleUndoSickDay() {
+    await performUndoSickDay();
+    setShowUndoSickDay(false);
   }
 
   // Writes parsed PDF schedule data to the week/student named in the PDF.
@@ -155,12 +161,21 @@ export default function PlannerLayout({
       <div className="planner-action-bar">
         {hasSubjects && !subjectsLoading && (
           <>
-            <button
-              className="planner-action-btn planner-action-btn--sick"
-              onClick={() => setShowSickDay(true)}
-            >
-              Sick Day
-            </button>
+            {isSickDay ? (
+              <button
+                className="planner-action-btn planner-action-btn--undo"
+                onClick={() => setShowUndoSickDay(true)}
+              >
+                ↩ Undo Sick Day
+              </button>
+            ) : (
+              <button
+                className="planner-action-btn planner-action-btn--sick"
+                onClick={() => setShowSickDay(true)}
+              >
+                Sick Day
+              </button>
+            )}
             <button
               className="planner-action-btn planner-action-btn--clear"
               onClick={handleDeleteWeek}
@@ -219,6 +234,28 @@ export default function PlannerLayout({
           onConfirm={handleSickDayConfirm}
           onClose={() => setShowSickDay(false)}
         />
+      )}
+
+      {showUndoSickDay && (
+        <div className="undo-sick-overlay" onClick={() => setShowUndoSickDay(false)}>
+          <div className="undo-sick-sheet" onClick={e => e.stopPropagation()}>
+            <div className="undo-sick-handle" />
+            <div className="undo-sick-header">
+              <span className="undo-sick-title">Undo Sick Day</span>
+              <button className="undo-sick-close" onClick={() => setShowUndoSickDay(false)}>✕</button>
+            </div>
+            <div className="undo-sick-body">
+              <p className="undo-sick-msg">
+                This will shift all lessons back one day. Lessons on Monday will
+                move to Friday of the previous week.
+              </p>
+            </div>
+            <div className="undo-sick-footer">
+              <button className="undo-sick-cancel" onClick={() => setShowUndoSickDay(false)}>Cancel</button>
+              <button className="undo-sick-confirm" onClick={handleUndoSickDay}>Undo Sick Day</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

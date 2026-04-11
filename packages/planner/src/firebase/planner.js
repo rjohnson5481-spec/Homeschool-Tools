@@ -57,6 +57,17 @@ export function writeSickDay(uid, dateString, student, subjectsShifted) {
   return setDoc(doc(db, sickDayPath(uid, dateString)), { student, date: dateString, subjectsShifted });
 }
 
+// Reads one sick day marker. Returns data or null if not found.
+export async function readSickDay(uid, dateString) {
+  const snap = await getDoc(doc(db, sickDayPath(uid, dateString)));
+  return snap.exists() ? snap.data() : null;
+}
+
+// Deletes a sick day marker — removes the sick indicator for that date.
+export function deleteSickDay(uid, dateString) {
+  return deleteDoc(doc(db, sickDayPath(uid, dateString)));
+}
+
 // Subscribes to sick day markers for the given week dates.
 // dateStrings: array of "YYYY-MM-DD" strings (Mon-Fri of the current week).
 // cb receives: { [dateString]: { student, date, subjectsShifted[] } }
