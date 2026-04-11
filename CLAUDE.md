@@ -98,13 +98,19 @@ Model: claude-sonnet-4-20250514
 /users/{uid}/weeks/{weekId}/students/{studentName}/days/{0-4}/subjects/{subjectName}
   → { lesson: string, note: string, done: boolean, flag: boolean }
 
-weekId format: "2026-08-17" (Monday of that week)
+/users/{uid}/sickDays/{dateString}
+  → { student: string, date: string, subjectsShifted: string[] }
+
+weekId / dateString format: "YYYY-MM-DD" (weekId = Monday of that week)
 
 Subjects are implicit — a subject exists on a given day only when its
 document exists. No separate subject list document. Querying all subjects
 for a day = simple collection read of .../days/{dayIndex}/subjects.
 
 dayIndex: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri
+
+sickDays collection: one document per calendar date that was marked sick.
+Filtered client-side by current week dates — collection is small (~360 docs/year max).
 
 ## Orphaned Firestore data (do not migrate — manual cleanup only)
 Old paths from before the per-day redesign are still present in Firestore
@@ -144,7 +150,9 @@ packages/planner/src/
 │   ├── AddSubjectSheet.jsx      # preset grid + custom input (~65 lines)
 │   ├── AddSubjectSheet.css      # add sheet styles (~115 lines)
 │   ├── MonthSheet.jsx           # calendar bottom sheet, week jump (~75 lines)
-│   └── MonthSheet.css           # month sheet styles (~60 lines)
+│   ├── MonthSheet.css           # month sheet styles (~60 lines)
+│   ├── SickDaySheet.jsx         # sick day checklist, cascade shift confirmation (~66 lines)
+│   └── SickDaySheet.css         # sick day sheet styles (~172 lines)
 └── constants/
     ├── subjects.js              # SUBJECT_PRESETS array (~19 lines)
     ├── days.js                  # DAY_NAMES, DAY_SHORT, date helpers (~46 lines)
@@ -256,6 +264,9 @@ Phase 1 — COMPLETE:
   ✓ 13. Bug fix: subject card lesson clamped to 3 lines, note to 2 lines
   ✓ 14. Feature: Delete Week — clears all cells for current student+week
   ✓ 15. Feature: Month picker — calendar bottom sheet, tapping weekday jumps to week
+  ✓ 16. Quick fixes: flag card red, note dot indicator, placeholder text, calendar emoji
+  ✓ 17. Feature: Upload sheet — rich parse preview, wipe toggle, success state, debug log
+  ✓ 18. Feature: Sick Day — cascade shift algorithm, Firestore markers, red dot on DayStrip
 
 Phase 2 (do not build yet):
   - Auto-roll flagged lessons to next week

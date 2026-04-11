@@ -1,122 +1,135 @@
-# HANDOFF — end of session 2026-04-10
+# HANDOFF — end of session 2026-04-11
 
 ## What was completed this session
-Three bug fixes and two new features. All changes committed and pushed
-directly to main in four separate commits.
+Three commits landed on main covering quick fixes, upload sheet improvements,
+and the Sick Day feature.
 
 ---
 
-### Fix 1 + Fix 2 — PDF import writes to correct week and student
-**Commit: `9f03b62`**
+### Commit 1 — Quick fixes
+**Commit: `898c8e1`**
 
-Problem: `handleApplySchedule` called `updateCell`, which uses the hook's
-closed-over `weekId` and `student`. PDF data (which includes `parsedData.weekId`
-and `parsedData.student`) was silently ignored — it always wrote to the
-currently-viewed week/student.
-
-Solution: Added `importCell(importWeekId, importStudent, subject, dayIndex, data)`
-to `useSubjects.js` — same logic as `updateCell` but takes an explicit
-weekId/student. After writing all cells, calls `jumpToWeek(parsedData.weekId)`
-and `setStudent(parsedData.student)` so the UI navigates to show the result.
-
-Also added `jumpToWeek` (= `setWeekId`) to `useWeek.js`.
+- **Flag card red:** `.subject-card--flag` sets `border-color: var(--red)` and
+  faint red background `rgba(192,57,43,0.06)`
+- **Note dot:** Removed note text preview from card body. Added always-visible
+  8×8px dot in card header — filled `var(--forest)` when note exists,
+  unfilled `var(--border)` when empty
+- **Placeholder text:** Empty lesson shows "Tap to add lesson details" in muted italic
+- **Calendar emoji:** Header "Cal" button changed to 📅 (explicitly requested by Rob)
 
 Files changed:
-- `hooks/useWeek.js` — added `jumpToWeek: setWeekId` to return
-- `hooks/useSubjects.js` — added `importCell` function
-- `App.jsx` — destructures and passes `jumpToWeek`, `importCell`
-- `components/PlannerLayout.jsx` — receives both; `handleApplySchedule` updated
+- `components/SubjectCard.jsx` — hasNote bool, note dot span, removed note `<p>`,
+  placeholder, `subject-card--flag` class
+- `components/SubjectCard.css` — flag card style, indicators flex, note dot styles,
+  removed old note styles, added `background 0.2s` to card transition
+- `components/Header.jsx` — "Cal" → "📅"
 
 ---
 
-### Fix 3 — Subject card lesson text clamped
-**Commit: `12844ef`**
+### Commit 2 — Upload sheet improvements
+**Commit: `2477a02`**
 
-Problem: cards could grow to unbounded height with long lesson text.
-
-Solution: CSS `-webkit-line-clamp: 3` on `.subject-card-lesson`,
-`-webkit-line-clamp: 2` on `.subject-card-note`. Full text remains in the
-DOM and is visible in the edit sheet when the card is tapped.
-
-Files changed:
-- `components/SubjectCard.css`
-
----
-
-### Feature: Delete Week
-**Commit: `fede4d7`**
-
-`deleteWeek(uid, weekId, student)` added to `firebase/planner.js` — queries
-all 5 days in parallel with `getDocs`, then deletes all subject documents
-in parallel. A `deleteWeek()` wrapper in `useSubjects.js` closes over the
-current uid/weekId/student.
-
-"Clear Week" button appears below the subject list when at least one subject
-exists on the current day. Tapping shows a `window.confirm` dialog before
-proceeding. Current day's cards disappear immediately via the live subscription.
-
-Files changed:
-- `firebase/planner.js` — `deleteWeek`, imports `getDocs`
-- `hooks/useSubjects.js` — wrapper + export
-- `App.jsx` — destructures and passes `deleteWeek`
-- `components/PlannerLayout.jsx` — `handleDeleteWeek`, Clear Week button
-- `components/PlannerLayout.css` — `.planner-clear-btn` style
-
----
-
-### Feature: Month picker
-**Commit: `e5c7938`**
-
-"Cal" button in the header opens a calendar bottom sheet. Shows one month at
-a time with prev/next arrows. Weekdays in the currently-selected week are
-highlighted with a Mon-Fri band (forest-pale background). Today gets a gold
-outline. Weekend cells are muted and not tappable.
-
-Tapping a weekday: closes the sheet, calls `jumpToWeek(toWeekId(getMondayOf(date)))`,
-and calls `setDay(date.getDay() - 1)` to select that specific day.
+- **Rich parse preview:** Student · week-of header, one row per lesson (day abbrev +
+  subject + "Day N" extracted via regex), scrollable when >6 rows, lesson/day count
+  footer
+- **Wipe toggle:** "Replace existing schedule" checkbox shown before applying; when
+  checked, calls `wipeWeek(parsedData.weekId, parsedData.student)` before writing cells
+- **Success state:** After applying, shows "✓ Applied — jumped to week of {date}"
+  instead of auto-closing; user closes manually via "Close" button
+- **Debug log:** `addLog(message)` in `usePdfImport` writes timestamped entries;
+  "View Log" button in UploadSheet opens `DebugSheet` (z-index 300) with "Copy All"
 
 New files:
-- `constants/months.js` — MONTH_NAMES, getCalendarGrid(year, month)
-- `components/MonthSheet.jsx` — calendar bottom sheet component
-- `components/MonthSheet.css` — styles
+- `components/DebugSheet.jsx` — log viewer, z-index 300, Copy All button
+- `components/DebugSheet.css` — monospace log entries, overlay styles
 
 Modified files:
-- `hooks/usePlannerUI.js` — added `showMonthPicker` / `setShowMonthPicker`
-- `components/Header.jsx` — added `onCalendar` prop and Cal button
-- `components/PlannerLayout.jsx` — MonthSheet import, `handleMonthDaySelect`,
-  renders `<MonthSheet>` when `showMonthPicker`, passes `weekId` and `onCalendar`
+- `hooks/usePdfImport.js` — added `log`, `addLog`, reset clears log, returns log
+- `components/UploadSheet.jsx` — full rewrite: local `wipe`/`applied`/`showLog` state,
+  rich preview, wipe toggle, success state, View Log button
+- `components/PlannerLayout.jsx` — `handleApplySchedule` made async, wipe param added,
+  removed `setShowUpload(false)` (user closes manually), sick banner + sick btn added,
+  `planner-sick-banner` and `planner-sick-btn` CSS classes
+
+---
+
+### Commit 3 — Sick Day feature
+**Commit: `4dbe485`**
+
+Full sick day workflow: mark a day sick, shift lessons forward, see red dots on tabs.
+
+**How it works:**
+1. User taps "Sick Day" → `SickDaySheet` opens with all today's subjects checked
+2. User deselects any subjects that should NOT shift (e.g., reading done before illness)
+3. Confirm → cascade algorithm runs per selected subject:
+   - Reads unbroken chain of consecutive scheduled days (up to 10)
+   - Writes each link's data to the next position (reverse order, safe)
+   - Deletes original sick-day cell
+4. Writes sick day marker to `/users/{uid}/sickDays/{dateString}`
+5. Red dot appears on that day's DayStrip tab; "Sick Day" banner shows when viewing
+
+**Friday edge case:** `nextSchoolDay(4, weekId)` returns `{dayIndex: 0, weekId: nextWeekId}`
+(adds 7 days to the Monday of the current week), bridging Friday → Monday correctly.
+
+New files:
+- `components/SickDaySheet.jsx` — checklist bottom sheet, all subjects checked by default
+- `components/SickDaySheet.css` — slide-up sheet, max-height 40vh list, forest-pale checked
+
+Modified files:
+- `constants/firestore.js` — added `sickDayPath(uid, dateString)`
+- `firebase/planner.js` — added `readCell` (getDoc), `writeSickDay`, `subscribeSickDays`
+- `hooks/useSubjects.js` — added sick days subscription, `nextSchoolDay`, `performSickDay`,
+  `sickDayIndices` Set computation (per-student client-side filter)
+- `hooks/usePlannerUI.js` — added `showSickDay` / `setShowSickDay`
+- `App.jsx` — destructures and passes `performSickDay`, `sickDayIndices`
+- `components/DayStrip.jsx` — `sickDayIndices` prop, red dot span when `sickDayIndices.has(i)`
+- `components/DayStrip.css` — `.day-strip-sick-dot` (6×6px, absolute, top-right of tab)
+- `components/PlannerLayout.jsx` — `handleSickDayConfirm`, `isSickDay`, sick banner,
+  sick button, `<SickDaySheet>` rendered when `showSickDay`
 
 ---
 
 ## What is currently incomplete or untested
 - **Not smoke-tested in browser** — no live device testing this session.
   Golden path to verify:
-  1. Cal button opens month sheet
-  2. Tap a weekday → planner jumps to that week, correct day tab selected
-  3. Month prev/next arrows navigate correctly
-  4. Selected week band highlights Mon-Fri correctly
-  5. Today's date has gold outline
-  6. Weekends are grey and not tappable
-  7. PDF import: uploading Orion's schedule while viewing Malachi → writes
-     to Orion's week (from PDF), navigates to that week/student automatically
-  8. Clear Week: confirmation shows → confirming clears all days for student+week
-  9. Subject cards: long lesson text truncates after 3 lines; full text in edit sheet
+  1. Flag a subject card → border and background turn red
+  2. Note dot: empty = hollow circle, has note = filled forest circle
+  3. No-lesson card shows "Tap to add lesson details" placeholder
+  4. Calendar header button shows 📅
+  5. Upload a PDF → rich preview with day/subject/lesson rows, scroll if long
+  6. Wipe toggle: check it, apply → old cells deleted before new ones written
+  7. Success state: "✓ Applied — jumped to week of..." shown; user closes manually
+  8. View Log: opens debug sheet with timestamped entries, Copy All works
+  9. Sick Day: tap button, sheet opens with all subjects checked
+  10. Deselect one → confirm → that subject stays, others shift to next school day
+  11. Red dot on sick day tab; "Sick Day" banner when viewing that day
+  12. Friday sick day: subjects land on Monday of next week
+  13. Chain collision: if Monday and Tuesday both have the same subject,
+      Tuesday's lesson shifts to Wednesday, Monday's shifts to Tuesday
 - **reward-tracker** — still needs migrating into monorepo structure
 
 ---
 
 ## What the next session should start with
 1. Read CLAUDE.md + HANDOFF.md (required)
-2. Confirm with Rob: smoke-test the live planner, or go straight to next feature?
-3. If smoke-testing: walk the golden path above; report issues before building
-4. Only after smoke-test passes (or Rob says skip): confirm what comes next
+2. Confirm with Rob: smoke-test the live planner, or move to Phase 2?
+3. Phase 2 options (from CLAUDE.md — do not build without Rob's go-ahead):
+   - Auto-roll flagged lessons to next week
+   - Week history browser
+   - Copy last week as template
+   - Export week as PDF
 
 ---
 
 ## Decisions made this session (already added to CLAUDE.md)
-- `importCell(weekId, student, subject, dayIndex, data)` in useSubjects — explicit
-  weekId/student bypass for PDF import; `updateCell` hook closure version unchanged
-- `jumpToWeek` = raw `setWeekId` exposed from useWeek; callers pass valid weekId strings
-- Delete Week uses parallel getDocs + parallel deleteDoc (no batch write needed at this scale)
-- Month picker display state (year/month) is local to MonthSheet, initialized from weekId prop
-- "Cal" used as header button label (text, not emoji) per design rules
+- sickDays Firestore collection: `/users/{uid}/sickDays/{dateString}`
+  → `{ student, date, subjectsShifted[] }` — one doc per sick calendar date
+- subscribeSickDays listens to full collection, filters client-side by week dateStrings
+  (collection stays tiny; no Firestore query/where needed)
+- sickDayIndices filters by `sickDays[ds]?.student === student` — markers are per-student
+- nextSchoolDay(4, weekId) bridges Friday→Monday by adding 7 days to Monday of weekId
+- Cascade writes in reverse order (last link first) — safe because chain is read into
+  memory before any writes begin
+- Success state: UploadSheet does NOT auto-close after apply; user closes manually
+- DebugSheet z-index: 300 (above all other sheets at 200)
+- Calendar emoji 📅 explicitly requested by Rob — exception to "no emoji in UI" rule
