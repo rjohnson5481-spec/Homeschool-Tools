@@ -38,7 +38,6 @@ export default function MonthSheet({ weekId, onSelectDay, onClose }) {
       && date.getDate() === today.getDate();
   }
 
-  // A weekday cell is "in the selected week" if its Monday equals weekId.
   function isInSelectedWeek(date) {
     return date != null && toWeekId(getMondayOf(date)) === weekId;
   }
@@ -64,6 +63,9 @@ export default function MonthSheet({ weekId, onSelectDay, onClose }) {
           <button className="month-sheet-nav" onClick={nextMonth} aria-label="Next month">
             ›
           </button>
+          <button className="month-sheet-close" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
         </div>
 
         <div className="month-sheet-grid">
@@ -71,8 +73,8 @@ export default function MonthSheet({ weekId, onSelectDay, onClose }) {
             <div key={h} className="month-sheet-dow">{h}</div>
           ))}
           {cells.map((date, i) => {
-            const weekend  = isWeekend(date);
-            const inWeek   = !weekend && isInSelectedWeek(date);
+            const weekend   = isWeekend(date);
+            const inWeek    = !weekend && isInSelectedWeek(date);
             const todayCell = isToday(date);
             const cls = [
               'month-sheet-cell',
