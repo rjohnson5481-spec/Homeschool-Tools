@@ -271,6 +271,7 @@ Phase 1 — COMPLETE:
   ✓ 20. Fix: upload preview grouped by day with bold day headers
   ✓ 21. Fix: debug log enhanced — file size, response time, raw preview, subjects, per-cell writes
   ✓ 22. Fix: sick day cascade within-week only; Friday overflow warning in SickDaySheet
+  ✓ 23. Visual Polish Session 1 — Ink & Gold tokens, header redesign, DayStrip floating pill, logo wired
 
 Phase 2 (do not build yet):
   - Auto-roll flagged lessons to next week
@@ -287,14 +288,14 @@ Phase 2 (do not build yet):
 - Anthropic API key server-side only — never in client bundle
 - Mobile-first, max-width 480px on all tools
 - Lexend font only — no serif fonts in the UI
-- Parchment & Forest color system only — no new tokens
+- Ink & Gold color system only — no new tokens
 - No grade tracking in any tool
 - @dnd-kit/core for drag-and-drop — never hand-roll
 - Exact dependency versions — no ^ or ~ in package.json
 
 ---
 
-## Design System — Parchment & Forest
+## Design System — Ink & Gold
 ### All tokens and components live in packages/shared
 ### Never redefine in individual tools
 
@@ -302,48 +303,62 @@ Phase 2 (do not build yet):
 Single font family: Lexend (Google Fonts)
 Weights: 300, 400, 500, 600, 700
 Stack: 'Lexend', system-ui, sans-serif — applied to ALL elements globally
-No serif fonts anywhere in the UI.
+Form elements override explicit: input, textarea, button, select all inherit Lexend.
+Body base: 14px. No serif fonts anywhere in the UI.
+
+**Logo**
+File: packages/shared/src/assets/logo.png
+Import: import logo from '@homeschool/shared/assets/logo.png'
+Both Header components render: <img src={logo} alt="ILA" className="header-logo" />
 
 **Color tokens — Light mode (default)**
---bg-base:       #f5f0e8
---bg-surface:    #ece6d8
---bg-card:       #faf7f2
---bg-card-hover: #f0ebe0
---border:        #d6cdb8
---border-light:  #e8e0cc
---forest:        #2d5a3d
---forest-light:  #3d7a52
---forest-pale:   rgba(45,90,61,0.08)
---gold:          #8a6a20
---gold-light:    #b8922a
---red:           #c0392b
---text-primary:  #2a2418
---text-secondary:#5a4e38
---text-muted:    #8a7a60
-
-**Color tokens — Dark mode**
---bg-base:       #1a2018
---bg-surface:    #202820
---bg-card:       #263024
---bg-card-hover: #2e3a2c
---border:        #3a4838
---border-light:  #445442
---forest:        #3a7a50
---forest-light:  #4e9e68
---forest-pale:   rgba(78,158,104,0.12)
+--bg-base:       #f2f0ed
+--bg-surface:    #ebe8e3
+--bg-card:       #ffffff
+--bg-card-hover: #faf8f5
+--border:        #eae6e0
+--border-light:  #f0ece6
+--ink:           #22252e
+--ink-light:     #3a3d48
 --gold:          #c9a84c
 --gold-light:    #e8c97a
+--gold-pale:     rgba(201,168,76,0.10)
+--red:           #c0392b
+--red-lt:        #fdf0ed
+--text-primary:  #2a2520
+--text-secondary:#5a5248
+--text-muted:    #a8a09a
+
+**Color tokens — Dark mode**
+--bg-base:       #1c1e24
+--bg-surface:    #22252e
+--bg-card:       #2a2d35
+--bg-card-hover: #32353f
+--border:        #363944
+--border-light:  #3a3d48
+--ink:           #3a3d48
+--ink-light:     #4a4e5a
+--gold:          #c9a84c
+--gold-light:    #e8c97a
+--gold-pale:     rgba(201,168,76,0.12)
 --red:           #e05252
---text-primary:  #e8f0e4
---text-secondary:#a0b89a
---text-muted:    #607860
+--red-lt:        rgba(224,82,82,0.10)
+--text-primary:  #e8e8e8
+--text-secondary:#a0a8b8
+--text-muted:    #5a6070
 
 Dark mode: toggle data-mode="light" / data-mode="dark" on <html>
 All tokens scoped to [data-mode] selectors
 All color transitions: transition: 0.3s
 
+Backward-compat aliases in tokens.css (Session 1 only — remove in Session 2 as each
+component is migrated away from var(--forest) references):
+  --forest: var(--gold)
+  --forest-light: var(--gold-light)
+  --forest-pale: var(--gold-pale)
+
 **Layout**
-- Fixed top header: 60px, background: var(--forest)
+- Fixed top header: 60px (dashboard), 80px (planner — 2-row), background: #22252e
 - Fixed left sidebar: 68px, background: var(--bg-surface),
   border-right: 1px solid var(--border)
 - Main: margin-top: 60px, margin-left: 68px, padding: 28px
@@ -353,23 +368,32 @@ All color transitions: transition: 0.3s
   no left margin
 
 **Header**
-- Background: var(--forest)
-- Logo: 38x38px, border-radius: 8px, gold gradient #c9a84c → #e8c97a,
-  dark green text #1a3020, font-weight: 700
-- School name: 13px, font-weight: 600, letter-spacing: 0.07em,
-  text-transform: uppercase, color: rgba(255,255,255,0.8),
-  accent word in #e8c97a
-- Tagline: italic, 11px, color: rgba(255,255,255,0.4)
-- Date: 12px, color: rgba(255,255,255,0.4)
-- Right controls: background: rgba(255,255,255,0.1),
-  border: 1px solid rgba(255,255,255,0.15), border-radius: 8px
+- Background: #22252e — hardcoded literal in both Header.css files, NOT a CSS var
+- Planner: 2 rows, Row 1 (48px) logo + week nav + 4 icon buttons; Row 2 (32px) student pills
+- Dashboard: single row, 60px, logo + school name + 2 icon buttons
+- Logo: 34–38px square, border-radius: 8px — uses logo.png (see Logo section above)
+- School name structure:
+    Line 1: "IRON & LIGHT" — LIGHT wrapped in .header-school-accent (color: #e8c97a)
+    Line 2: "JOHNSON ACADEMY"
+    Tagline: "Faith · Knowledge · Strength" (rgba(255,255,255,0.35))
+- Icon buttons: 32×32px, background: rgba(255,255,255,0.08), border: rgba(255,255,255,0.13)
+- Active student tab: color: #e8c97a (gold)
+- Student row border-top: 1px solid rgba(255,255,255,0.07)
+
+**DayStrip**
+- Floating pill container: background var(--bg-card), border-radius: 12px,
+  padding: 5px, margin: 0 14px 14px
+- Active day: background #22252e (dark pill), white text
+- Today: date number in var(--gold), 2px solid underline in var(--gold)
+- Today + active: date in var(--gold-light) for contrast on dark pill
+- Sick day: red dot via CSS ::after centered below date number (not top-right corner)
 
 **Sidebar nav items**
 - 44x44px, border-radius: 10px
 - Default: color: var(--text-muted), no background
 - Hover: background: var(--bg-card)
-- Active: background: var(--forest-pale), color: var(--forest),
-  box-shadow: inset 0 0 0 1px rgba(45,90,61,0.2)
+- Active: background: var(--gold-pale), color: var(--gold),
+  box-shadow: inset 0 0 0 1px rgba(201,168,76,0.2)
 
 **Cards**
 - background: var(--bg-card), border: 1px solid var(--border),
@@ -378,26 +402,25 @@ All color transitions: transition: 0.3s
 - shadow dark: 0 1px 6px rgba(0,0,0,0.25)
 - Title: 12px, font-weight: 600, letter-spacing: 0.08em,
   text-transform: uppercase, color: var(--text-secondary)
-- Hover: border-color: var(--forest-light),
-  box-shadow: 0 4px 16px rgba(45,90,61,0.12),
+- Hover: border-color: var(--gold-light),
+  box-shadow: 0 4px 16px rgba(201,168,76,0.12),
   transform: translateY(-2px)
 
 **Buttons**
-- Primary: background: var(--forest), color: #fff,
+- Primary: background: var(--gold), color: #fff,
   border-radius: 8px, padding: 7px 16px, 13px, font-weight: 600
-  hover: var(--forest-light)
+  hover: var(--gold-light)
 - Ghost: transparent, border: 1px solid var(--border),
   color: var(--text-secondary)
-  hover: border var(--forest), color var(--forest)
-- Text link: color: var(--forest-light), no border/background
+  hover: border var(--gold), color var(--gold)
+- Text link: color: var(--gold-light), no border/background
 
 **Progress bars**
 - Track: 4px, background: var(--border), border-radius: 2px
-- Fill: linear-gradient(90deg, var(--forest), var(--forest-light))
-- Fill gold: linear-gradient(90deg, #b8922a, #d4aa3a)
-- Thumb: 12x12px, background: var(--forest-light),
+- Fill: linear-gradient(90deg, var(--gold), var(--gold-light))
+- Thumb: 12x12px, background: var(--gold-light),
   border: 2px solid var(--bg-base),
-  box-shadow: 0 0 0 2px var(--forest-light)
+  box-shadow: 0 0 0 2px var(--gold-light)
 
 **Lesson rows**
 - padding: 10px 14px, border-radius: 8px
@@ -412,10 +435,10 @@ All color transitions: transition: 0.3s
 - ::after flex line: height: 1px, background: var(--border), flex: 1
 
 **General vibe — non-negotiable**
-- Warm, never cold. Neutrals lean cream/tan in light, forest in dark.
-  Never gray-blue anywhere.
+- Warm charcoal + gold. Header is always #22252e — the strongest brand anchor.
+- Content area is warm cream/white in light, dark charcoal in dark. Never gray-blue.
 - Lexend 300-400 body, 500-600 emphasis
-- Forest green header is the strongest brand anchor — always consistent
+- Gold (#c9a84c) is the primary accent — active states, highlights, CTAs
 - Borders always warm-toned, never neutral gray
 - Spacing generous: 28px page padding, 20px between cards,
   22px internal card padding

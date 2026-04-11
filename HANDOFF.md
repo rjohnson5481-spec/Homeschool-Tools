@@ -1,111 +1,116 @@
-# HANDOFF — end of session 2026-04-11 (session 2)
+# HANDOFF — end of Visual Polish Session 1 (2026-04-11)
 
 ## What was completed this session
-Four fixes in four commits, all pushed to main.
+Six steps, all committed and pushed to main.
 
 ---
 
-### Commit 1 — Fix flagged card color (`8098c98`)
-
-- Background tint: `rgba(192,57,43,0.06)` → `rgba(192,57,43,0.04)` — much subtler hint
-- Flag badge: `var(--gold)` → `var(--red)` — badge is now the primary visual signal
-
-Files: `SubjectCard.css`
+### Commit 1 — Logo directory (`a62e41d`)
+Created `packages/shared/src/assets/` with a `.gitkeep` placeholder.
+Commit message documents the import path and sharp resize commands for when the logo
+file is added.
 
 ---
 
-### Commit 2 — Upload preview grouped by day (`f20bb51`)
+### Commit 2 — Ink & Gold token system (`70db3aa`)
+Rewrote `packages/shared/src/styles/tokens.css` completely:
+- New tokens: `--ink`, `--ink-light`, `--gold`, `--gold-light`, `--gold-pale`,
+  `--red-lt`, refreshed `--bg-*`, `--border-*`, `--text-*` values
+- Backward-compat aliases at the bottom so existing components using `var(--forest)`
+  don't break: `--forest: var(--gold)` (both light/dark)
+- **Session 2 task**: remove these aliases as each component is migrated to `var(--gold)`
 
-Preview now shows one block per day:
+Files: `packages/shared/src/styles/tokens.css`
+
+---
+
+### Commit 3 — Typography (`a8f5e9e`)
+Updated `packages/shared/src/styles/fonts.css`:
+- Added explicit form element font override: `input, textarea, button, select { font-family: ... }`
+- Added `body { font-size: 14px }`
+
+Files: `packages/shared/src/styles/fonts.css`
+
+---
+
+### Commit 4 — Header redesign (`8f4624c`)
+Rewrote both Header components and CSS files:
+
+**Planner header** (`packages/planner/src/components/Header.{jsx,css}`):
+- Background: `#22252e` (hardcoded, not a CSS var)
+- Two-row layout: Row 1 (48px) = logo + school name + week nav + 4 icon buttons;
+  Row 2 (32px) = student selector pills
+- School name: "IRON & LIGHT" (LIGHT in gold `#e8c97a`) / "JOHNSON ACADEMY" / tagline
+- 4 icon buttons: 📅 calendar, upload SVG, ⚙ settings (no-op), exit SVG sign out
+- Active student pill: `color: #e8c97a`
+
+**Dashboard header** (`packages/dashboard/src/components/Header.{jsx,css}`):
+- Same `#22252e` background, 60px single-row
+- Same school name structure
+- 2 buttons: ☽/☀ mode toggle + exit SVG sign out
+
+---
+
+### Commit 5 — DayStrip floating pill (`adb0259`)
+Rewrote `packages/planner/src/components/DayStrip.{jsx,css}`:
+- Floating pill container: `background: var(--bg-card)`, `border-radius: 12px`,
+  `margin: 0 14px 14px` — replaces old full-width strip
+- Active day: `background: #22252e` dark pill, white text
+- Today: `color: var(--gold)`, `border-bottom: 2px solid var(--gold)` on date number
+- Today + active: `color: var(--gold-light)` for contrast on dark pill
+- Sick day: CSS `::after` red dot centered below date number (was top-right `<span>`)
+- Added `isToday(date)` helper function
+
+---
+
+### Commit 6 — Logo wired into both headers (`f8a6dfc`)
+Rob uploaded the logo PNG to the repo. Moved it to `packages/shared/src/assets/logo.png`.
+Both Header components now import and render the real logo:
+```jsx
+import logo from '@homeschool/shared/assets/logo.png';
+// ...
+<img src={logo} alt="ILA" className="header-logo" />
 ```
-Mon · Aug 17
-  Reading 3          Day 100
-  Math 4             Day 11
-
-Tue · Aug 18
-  ...
-```
-Day header: bold, forest color. Rows indented 12px. Blank gap between groups.
-
-Added `formatDayDate(weekId, dayIndex)` helper (computes Monday + offset).
-Removed the flat per-row day abbreviation column.
-
-Files: `UploadSheet.jsx`, `UploadSheet.css`
 
 ---
 
-### Commit 3 — Enhanced import debug log (`7fd0f20`)
+## What is currently incomplete
+- **Not smoke-tested in browser** — verify the following after the next deploy:
+  1. Logo renders correctly in both headers (not distorted — `object-fit: cover` on .header-logo)
+  2. DayStrip: today tab has gold number + underline; active tab is dark pill
+  3. Sick day red dot appears centered below date number (not corner)
+  4. Student toggle active tab shows gold text
+  5. Dark mode: all backgrounds/borders use new token values (warm charcoal, not green)
+  6. Light mode: content area is warm white (`#ffffff` cards), no green tint
 
-`usePdfImport.js`:
-- File selected: includes type + size KB
-- Request: endpoint + base64 KB + mediaType
-- Response: status + response time in seconds
-- Raw: first 200 chars of JSON response
-- Parsed: student · weekId · days (day names) · subjects list · total lessons
-- Error: includes stack trace if available
+- **Backward-compat `--forest` aliases still in tokens.css** — these map `--forest` to
+  `var(--gold)` so existing components don't break. Session 2 will migrate each component
+  to use `var(--gold)` directly, then remove the aliases.
 
-`PlannerLayout.jsx`:
-- Per-cell writes: "Writing: student › day › subject › lesson"
-- Apply complete: "Apply complete: Applied N cells"
-- Navigation: "Navigation: jumping to week of weekId"
-
-`DebugSheet.css`:
-- `white-space: pre-wrap` on `.debug-sheet-entry` — error stacks render line-by-line
-
-Files: `usePdfImport.js`, `PlannerLayout.jsx`, `DebugSheet.css`
-
----
-
-### Commit 4 — Sick Day cascade within-week only + Friday warning (`cf89e09`)
-
-**Cascade change:**
-- Old: followed chain across weeks (Friday → Monday of next week)
-- New: stays within current week only — chain stops at Friday
-- If chain reaches Friday and would push past, that Friday content is dropped (not written to next week)
-- Algorithm: builds consecutive chain from sick day to day+1 … 4, reverse-write, delete original
-
-**Friday warning:**
-- `SickDaySheet` shows "Friday lessons for selected subjects will be removed." when `day < 4 && selected.size > 0`
-- New `day` prop passed from PlannerLayout to SickDaySheet
-
-**Removed:** `nextSchoolDay()` helper — no longer needed without cross-week logic
-
-Files: `useSubjects.js`, `SickDaySheet.jsx`, `SickDaySheet.css`, `PlannerLayout.jsx`
-
----
-
-## What is currently incomplete or untested
-- **Not smoke-tested in browser** — no live device testing this session.
-  Golden path to verify:
-  1. Flag a card → very light red tint on card background, red ⚑ badge
-  2. Upload PDF → preview shows grouped day headers with dates, indented rows
-  3. View Log after import → sees file KB, response time, raw preview, subjects list
-  4. Per-cell writes: "Writing: Orion › Mon › Reading 3 › …"
-  5. Sick Day on Wednesday → subjects shift Wed→Thu, Thu→Fri; Thursday's original gone
-  6. Sick Day on Thursday → subjects shift Thu→Fri; Friday's original gone
-  7. Sick Day on Friday → subjects cleared (no target day available)
-  8. Friday warning appears when sick day is Mon–Thu with subjects selected
-  9. Friday warning disappears when all subjects are deselected
-  10. Deselected subjects are NOT shifted (their cells remain untouched)
 - **reward-tracker** — still needs migrating into monorepo structure
 
 ---
 
-## What the next session should start with
+## What Session 2 should start with
 1. Read CLAUDE.md + HANDOFF.md (required)
-2. Confirm with Rob: smoke-test these fixes, or move to Phase 2 features?
-3. Phase 2 options (do not build without Rob's go-ahead):
-   - Auto-roll flagged lessons to next week
-   - Week history browser
-   - Copy last week as template
-   - Export week as PDF
+2. Smoke-test Session 1 changes in the browser — confirm logo, DayStrip, headers
+3. Confirm with Rob: proceed to Session 2 visual polish?
+
+### Session 2 scope (do not start without Rob's go-ahead)
+In priority order:
+1. Subject cards — done state, flag state, note dot, lesson/note text styling
+2. Bottom sheets — EditSheet, AddSubjectSheet, UploadSheet, SickDaySheet, MonthSheet
+3. Action bar (add subject row at bottom of day view)
+4. Empty state (no subjects for this day)
+5. Dashboard polish (tool card grid, nav icons, progress bars)
+6. Remove `--forest` backward-compat aliases from tokens.css (after all components migrated)
 
 ---
 
-## Decisions made this session (already added to CLAUDE.md)
-- Sick Day cascade scoped to current week only — no cross-week bridging
-- Friday overflow → content is dropped (not pushed to next Monday)
-- Friday warning shown whenever day < 4 AND subjects selected (safe approximation —
-  may show even when no Friday data exists, which is acceptable)
-- `nextSchoolDay()` removed — was only used by the old cross-week algorithm
-- Flag badge: red (not gold) — badge is primary signal, background is secondary cue
+## Decisions made this session (already in CLAUDE.md)
+- Header background is `#22252e` hardcoded in CSS — not a CSS var, intentionally fixed in both modes
+- Gold (`#c9a84c`) replaces forest green as the primary accent color
+- Backward-compat `--forest: var(--gold)` aliases in tokens.css — remove in Session 2
+- Logo at `packages/shared/src/assets/logo.png`, imported via `@homeschool/shared/assets/logo.png`
+- DayStrip sick dot: CSS `::after` pseudo-element, centered below date (not top-right corner)
+- DayStrip today+active uses `var(--gold-light)` (#e8c97a) for contrast on dark pill
