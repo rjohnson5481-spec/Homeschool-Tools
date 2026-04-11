@@ -2,9 +2,9 @@
   min-height: 100vh;
 }
 
-/* Pushes body content below the 80px fixed header (48px row 1 + 32px row 2). */
+/* Pushes body content below the 132px fixed header (48px row 1 + 52px row 2 + 32px row 3). */
 .planner-body {
-  margin-top: 80px;
+  margin-top: 132px;
   max-width: 480px;
   margin-left: auto;
   margin-right: auto;

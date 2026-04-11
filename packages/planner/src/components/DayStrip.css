@@ -1,7 +1,7 @@
 /* ── Floating pill container — sits below the fixed header ── */
 .day-strip {
   position: sticky;
-  top: 80px;
+  top: 132px;
   z-index: 50;
   display: flex;
   gap: 3px;

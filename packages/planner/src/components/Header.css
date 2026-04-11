@@ -76,13 +76,14 @@
   line-height: 1;
 }
 
-/* Week navigation — centered, flex:1 fills available space */
+/* Row 2 — week navigation, full-width, centered */
 .header-week {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
+  padding: 8px 16px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .header-nav-btn {
@@ -171,8 +172,4 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Hide school name on very small screens to keep week nav readable */
-@media (max-width: 380px) {
-  .header-school     { display: none; }
-  .header-week-label { font-size: 11px; min-width: 88px; }
-}
+/* Week nav now has its own row — school name visible on all screen widths */

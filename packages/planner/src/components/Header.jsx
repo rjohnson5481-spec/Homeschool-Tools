@@ -14,7 +14,7 @@ export default function Header({
   return (
     <header className="header">
 
-      {/* Row 1 — brand · week navigation · action buttons */}
+      {/* Row 1 — brand left, four action buttons right */}
       <div className="header-top">
         <div className="header-brand">
           <img src={logo} alt="ILA" className="header-logo" />
@@ -26,12 +26,6 @@ export default function Header({
             <span className="header-school-tagline">Faith · Knowledge · Strength</span>
           </div>
         </div>
-
-        <nav className="header-week" aria-label="Week navigation">
-          <button className="header-nav-btn" onClick={prevWeek} aria-label="Previous week">‹</button>
-          <span className="header-week-label">{formatWeekLabel(weekDates)}</span>
-          <button className="header-nav-btn" onClick={nextWeek} aria-label="Next week">›</button>
-        </nav>
 
         <div className="header-actions">
           <button className="header-btn" onClick={onCalendar} aria-label="Open calendar" title="Calendar">
@@ -55,7 +49,14 @@ export default function Header({
         </div>
       </div>
 
-      {/* Row 2 — student selector */}
+      {/* Row 2 — week navigation, centered */}
+      <nav className="header-week" aria-label="Week navigation">
+        <button className="header-nav-btn" onClick={prevWeek} aria-label="Previous week">‹</button>
+        <span className="header-week-label">{formatWeekLabel(weekDates)}</span>
+        <button className="header-nav-btn" onClick={nextWeek} aria-label="Next week">›</button>
+      </nav>
+
+      {/* Row 3 — student selector */}
       <div className="header-students">
         {STUDENTS.map(name => (
           <button
