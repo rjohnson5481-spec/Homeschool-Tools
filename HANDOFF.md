@@ -1,44 +1,50 @@
-# HANDOFF — Two Small Fixes (2026-04-12)
+# HANDOFF — Version Label Session (2026-04-12)
 
 ## What was completed this session
 
-### Fix 1 — Undo Sick Day button always visible on sick days
+### Version number added to both headers
 
-**Bug:** "↩ Undo Sick Day" button only appeared when subjects were scheduled on
-the sick day. After a sick day cascade the sick day cell is deleted, so the button
-disappeared — making it impossible to undo.
+Both package.json files bumped to `"version": "0.17.0"`.
 
-**Fix:** `PlannerLayout.jsx` action bar restructured. `isSickDay` and `hasSubjects`
-are now independent conditions:
-- `isSickDay && !subjectsLoading` → shows "↩ Undo Sick Day" (no subjects requirement)
-- `!isSickDay && hasSubjects && !subjectsLoading` → shows "Sick Day" + "Clear Week"
+Both Header.jsx files import version from their local package.json:
+```js
+import { version } from '../../package.json';
+```
 
----
+A `<span className="header-school-version">v{version}</span>` is rendered
+directly below the tagline ("Faith · Knowledge · Strength") in the brand block.
 
-### Fix 2 — Duplicate "+ Add Subject" button on empty days
+CSS class added to both Header.css files:
+```css
+.header-school-version {
+  font-size: 9px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1;
+}
+```
 
-**Bug:** When a day had zero subjects, both the empty-state "+ Add Subject" button
-and the regular dashed "+ Add Subject" button rendered at the same time.
-
-**Fix:** Dashed add button guard changed from `!subjectsLoading` to
-`!subjectsLoading && hasSubjects`. The empty state already has its own "+ Add Subject"
-button, so the dashed one is only needed when subjects are present.
-
-Both fixes: `PlannerLayout.jsx` — one commit.
+Files changed (one commit):
+- `packages/planner/package.json`
+- `packages/dashboard/package.json`
+- `packages/planner/src/components/Header.jsx`
+- `packages/planner/src/components/Header.css`
+- `packages/dashboard/src/components/Header.jsx`
+- `packages/dashboard/src/components/Header.css`
 
 ---
 
 ## What is currently incomplete
 
-- **Smoke-test still needed** for fixes from the prior bug fix session:
-  - Fix 2: Header shows 3 rows on mobile; all 4 icon buttons visible
-  - Fix 3: Undo sick day — correct message for Mon–Thu vs Friday
-  - Fix 4: Sick day sheet shows full week grouped by day with gold headers
-  - Fix 5: Edit sheet "Remove from this day" with two-tap confirm
-  - Fix 1 (undo sick day button): NOW also includes today's visibility fix
+- **Smoke-test still needed** for fixes from earlier sessions:
+  - Header 3 rows on mobile; all 4 icon buttons visible
+  - Undo sick day button visible when no subjects on sick day (fixed 2026-04-12)
+  - Undo sick day — correct message for Mon–Thu vs Friday
+  - Sick day sheet shows full week grouped by day with gold headers
+  - Edit sheet "Remove from this day" with two-tap confirm
 
 - **CLAUDE.md header layout note is outdated:** says "2 rows, total 80px" — code
-  uses 132px (3 rows). Only the doc is wrong.
+  uses 132px (3 rows: 48px brand+buttons, 52px week nav, 32px students).
 
 - **reward-tracker** — still needs migrating into monorepo structure
 
@@ -47,7 +53,6 @@ Both fixes: `PlannerLayout.jsx` — one commit.
 ## What the next session should start with
 
 1. Read CLAUDE.md + HANDOFF.md
-2. Smoke-test the undo sick day button on a real sick day
-3. Smoke-test fixes 2–5 from prior session
-4. Update CLAUDE.md header note (80px → 132px, 2 rows → 3 rows)
-5. Confirm with Rob: Phase 2 features or reward-tracker migration?
+2. Smoke-test all pending fixes in browser
+3. Update CLAUDE.md header note (80px → 132px, 2 rows → 3 rows)
+4. Confirm with Rob: Phase 2 features or reward-tracker migration?

@@ -1,6 +1,7 @@
 import logo from '@homeschool/shared/assets/logo.png';
 import { signOut } from '@homeschool/shared';
 import { formatWeekLabel } from '../constants/days.js';
+import { version } from '../../package.json';
 import './Header.css';
 
 const STUDENTS = ['Orion', 'Malachi'];
@@ -24,6 +25,7 @@ export default function Header({
             </span>
             <span className="header-school-line2">JOHNSON ACADEMY</span>
             <span className="header-school-tagline">Faith · Knowledge · Strength</span>
+            <span className="header-school-version">v{version}</span>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import logo from '@homeschool/shared/assets/logo.png';
 import { signOut } from '@homeschool/shared';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { version } from '../../package.json';
 import './Header.css';
 
 export default function Header() {
@@ -16,6 +17,7 @@ export default function Header() {
           </span>
           <span className="header-school-line2">JOHNSON ACADEMY</span>
           <span className="header-school-tagline">Faith · Knowledge · Strength</span>
+          <span className="header-school-version">v{version}</span>
         </div>
       </div>
       <div className="header-controls">
