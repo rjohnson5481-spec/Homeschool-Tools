@@ -138,6 +138,54 @@
 
 .settings-row-action:hover { background: var(--bg-card); color: var(--text-primary); }
 .settings-row-action--remove:hover { color: var(--red); }
+.settings-row-action--del:hover { color: var(--red); }
+
+.settings-row-actions {
+  display: flex;
+  gap: 2px;
+}
+
+/* ── Student delete confirmation ── */
+.settings-row--confirm {
+  background: var(--red-lt);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.settings-confirm-msg {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--red);
+}
+
+.settings-confirm-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-confirm-yes {
+  padding: 5px 14px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.settings-confirm-cancel {
+  padding: 5px 14px;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
 
 /* ── Dark mode toggle ── */
 .settings-toggle {

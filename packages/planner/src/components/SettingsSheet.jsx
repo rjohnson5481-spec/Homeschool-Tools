@@ -9,11 +9,12 @@ export default function SettingsSheet({ uid, onClose }) {
   const { mode, toggle }                                        = useDarkMode();
   const { students, activeStudent, setActiveStudent,
           activeSubjects, saveStudents, saveSubjects }          = useSettings(uid);
-  const [editingIdx, setEditingIdx]     = useState(null);
-  const [editingValue, setEditingValue] = useState('');
-  const [addingSubject, setAddingSubject] = useState(false);
-  const [newSubject, setNewSubject]     = useState('');
-  const [clearing, setClearing]         = useState(false);
+  const [editingIdx, setEditingIdx]         = useState(null);
+  const [editingValue, setEditingValue]     = useState('');
+  const [confirmRemoveIdx, setConfirmRemoveIdx] = useState(null);
+  const [addingSubject, setAddingSubject]   = useState(false);
+  const [newSubject, setNewSubject]         = useState('');
+  const [clearing, setClearing]             = useState(false);
 
   function startEdit(i, name) { setEditingIdx(i); setEditingValue(name); }
 
@@ -32,6 +33,11 @@ export default function SettingsSheet({ uid, onClose }) {
     saveStudents([...students, '']);
     setEditingIdx(students.length); // length before update = index of new entry
     setEditingValue('');
+  }
+
+  function confirmRemove(i) {
+    saveStudents(students.filter((_, j) => j !== i));
+    setConfirmRemoveIdx(null);
   }
 
   function removeSubject(subj) {
@@ -54,6 +60,8 @@ export default function SettingsSheet({ uid, onClose }) {
       window.location.reload();
     }
   }
+
+  const namedStudents = students.filter(Boolean);
 
   return (
     <div className="settings-overlay" onClick={onClose}>
@@ -78,7 +86,7 @@ export default function SettingsSheet({ uid, onClose }) {
 
           <div className="settings-section-label">Students</div>
           {students.map((name, i) => (
-            <div key={i} className="settings-row">
+            <div key={i} className={`settings-row${confirmRemoveIdx === i ? ' settings-row--confirm' : ''}`}>
               {editingIdx === i ? (
                 <input
                   className="settings-input settings-input--inline"
@@ -88,10 +96,23 @@ export default function SettingsSheet({ uid, onClose }) {
                   onBlur={() => commitEdit(i)}
                   onKeyDown={e => e.key === 'Enter' && commitEdit(i)}
                 />
+              ) : confirmRemoveIdx === i ? (
+                <>
+                  <span className="settings-confirm-msg">Remove {name}?</span>
+                  <div className="settings-confirm-btns">
+                    <button className="settings-confirm-yes" onClick={() => confirmRemove(i)}>Yes</button>
+                    <button className="settings-confirm-cancel" onClick={() => setConfirmRemoveIdx(null)}>Cancel</button>
+                  </div>
+                </>
               ) : (
                 <>
                   <span className="settings-row-label">{name}</span>
-                  <button className="settings-row-action" onClick={() => startEdit(i, name)} aria-label="Edit name">✏</button>
+                  <div className="settings-row-actions">
+                    <button className="settings-row-action" onClick={() => startEdit(i, name)} aria-label="Edit name">✏</button>
+                    {namedStudents.length > 1 && (
+                      <button className="settings-row-action settings-row-action--del" onClick={() => setConfirmRemoveIdx(i)} aria-label="Remove student">✕</button>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -100,7 +121,7 @@ export default function SettingsSheet({ uid, onClose }) {
 
           <div className="settings-section-label">Default Subjects</div>
           <div className="settings-tabs">
-            {students.filter(Boolean).map(name => (
+            {namedStudents.map(name => (
               <button
                 key={name}
                 className={`settings-tab${activeStudent === name ? ' settings-tab--active' : ''}`}
@@ -130,9 +151,9 @@ export default function SettingsSheet({ uid, onClose }) {
 
           <div className="settings-coming-soon">
             <div className="settings-section-label">
-              School Year <span className="settings-badge">Coming Soon</span>
+              School Year &amp; Compliance <span className="settings-badge">Coming Soon</span>
             </div>
-            <p className="settings-coming-desc">Set your academic year start and end dates — coming in Phase 2</p>
+            <p className="settings-coming-desc">Set academic year dates and track school days for ND compliance — coming in Phase 2</p>
           </div>
 
           <div className="settings-section-label">App</div>
@@ -143,13 +164,6 @@ export default function SettingsSheet({ uid, onClose }) {
           <button className="settings-cache-btn" onClick={clearCache} disabled={clearing}>
             {clearing ? 'Clearing…' : 'Clear Cache & Reload'}
           </button>
-
-          <div className="settings-coming-soon">
-            <div className="settings-section-label">
-              School Days <span className="settings-badge">Coming Soon</span>
-            </div>
-            <p className="settings-coming-desc">Track school days completed for ND compliance — coming in Phase 2</p>
-          </div>
 
         </div>
       </div>
