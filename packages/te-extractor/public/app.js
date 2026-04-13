@@ -32,6 +32,7 @@ const state = {
   selectedFile: null,
   lastResult:   null,   // { html, lessons, filename, timestamp }
   sessionLog:   [],
+  debugLog:     [],     // { timestamp, label, body } entries
 };
 
 // ── DOM Refs ─────────────────────────────────────────────────
@@ -71,6 +72,13 @@ const dom = {
   // Session log
   logEmpty:         $('logEmpty'),
   logList:          $('logList'),
+
+  // Debug log
+  debugBadge:       $('debugBadge'),
+  debugEmpty:       $('debugEmpty'),
+  debugEntries:     $('debugEntries'),
+  debugCopyAllBtn:  $('debugCopyAllBtn'),
+  debugClearBtn:    $('debugClearBtn'),
 
   // PDF splitter
   splitSection:     $('splitSection'),
@@ -244,23 +252,38 @@ async function runExtraction() {
     // 2. Read file as base64
     const { base64, mediaType } = await readFileAsBase64(file);
 
-    // 3. Call Anthropic API directly
+    // 3. Call Anthropic API directly (with timing for debug log)
+    const apiStart = Date.now();
     const html = await callAPI({ base64, mediaType, lessons, fileName: file.name });
+    const apiMs = Date.now() - apiStart;
 
     // 4. Validate response
     if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
       throw new Error('The response did not contain a valid HTML document. Please try again.');
     }
 
-    // 5. Store result
+    // 5. Log debug info
+    addDebugLog({
+      label: `Lessons ${lessons} — ${file.name}`,
+      body: [
+        `File: ${file.name}`,
+        `File size: ${formatBytes(file.size)}`,
+        `Lessons: ${lessons}`,
+        `API response time: ${(apiMs / 1000).toFixed(2)}s`,
+        `Output size: ${formatBytes(html.length)}`,
+        `Output preview (first 300 chars):\n${html.slice(0, 300)}`,
+      ].join('\n'),
+    });
+
+    // 6. Store result
     const filename  = `lessons_${sanitizeFilename(lessons)}_questions.html`;
     const timestamp = new Date();
     state.lastResult = { html, lessons, filename, timestamp };
 
-    // 6. Log to session
+    // 7. Log to session
     addToSessionLog({ lessons, filename, timestamp, html, fileUsed: file.name });
 
-    // 7. Show results
+    // 8. Show results
     showResults(lessons);
 
   } catch (err) {
@@ -534,6 +557,52 @@ window.logPrint = function(idx) {
   win.onload = () => win.print();
   setTimeout(() => { try { win.print(); } catch(_) {} }, 800);
 };
+
+// ── Debug Log ────────────────────────────────────────────────
+function addDebugLog({ label, body }) {
+  const entry = { label, body, timestamp: new Date() };
+  state.debugLog.unshift(entry); // newest first
+
+  // Update badge
+  dom.debugBadge.textContent = state.debugLog.length;
+  dom.debugBadge.style.display = 'inline';
+
+  renderDebugLog();
+}
+
+function renderDebugLog() {
+  if (state.debugLog.length === 0) {
+    dom.debugEmpty.style.display = 'flex';
+    dom.debugEntries.style.display = 'none';
+    dom.debugBadge.style.display = 'none';
+    return;
+  }
+
+  dom.debugEmpty.style.display = 'none';
+  dom.debugEntries.style.display = 'flex';
+
+  dom.debugEntries.innerHTML = state.debugLog.map(entry => `
+    <div class="debug-entry">
+      <div class="debug-entry-header">
+        <span>${escHtml(entry.label)}</span>
+        <span class="debug-entry-time">${formatTime(entry.timestamp)}</span>
+      </div>
+      <pre class="debug-entry-body">${escHtml(entry.body)}</pre>
+    </div>
+  `).join('');
+}
+
+dom.debugCopyAllBtn.addEventListener('click', () => {
+  const text = state.debugLog.map(e =>
+    `[${formatTime(e.timestamp)}] ${e.label}\n${e.body}`
+  ).join('\n\n---\n\n');
+  copyText(text, dom.debugCopyAllBtn);
+});
+
+dom.debugClearBtn.addEventListener('click', () => {
+  state.debugLog = [];
+  renderDebugLog();
+});
 
 // ── Utilities ────────────────────────────────────────────────
 function triggerDownload(content, filename) {
