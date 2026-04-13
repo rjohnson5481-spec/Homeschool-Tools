@@ -16,12 +16,12 @@ QUESTIONS: Only lines ending in ? Copied exactly. No answers, directions, or com
 VOCABULARY: Words listed under "New" or "Review" labels. Words only, no definitions. Note New vs Review.
 
 STEP 3 — Return a complete, self-contained HTML file with:
-- Lora font (Google Fonts)
+- Lexend font (Google Fonts, weights 300;400;500;600;700)
 - Logo img src="https://i.imgur.com/9JfGi6d.jpeg" 150px on cover, 32px in footer, onerror hide
 - School name: Iron & Light Johnson Academy | Tagline: Faith · Knowledge · Strength
-- Sticky print bar (hidden on print): school name left, Print button right
+- Sticky print bar (hidden on print): background #22252e, school name left in white, Print button right in #c9a84c
 - Cover page: logo, school name, tagline, curriculum info, summary table (Lesson / Story / Student Pages / TE Pages / Questions / Vocabulary count). Page break after.
-- Per lesson: dark green banner (#2d5a3d) with lesson number and story title, meta strip (#f3f8f5) with page info, vocabulary pills (New=filled #2d5a3d white text, Review=outlined #3d7a52 green text), questions grouped by TE page with green TE badge and outlined student page badge, numbered list with green counters
+- Per lesson: dark banner (#22252e) with lesson number in #e8c97a and story title in white, meta strip (#f2f0ed) with page info, vocabulary pills (New=filled #22252e white text, Review=outlined #c9a84c gold text), questions grouped by TE page with #22252e TE badge and outlined student page badge, numbered list with #c9a84c counters
 - Page break after each lesson
 - Print CSS: @page { margin: 1.5cm 2cm; size: letter; } with print-color-adjust: exact
 
