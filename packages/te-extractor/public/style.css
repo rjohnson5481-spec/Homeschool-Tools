@@ -761,6 +761,39 @@ body {
 }
 
 /* ============================================================
+   EXTRACT FOOTER (version + cache clear — mobile only)
+   ============================================================ */
+
+.extract-footer {
+  display: none; /* hidden on desktop — sidebar footer covers this */
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 14px 0 8px;
+  border-top: 1px solid #eae6e0;
+}
+
+.extract-footer-version {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.extract-cache-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  color: var(--text-muted);
+  border-color: #eae6e0;
+}
+
+.extract-cache-btn:not(:disabled):hover {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: var(--bg-tint);
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 
@@ -981,5 +1014,10 @@ body {
   .btn-lg {
     font-size: 14px;
     padding: 12px 20px;
+  }
+
+  /* ── Extract footer: show on mobile ── */
+  .extract-footer {
+    display: flex;
   }
 }

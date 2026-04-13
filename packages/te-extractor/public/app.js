@@ -79,9 +79,10 @@ const dom = {
   splitStatus:      $('splitStatus'),
 };
 
-// Stamp version into both displays
-// versionDisplay is inside "TE Extractor v<span>" so inject without the v prefix
+// Stamp version into all version displays
+// versionDisplay and versionDisplayMobile are inside "TE Extractor v<span>" — no v prefix
 document.getElementById('versionDisplay').textContent = VERSION;
+document.getElementById('versionDisplayMobile').textContent = VERSION;
 document.getElementById('sidebarVersion').textContent = `v${VERSION}`;
 
 // ── Tab Navigation ───────────────────────────────────────────
@@ -741,7 +742,7 @@ function parsePageRange(str) {
 }
 
 // ── Cache Clear ──────────────────────────────────────────────
-document.getElementById('clearCacheBtn').addEventListener('click', () => {
+function clearCacheAndReload() {
   if ('caches' in window) {
     caches.keys()
       .then(keys => Promise.all(keys.map(k => caches.delete(k))))
@@ -749,4 +750,7 @@ document.getElementById('clearCacheBtn').addEventListener('click', () => {
   } else {
     window.location.reload(true);
   }
-});
+}
+
+document.getElementById('clearCacheBtn').addEventListener('click', clearCacheAndReload);
+document.getElementById('clearCacheBtnMobile').addEventListener('click', clearCacheAndReload);
