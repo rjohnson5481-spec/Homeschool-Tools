@@ -81,6 +81,12 @@ const dom = {
   debugCopyAllBtn:  $('debugCopyAllBtn'),
   debugClearBtn:    $('debugClearBtn'),
 
+  // Extraction progress
+  extractionProgress: $('extractionProgress'),
+  progressBarFill:    $('progressBarFill'),
+  progressStatus:     $('progressStatus'),
+  progressTimer:      $('progressTimer'),
+
   // PDF splitter
   splitSection:     $('splitSection'),
   splitPageRange:   $('splitPageRange'),
@@ -238,6 +244,7 @@ async function runExtraction() {
   hideError();
   setExtracting(true);
   hideResults();
+  startProgress();
 
   const lessons = dom.lessonNumbers.value.trim();
   const file    = state.selectedFile;
@@ -295,6 +302,7 @@ async function runExtraction() {
   } catch (err) {
     showError(err.message || 'An unexpected error occurred.');
   } finally {
+    stopProgress();
     setExtracting(false);
   }
 }
@@ -721,6 +729,45 @@ function sanitizeFilename(str) {
 function stripMarkdownFences(text) {
   // Remove ```html ... ``` or ``` ... ``` wrappers if present
   return text.replace(/^```(?:html)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+}
+
+// ── Extraction Progress Indicator ────────────────────────────
+const PROGRESS_MESSAGES = [
+  'Scanning PDF for lesson pages…',
+  'Extracting questions and vocabulary…',
+  'Building HTML output…',
+  'Almost done…',
+];
+
+let _progressInterval = null;
+let _progressStart    = 0;
+
+function startProgress() {
+  _progressStart = Date.now();
+  dom.progressStatus.textContent  = PROGRESS_MESSAGES[0];
+  dom.progressTimer.textContent   = '0s';
+  dom.progressBarFill.style.width = '0%';
+  dom.extractionProgress.style.display = 'block';
+
+  _progressInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - _progressStart) / 1000);
+    dom.progressTimer.textContent = `${elapsed}s`;
+
+    // Rotate message every 5 seconds
+    const msgIdx = Math.min(Math.floor(elapsed / 5), PROGRESS_MESSAGES.length - 1);
+    dom.progressStatus.textContent = PROGRESS_MESSAGES[msgIdx];
+
+    // Fill grows to 90% over 90 seconds — never reaches 100% until done
+    const pct = Math.min(90, (elapsed / 90) * 90);
+    dom.progressBarFill.style.width = `${pct}%`;
+  }, 500);
+}
+
+function stopProgress() {
+  clearInterval(_progressInterval);
+  _progressInterval = null;
+  dom.extractionProgress.style.display = 'none';
+  dom.progressBarFill.style.width = '0%';
 }
 
 // ── PDF Splitter ─────────────────────────────────────────────

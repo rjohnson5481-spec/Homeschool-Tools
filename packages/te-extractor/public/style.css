@@ -804,6 +804,52 @@ body {
 }
 
 /* ============================================================
+   EXTRACTION PROGRESS INDICATOR
+   ============================================================ */
+
+.extraction-progress {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #eae6e0;
+}
+
+.progress-bar-track {
+  height: 4px;
+  background: #eae6e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.6s ease;
+}
+
+.progress-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.progress-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.progress-timer {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ============================================================
    DEBUG LOG
    ============================================================ */
 
