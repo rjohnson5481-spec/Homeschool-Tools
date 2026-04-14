@@ -40,7 +40,7 @@
 .sc-name {
   font-size: 20px;
   font-weight: 700;
-  color: #22252e;
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -60,7 +60,7 @@
   display: block;
   font-size: 56px;
   font-weight: 700;
-  color: #22252e;
+  color: var(--text-primary);
   line-height: 1;
 }
 

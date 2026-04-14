@@ -1,8 +1,8 @@
 import logo from '@homeschool/shared/assets/logo.png';
 import './RewardHeader.css';
 
-// Props: onBack (fn | null) — if provided, shows a back arrow on the left.
-export default function RewardHeader({ onBack }) {
+// Props: onBack (fn | null), mode ('light'|'dark'), onToggleDark (fn)
+export default function RewardHeader({ onBack, mode, onToggleDark }) {
   return (
     <header className="rh-header">
       <div className="rh-top">
@@ -24,7 +24,13 @@ export default function RewardHeader({ onBack }) {
           </div>
         </div>
 
-        <div className="rh-back-spacer" />
+        <button
+          className="rh-mode-btn"
+          onClick={onToggleDark}
+          aria-label="Toggle dark mode"
+        >
+          {mode === 'dark' ? '☀️' : '🌙'}
+        </button>
       </div>
     </header>
   );
