@@ -2,9 +2,9 @@ import './StudentCard.css';
 
 const AVATARS = { Orion: '😎', Malachi: '🐼' };
 
-// 15 pts = $1.00 — always floor
+// 15 pts = $1.00 — floor to penny (not dollar)
 function cashValue(pts) {
-  return (Math.floor(pts / 15)).toFixed(2);
+  return (Math.floor(pts / 15 * 100) / 100).toFixed(2);
 }
 
 // Next multiple of 15 strictly above current pts
