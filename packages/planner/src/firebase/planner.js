@@ -77,6 +77,18 @@ export function deleteSickDay(uid, dateString) {
   return deleteDoc(doc(db, sickDayPath(uid, dateString)));
 }
 
+// Returns true if an all-day event exists in the given subjects map.
+// subjects: { [subject]: cellData } — the full dayData object for a day.
+export function hasAllDayEvent(subjects) {
+  return Object.prototype.hasOwnProperty.call(subjects, '__allday__');
+}
+
+// Returns the all-day event cell data or null if none exists.
+// subjects: { [subject]: cellData }
+export function getAllDayEvent(subjects) {
+  return subjects['__allday__'] ?? null;
+}
+
 // Subscribes to sick day markers for the given week dates.
 // dateStrings: array of "YYYY-MM-DD" strings (Mon-Fri of the current week).
 // cb receives: { [dateString]: { student, date, subjectsShifted[] } }
