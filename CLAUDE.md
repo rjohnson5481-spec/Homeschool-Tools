@@ -193,6 +193,27 @@ packages/planner/src/
 - Each sheet has its own overlay class (not shared) to avoid CSS conflicts
 - safe-area-inset-bottom applied to all sheets for iPhone home bar
 
+## Desktop layout (≥768px) — all rules are additive media queries; mobile is UNCHANGED
+- Header: collapses to 1 row (48px). Week nav is `position: absolute` over header-top row,
+  centered. Student row hidden (students appear in DayStrip sidebar instead).
+- DayStrip: becomes `position: fixed; left: 0; top: 48px; bottom: 0; width: 200px;`
+  background var(--bg-surface), border-right. Shows student pills at top + horizontal day rows.
+- planner-body: margin-top: 48px, margin-left: 200px, max-width: none.
+- .planner-subjects: grid repeat(auto-fill, minmax(340px, 1fr)).
+- .planner-action-bar: left: 200px, max-width: none.
+- Desktop breakpoint: 768px. Never add desktop-only JSX — CSS media queries only.
+
+## All Day Event — data model
+- Stored as `__allday__` key in the existing per-day subjects collection.
+  Path: /users/{uid}/weeks/{weekId}/students/{student}/days/{dayIndex}/subjects/__allday__
+  Fields: { lesson: eventName, note: eventNote, done: false, flag: false }
+- `hasAllDayEvent(subjects)` and `getAllDayEvent(subjects)` helpers in firebase/planner.js.
+- `subjects` (Object.keys(dayData)) includes `__allday__` — always filter it from regular
+  subject lists using `.filter(s => s !== '__allday__')`.
+- SubjectCard renders a full-width #22252e banner when subject === '__allday__'.
+- EditSheet hides Done/Flag toggles and shows 'All Day Event' title when subject === '__allday__'.
+- AddSubjectSheet shows '+ All Day Event' at top; if one exists, shows 'Edit All Day Event ›'.
+
 ---
 
 ## File size rules — enforce strictly
@@ -302,6 +323,8 @@ Phase 1 — COMPLETE:
   ✓ 26. v0.19.0 polish — PWA theme_color #22252e; School Year & Compliance merged coming-soon;
          student delete with inline confirmation; Header students from Firestore;
          AddSubjectSheet quick-picks from per-student Firestore presets
+  ✓ 27. v0.21.0 — All Day Event (__allday__ key); desktop responsive layout ≥768px
+         (single-row header, 200px DayStrip sidebar, auto-fill card grid, action bar shift)
 
 Phase 2 (do not build yet):
   - Auto-roll flagged lessons to next week
