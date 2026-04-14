@@ -325,6 +325,11 @@ Phase 1 — COMPLETE:
          AddSubjectSheet quick-picks from per-student Firestore presets
   ✓ 27. v0.21.0 — All Day Event (__allday__ key); desktop responsive layout ≥768px
          (single-row header, 200px DayStrip sidebar, auto-fill card grid, action bar shift)
+  ✓ 28. v0.21.1 — 11-fix polish pass: All Day Event banner no longer flashes on save;
+         sidebar always #22252e dark; header logo 42px + larger fonts at desktop;
+         card grid gap:14px; desktop day-title header with subject count;
+         header icons right-aligned + emoji font; done-pill replaced with tap-to-edit hint;
+         desktop action bar Import pushed right
 
 Phase 2 (do not build yet):
   - Auto-roll flagged lessons to next week
