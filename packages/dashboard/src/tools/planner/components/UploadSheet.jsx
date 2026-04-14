@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DebugSheet from './DebugSheet.jsx';
-import { DAY_SHORT } from '../constants/days.js';
+import { DAY_SHORT, mondayWeekId } from '../constants/days.js';
 import './UploadSheet.css';
 
 // Extracts the day number from a lesson string like "Day 32 — Title" → "32".
@@ -102,7 +102,7 @@ export default function UploadSheet({ pdfImport, onApply, onClose }) {
             {/* Success state */}
             {applied && result && (
               <div className="upload-sheet-success">
-                ✓ Applied — jumped to week of {formatWeekOf(result.weekId)}
+                ✓ Applied — jumped to week of {formatWeekOf(mondayWeekId(result.weekId))}
               </div>
             )}
 
@@ -110,14 +110,14 @@ export default function UploadSheet({ pdfImport, onApply, onClose }) {
             {result && !importing && !applied && (
               <div className="upload-sheet-result">
                 <p className="upload-sheet-result-meta">
-                  {result.student} · Week of {formatWeekOf(result.weekId)}
+                  {result.student} · Week of {formatWeekOf(mondayWeekId(result.weekId))}
                 </p>
                 <div className="upload-sheet-divider" />
                 <div className="upload-sheet-lesson-list">
                   {(result.days ?? []).map(({ dayIndex, lessons }) => (
                     <div key={dayIndex} className="upload-sheet-day-group">
                       <div className="upload-sheet-day-header">
-                        {DAY_SHORT[dayIndex]} · {formatDayDate(result.weekId, dayIndex)}
+                        {DAY_SHORT[dayIndex]} · {formatDayDate(mondayWeekId(result.weekId), dayIndex)}
                       </div>
                       {(lessons ?? []).map(({ subject, lesson }, i) => {
                         const dayNum = extractDayNum(lesson);
