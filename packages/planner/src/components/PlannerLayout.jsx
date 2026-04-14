@@ -9,7 +9,7 @@ import AddSubjectSheet from './AddSubjectSheet.jsx';
 import MonthSheet      from './MonthSheet.jsx';
 import SickDaySheet    from './SickDaySheet.jsx';
 import SettingsSheet   from './SettingsSheet.jsx';
-import { getMondayOf, toWeekId, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
+import { getMondayOf, toWeekId, mondayWeekId, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 
 export default function PlannerLayout({
@@ -69,26 +69,27 @@ export default function PlannerLayout({
   // wipe=false: merge only — imported cells are skipped if they already exist.
   // Does NOT auto-close — UploadSheet shows a success state; user closes manually.
   async function handleApplySchedule(parsedData, wipe) {
-    pdfImport.addLog(`Applying — student: ${parsedData.student}, week: ${parsedData.weekId}${wipe ? ', wipe: true' : ''}`);
+    const safeData = { ...parsedData, weekId: mondayWeekId(parsedData.weekId) };
+    pdfImport.addLog(`Applying — student: ${safeData.student}, week: ${safeData.weekId}${wipe ? ', wipe: true' : ''}`);
     if (wipe) {
       pdfImport.addLog('Wiping existing week...');
-      await wipeWeek(parsedData.weekId, parsedData.student);
+      await wipeWeek(safeData.weekId, safeData.student);
       pdfImport.addLog('Wipe complete.');
     }
-    const cells = (parsedData.days ?? []).flatMap(({ dayIndex, lessons }) =>
+    const cells = (safeData.days ?? []).flatMap(({ dayIndex, lessons }) =>
       (lessons ?? []).map(({ subject, lesson }) => ({ dayIndex, subject, lesson }))
     );
     cells.forEach(({ dayIndex, subject, lesson }) =>
-      pdfImport.addLog(`Writing: ${parsedData.student} › ${DAY_SHORT[dayIndex]} › ${subject} › ${lesson}`)
+      pdfImport.addLog(`Writing: ${safeData.student} › ${DAY_SHORT[dayIndex]} › ${subject} › ${lesson}`)
     );
     await Promise.all(cells.map(({ dayIndex, subject, lesson }) =>
-      importCell(parsedData.weekId, parsedData.student, subject, dayIndex,
+      importCell(safeData.weekId, safeData.student, subject, dayIndex,
         { lesson, note: '', done: false, flag: false }, wipe)
     ));
     pdfImport.addLog(`Apply complete: Applied ${cells.length} cells`);
-    jumpToWeek(parsedData.weekId);
-    setStudent(parsedData.student);
-    pdfImport.addLog(`Navigation: jumping to week of ${parsedData.weekId}, student=${parsedData.student}`);
+    jumpToWeek(safeData.weekId);
+    setStudent(safeData.student);
+    pdfImport.addLog(`Navigation: jumping to week of ${safeData.weekId}, student=${safeData.student}`);
   }
 
   const allDayData = dayData['allday'] ?? null, hasAllDay = Boolean(allDayData);

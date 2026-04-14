@@ -40,6 +40,13 @@ export function formatWeekLabel(weekDates) {
   return `${start}–${end}, ${weekDates[4].getFullYear()}`;
 }
 
+// Parses a YYYY-MM-DD string as a local date and returns the Monday weekId of that week.
+// Use this to normalize weekId strings from external sources (e.g., AI parse results).
+export function mondayWeekId(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return toWeekId(getMondayOf(new Date(y, m - 1, d)));
+}
+
 // Returns today's 0-based weekday index (Mon=0 … Fri=4).
 // Returns 0 on weekends so the view defaults to Monday.
 export function getTodayDayIndex() {
