@@ -1,85 +1,110 @@
-# HANDOFF — Session 14 (cleanup + weekId display fix)
+# HANDOFF — Session 15 (morning summary + desktop sidebar)
 
 ## What was completed this session
 
-### 1. Retired packages/planner and packages/reward-tracker
-- Deleted `packages/planner/` and `packages/reward-tracker/` directories
-- Updated root `package.json` workspaces from `["packages/*"]` glob to explicit list:
-  `["packages/shared", "packages/dashboard", "packages/te-extractor"]`
-- Removed `/planner/*` and `/reward-tracker/*` redirect blocks from `netlify.toml`
-  (only `/api/*`, `/te-extractor/*`, and `/*` remain)
-- Build verified clean after retirement
+### Fix 1 — Dead tool card links
+- `ToolCard.jsx`: added `onClick` prop — renders `<button>` instead of `<a>` when provided
+- `ToolCard.css`: added `button.tool-card-link` reset styles
+- `HomeTab.jsx`: accepts `onTabChange` prop; Planner + Rewards cards call `onTabChange`
+- `App.jsx`: passes `onTabChange={setActiveTab}` to `<HomeTab>`
 
-### 2. Fixed weekId display in import preview sheet
-- `UploadSheet.jsx` was displaying `result.weekId` raw (from AI parse response)
-- AI can return a non-Monday date (e.g. "2026-04-14" Tue instead of "2026-04-13" Mon)
-- Wrapped all three display sites with `mondayWeekId()` imported from `../constants/days.js`:
-  - Success state: "Applied — jumped to week of …"
-  - Preview meta: "Student · Week of …"
-  - Per-day date headers in the lesson list
-- `handleApply` left unchanged — PlannerLayout already normalizes via `mondayWeekId()` before writes
+### Fix 2 — Morning summary dashboard
+- New hook: `packages/dashboard/src/hooks/useHomeSummary.js`
+  - Subscribes (onSnapshot) to: student settings list, today's subjects for active student,
+    Orion's points, Malachi's points
+  - Returns live data + `setActiveStudent` for student switching
+- `HomeTab.jsx`: complete rewrite — today's date, student pills, 3 summary cards
+  (lessons done/total, Orion pts + cash, Malachi pts + cash), lesson list with
+  tap-to-open-planner, quick action buttons (Open Planner + Award Points)
+- `HomeTab.css`: complete rewrite with new styles (`.home-content`, `.home-summary-row`,
+  `.home-lesson-list`, `.home-actions`)
+
+### Fix 3 — Dark mode + sign-out on HomeTab
+- Added `<header className="home-header">` to HomeTab:
+  - Left: logo + "IRON & LIGHT / JOHNSON ACADEMY" (LIGHT in #e8c97a)
+  - Right: dark mode toggle (🌙/☀️) + sign-out (🚪)
+  - Uses `useDarkMode` from `hooks/useDarkMode.js`
+  - Calls `signOut` from `@homeschool/shared`
+  - Hidden on desktop (sidebar provides branding) via `@media (min-width: 768px)`
+
+### Fix 4 — CLAUDE.md netlify.toml section updated
+- Removed `/planner/*` and `/reward-tracker/*` redirect docs (both retired)
+- Updated to reflect current 3-redirect config + no-base-directory note
+
+### Feature — Desktop left sidebar
+- `BottomNav.jsx`: added brand section (logo + name + tagline) and sign-out footer
+  (both hidden on mobile, visible on desktop via CSS)
+- `BottomNav.css`: full `@media (min-width: 768px)` sidebar — 200px fixed left,
+  full viewport height, brand at top, tabs stacked vertically, sign-out + version at bottom
+- `App.css`: desktop `.shell-content` → `margin-left: 200px; padding-bottom: 0`
+- `App.css`: `.shell-content .day-strip` overrides revert the planner's desktop DayStrip
+  sidebar mode when embedded in the shell (avoids two sidebars at left: 0)
+- `App.css`: `.shell-content .planner-action-bar` corrected to `left: 200px; bottom: 0`
 
 ---
 
 ## What is currently incomplete / pending
 
-1. **HomeTab — replace tool cards with morning summary**
-   - Currently shows old tool card grid. Links point to /planner and /reward-tracker — both retired.
-   - Replace with morning summary: today's date, which student's day it is, point balances.
+1. **Chunk size warning**
+   - JS bundle is ~635 KB (>500 KB). Expected with both tools merged.
+   - Address with dynamic imports if load time becomes a concern.
 
-2. **Dark mode + sign-out missing from shell HomeTab**
-   - Dark mode toggle and sign-out only accessible inside each tool's own header.
-   - HomeTab needs an accessible dark mode toggle and sign-out. Confirm approach with Rob.
-
-3. **Chunk size warning**
-   - JS bundle is 634 KB (>500 KB threshold). Expected with both tools merged.
-   - Not a blocker. Address with dynamic imports if load time becomes a concern.
-
-4. **Import merge bug (calm-whistling-clock.md plan)**
+2. **Import merge bug (calm-whistling-clock.md plan)**
    - Rob reported second PDF import with "Replace existing schedule" OFF still overwrites data.
    - Full diagnostic plan at `/root/.claude/plans/calm-whistling-clock.md`.
-   - Next step: add console.logs to UploadSheet, PlannerLayout, useSubjects — confirm still
-     reproducible in the shell tab (not the retired /planner/ URL), then fix.
+   - Next step: add console.logs to UploadSheet, PlannerLayout, useSubjects in
+     `packages/dashboard/src/tools/planner/` (the shell copy, not the retired package).
+   - Do NOT add logs to the retired `/planner/` package files.
 
-5. **CLAUDE.md netlify.toml section needs update**
-   - CLAUDE.md still documents the old config with `/planner/*` and `/reward-tracker/*` blocks.
-   - Update to reflect the current 3-redirect config.
+3. **Planner desktop layout inside shell — partially resolved**
+   - The planner's DayStrip desktop sidebar (fixed left: 0) was overriding the shell sidebar.
+   - Fixed in App.css: `.shell-content .day-strip` reverts to sticky/horizontal mode.
+   - The planner no longer shows its desktop card grid layout when in the shell (DayStrip
+     isn't a sidebar, so the grid trigger was the DayStrip sidebar being present).
+   - Planner subjects still show as a flex column on desktop. The grid layout
+     (`repeat(auto-fill, minmax(340px, 1fr))`) only activates via the planner's own desktop
+     CSS — it still applies (the override doesn't disable it). Verify in browser.
+
+4. **HomeTab header on desktop**
+   - `.home-header` is hidden on desktop (sidebar provides branding).
+   - Sidebar sign-out is in BottomNav footer — works on all tabs on desktop.
+   - HomeTab sign-out button only visible on mobile. This is correct.
+
+5. **BottomNav bn-signout font-family bug**
+   - `BottomNav.css` has `font-family` declared twice in `.bn-signout` (inherit + emoji).
+   - Minor — doesn't affect function. Fix next session.
 
 ---
 
 ## What the next session should start with
 
 1. Read CLAUDE.md + HANDOFF.md (standard)
-2. Confirm HomeTab tool card links are dead and begin morning summary replacement
-3. Address dark mode + sign-out on HomeTab (confirm approach with Rob first)
-4. If Rob reports import merge bug still present: follow calm-whistling-clock.md plan
-5. Update CLAUDE.md netlify.toml section
+2. Test desktop layout in browser — confirm: sidebar visible, content shifted right,
+   planner DayStrip horizontal (not a sidebar), action bar at correct position
+3. If import merge bug still reported by Rob: follow `calm-whistling-clock.md` plan
+4. Fix the duplicate `font-family` in `.bn-signout`
+5. Consider enabling planner card grid on desktop inside shell (subjects auto-fill grid)
 
 ---
 
-## Current netlify.toml (confirmed working)
-```toml
-[build]
-  command = "npm install && npm run build"
-  publish = "dist"
+## Decisions made this session (update CLAUDE.md)
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/te-extractor/*"
-  to = "/te-extractor/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+### HomeTab architecture (add to CLAUDE.md)
+```
+packages/dashboard/src/
+├── hooks/
+│   └── useHomeSummary.js   # live Firestore: students, today's subjects, points
+├── tabs/
+│   └── HomeTab.jsx         # morning summary: date, student pills, 3 cards, lessons, actions
+│   └── HomeTab.css         # morning summary styles
 ```
 
-## Current root workspaces
-```json
-"workspaces": ["packages/shared", "packages/dashboard", "packages/te-extractor"]
-```
+### Desktop sidebar (add to CLAUDE.md)
+- BottomNav becomes a 200px left sidebar at ≥768px (background: #22252e always)
+- Shell content gets `margin-left: 200px; padding-bottom: 0` at ≥768px
+- Planner DayStrip desktop sidebar disabled inside shell — override in App.css
+  forces it back to sticky/horizontal to avoid two sidebars
+- HomeTab header hidden on desktop (`.home-header { display: none }` at ≥768px)
+
+### CLAUDE.md tools status update needed
+- dashboard → ✅ Shell complete — planner + rewards embedded, morning summary, desktop sidebar
