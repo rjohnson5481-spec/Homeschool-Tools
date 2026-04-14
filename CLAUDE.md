@@ -133,6 +133,19 @@ dayIndex: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri
 sickDays collection: one document per calendar date that was marked sick.
 Filtered client-side by current week dates — collection is small (~360 docs/year max).
 
+## Reward Tracker — Firestore data model
+/users/{uid}/rewardTracker/students/{studentName}
+  → { points: number }
+
+/users/{uid}/rewardTracker/students/{studentName}/log/{docId}
+  → { type: 'award' | 'deduct' | 'spend', points: number, note: string, createdAt: serverTimestamp }
+
+Initial seed: Orion 50 pts, Malachi 60 pts. Seeding guarded by localStorage flag
+`rewardTracker_seeded_{uid}` — only runs once per browser on first visit after auth.
+Cash value: 15 pts = $1.00 (floor division). Next $1 threshold = next multiple of 15 above balance.
+
+---
+
 ## Orphaned Firestore data (do not migrate — manual cleanup only)
 Old paths from before the per-day redesign are still present in Firestore
 but are no longer read or written by the app:
@@ -296,7 +309,7 @@ Before closing, do both of these:
 - dashboard      → ✅ Complete — deployed to Netlify, Google auth working, PWA ready
 - planner        → ✅ Complete — merged to main, deployed to /planner
 - te-extractor   → ✅ Complete — vanilla HTML/CSS/JS, deployed to /te-extractor
-- reward-tracker → exists, needs migrating into monorepo structure
+- reward-tracker → ✅ Built — deployed to /reward-tracker, v0.21.2
 
 ## Phase tracking — planner
 Phase 1 — COMPLETE:
