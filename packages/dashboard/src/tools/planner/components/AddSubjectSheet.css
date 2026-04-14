@@ -278,6 +278,45 @@
   font-weight: 600;
 }
 
+/* ── Per-day lesson details (optional) ── */
+.add-sheet-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-sheet-detail-block {
+  margin-bottom: 10px;
+}
+
+.add-sheet-detail-block:last-child {
+  margin-bottom: 0;
+}
+
+.add-sheet-detail-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.add-sheet-detail-input {
+  width: 100%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s;
+}
+
+.add-sheet-detail-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
 /* ── Student pills ── */
 .add-sheet-student-pills {
   display: flex;

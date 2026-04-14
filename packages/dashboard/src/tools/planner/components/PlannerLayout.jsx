@@ -54,13 +54,18 @@ export default function PlannerLayout({
     deleteWeek();
   }
 
-  // Batch-add an empty cell for each (dayIndex, student) pair.
-  // Uses importCell with overwrite=false so existing cells are preserved.
-  async function handleBatchAddSubject(subject, cells) {
-    await Promise.all(cells.map(({ dayIndex, student: cellStudent }) =>
-      importCell(weekId, cellStudent, subject, dayIndex,
-        { lesson: '', note: '', done: false, flag: false }, false)
-    ));
+  // Batch-add a cell for each (dayIndex, student) pair.
+  // lessonDetails is an optional { [dayIndex]: lessonText } map — if a value
+  // exists for a dayIndex it becomes the initial lesson text; otherwise the
+  // cell is created blank. Uses importCell with overwrite=false so existing
+  // cells are preserved.
+  async function handleBatchAddSubject(subject, cells, lessonDetails) {
+    const details = lessonDetails ?? {};
+    await Promise.all(cells.map(({ dayIndex, student: cellStudent }) => {
+      const lesson = details[dayIndex] ?? '';
+      return importCell(weekId, cellStudent, subject, dayIndex,
+        { lesson, note: '', done: false, flag: false }, false);
+    }));
     setShowAddSubject(false);
   }
 

@@ -6,7 +6,8 @@ import './AddSubjectSheet.css';
 // Props: existingSubjects (string[]), presets (string[]|undefined),
 //        weekDates (Date[5]), currentDayIndex (0-4), currentStudent (string),
 //        students (string[]),
-//        onAdd(subject, cells) — cells: [{ dayIndex, student }]
+//        onAdd(subject, cells, lessonDetails) — cells: [{ dayIndex, student }]
+//        lessonDetails: { [dayIndex]: lessonText } — optional per-day lesson
 //        onAddAllDay(name, note), onEditAllDay, onClose
 // presets: per-student Firestore subjects; falls back to SUBJECT_PRESETS if absent.
 const STUDENT_EMOJI = { Orion: '😎', Malachi: '🐼' };
@@ -19,6 +20,7 @@ export default function AddSubjectSheet({
   const [subject, setSubject]         = useState('');
   const [selectedDays, setSelectedDays]         = useState(() => new Set([currentDayIndex]));
   const [selectedStudents, setSelectedStudents] = useState(() => new Set([currentStudent]));
+  const [lessonDetails, setLessonDetails]       = useState({});
   const [showAllDayForm, setShowAllDayForm] = useState(false);
   const [allDayName, setAllDayName]   = useState('');
   const [allDayNote, setAllDayNote]   = useState('');
@@ -28,11 +30,20 @@ export default function AddSubjectSheet({
   const trimmed   = subject.trim();
 
   function toggleDay(i) {
+    const wasSelected = selectedDays.has(i);
     setSelectedDays(prev => {
       const next = new Set(prev);
-      if (next.has(i)) next.delete(i); else next.add(i);
+      if (wasSelected) next.delete(i); else next.add(i);
       return next;
     });
+    if (wasSelected) {
+      // Deselecting a day discards its stored lesson text.
+      setLessonDetails(prev => {
+        const next = { ...prev };
+        delete next[i];
+        return next;
+      });
+    }
   }
 
   function toggleStudent(s) {
@@ -44,7 +55,11 @@ export default function AddSubjectSheet({
   }
 
   function selectAllDays() { setSelectedDays(new Set([0, 1, 2, 3, 4])); }
-  function clearDays()     { setSelectedDays(new Set()); }
+  function clearDays()     { setSelectedDays(new Set()); setLessonDetails({}); }
+
+  function setDetail(i, text) {
+    setLessonDetails(prev => ({ ...prev, [i]: text }));
+  }
 
   function handleConfirm() {
     if (!trimmed || selectedDays.size === 0 || selectedStudents.size === 0) return;
@@ -52,7 +67,7 @@ export default function AddSubjectSheet({
     for (const s of selectedStudents) {
       for (const d of selectedDays) cells.push({ dayIndex: d, student: s });
     }
-    onAdd(trimmed, cells);
+    onAdd(trimmed, cells, lessonDetails);
   }
 
   function handleAddAllDay() {
@@ -150,6 +165,31 @@ export default function AddSubjectSheet({
               </button>
             ))}
           </div>
+
+          {/* Per-day lesson details — shown only with subject + at least one day.
+              Iterates selectedDays in insertion order so newly added days append
+              to the bottom and filled fields are not reordered. */}
+          {trimmed.length > 0 && selectedDays.size > 0 && (
+            <>
+              <p className="add-sheet-section-label">Lesson details</p>
+              <div className="add-sheet-details">
+                {Array.from(selectedDays).map(i => (
+                  <div key={i} className="add-sheet-detail-block">
+                    <label className="add-sheet-detail-label">
+                      {DAY_SHORT[i].toUpperCase()} · {weekDates?.[i]?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </label>
+                    <input
+                      className="add-sheet-detail-input"
+                      type="text"
+                      value={lessonDetails[i] ?? ''}
+                      onChange={e => setDetail(i, e.target.value)}
+                      placeholder="Add lesson details..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Students selector */}
           <p className="add-sheet-section-label">Add for students</p>
