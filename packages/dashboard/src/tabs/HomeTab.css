@@ -1,0 +1,20 @@
+.home-tab {
+  padding: 20px 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.home-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+}
+
+.home-tool-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
