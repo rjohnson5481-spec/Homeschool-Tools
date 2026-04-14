@@ -1,7 +1,7 @@
 {
   "name": "homeschool-tools",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": ["packages/shared", "packages/dashboard", "packages/te-extractor"],
   "dependencies": {
     "@anthropic-ai/sdk": "0.30.0"
   },
