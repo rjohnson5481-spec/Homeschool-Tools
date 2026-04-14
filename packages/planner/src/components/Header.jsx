@@ -33,18 +33,18 @@ export default function Header({
             📅
           </button>
           <button className="header-btn" onClick={onUpload} aria-label="Import schedule" title="Import schedule">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7.5 10.5V3.5M4.5 6.5l3-3 3 3M2.5 13.5h10"/>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7.5 10.5V3.5M4.5 6.5l3-3 3 3M2.5 13.5h10" fill="none"/>
             </svg>
           </button>
           <button className="header-btn" onClick={onSettings} aria-label="Settings" title="Settings">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="7.5" cy="7.5" r="2"/><path d="M7.5 1v2M7.5 12v2M1 7.5h2M12 7.5h2M3.3 3.3l1.4 1.4M10.3 10.3l1.4 1.4M10.3 4.7l-1.4 1.4M4.7 10.3l-1.4 1.4"/>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="7.5" cy="7.5" r="2" fill="none"/><path d="M7.5 1v2M7.5 12v2M1 7.5h2M12 7.5h2M3.3 3.3l1.4 1.4M10.3 10.3l1.4 1.4M10.3 4.7l-1.4 1.4M4.7 10.3l-1.4 1.4" fill="none"/>
             </svg>
           </button>
           <button className="header-btn" onClick={() => signOut()} aria-label="Sign out" title="Sign out">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 4.5l3 3-3 3M13 7.5H6M8 2.5H3v10h5"/>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 4.5l3 3-3 3M13 7.5H6M8 2.5H3v10h5" fill="none"/>
             </svg>
           </button>
         </div>
