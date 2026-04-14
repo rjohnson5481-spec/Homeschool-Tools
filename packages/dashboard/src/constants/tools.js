@@ -13,7 +13,7 @@ export const TOOLS = [
     name: 'Reward Tracker',
     description: 'Earn and redeem points for good work and character.',
     icon: 'RT',
-    href: '/reward-tracker',
+    href: '/reward-tracker/',
     available: true,
   },
   {
