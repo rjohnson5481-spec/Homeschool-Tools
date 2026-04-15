@@ -1,0 +1,132 @@
+/* ── Outer wrapper ── */
+.ar-tab {
+  padding: 20px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Header ── */
+.ar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ar-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.ar-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+/* ── Section + label with trailing rule ── */
+.ar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ar-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.ar-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Quick Actions list ── */
+.ar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ar-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ar-action:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--gold-light);
+}
+
+.ar-action--disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ar-action-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+}
+
+.ar-action-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.ar-action-chevron {
+  font-size: 20px;
+  color: var(--text-muted);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ar-action-soon {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-pale);
+  border-radius: 10px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+/* ── Large phone (400–1023px) — scaled up for wide phones ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .ar-tab           { padding: 24px 20px 32px; gap: 28px; }
+  .ar-title         { font-size: 26px; }
+  .ar-subtitle      { font-size: 14px; }
+  .ar-section-label { font-size: 11px; }
+  .ar-action        { padding: 16px 18px; gap: 14px; }
+  .ar-action-icon   { font-size: 22px; }
+  .ar-action-label  { font-size: 15px; }
+  .ar-action-soon   { font-size: 11px; padding: 4px 10px; }
+}
