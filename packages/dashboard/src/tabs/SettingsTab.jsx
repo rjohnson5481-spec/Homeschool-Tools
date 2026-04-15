@@ -3,6 +3,8 @@ import { signOut } from '@homeschool/shared';
 import { useSettings } from '../tools/planner/hooks/useSettings.js';
 import { version } from '../../package.json';
 import './SettingsTab.css';
+import './SettingsRow.css';
+import './SettingsSubjects.css';
 
 const STUDENT_EMOJI = { Orion: '😎', Malachi: '🐼' };
 
