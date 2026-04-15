@@ -1,0 +1,403 @@
+/* Stacking: this sheet stacks ABOVE EnrollmentSheet.
+   - EnrollmentSheet         overlay = z-index 300
+   - AddEditEnrollmentSheet  overlay = z-index 310
+   - AddEditEnrollmentSheet  panel   = z-index 311
+   Same level as AddEditCourseSheet (also 310/311) — never open at the same
+   time as the AddEditCourseSheet. Do not change without coordinating with
+   EnrollmentSheet.css. */
+
+/* ── Backdrop ── */
+.aee-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 310;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* ── Sheet panel ── */
+.aee-sheet {
+  position: relative;
+  z-index: 311;
+  width: 100%;
+  max-width: 100%;
+  max-height: 85vh;
+  background: var(--bg-base);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  animation: aee-sheet-up 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes aee-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.aee-sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: #d4cfc8;
+  border-radius: 3px;
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* ── Header — hardcoded #22252e per design system ── */
+.aee-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 14px;
+  background: #22252e;
+  flex-shrink: 0;
+}
+
+.aee-sheet-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.aee-sheet-close {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, .12);
+  border: none;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, .8);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+.aee-sheet-close:hover {
+  background: rgba(255, 255, 255, .22);
+  color: #fff;
+}
+
+/* ── Body — scrollable ── */
+.aee-sheet-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Field group ── */
+.aee-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aee-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.aee-readonly {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.aee-helper {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+/* ── Course picker (Add mode) ── */
+.aee-course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.aee-course-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.aee-course-row:hover:not(.aee-course-row--selected) {
+  border-color: var(--gold-light);
+}
+
+.aee-course-row--selected {
+  background: var(--gold-pale);
+  border-color: var(--gold);
+}
+
+.aee-course-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.aee-course-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aee-course-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aee-course-curriculum {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aee-course-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+.aee-course-badge--letter {
+  color: var(--gold);
+  background: var(--gold-pale);
+}
+
+.aee-course-badge--esnu {
+  color: #1565c0;
+  background: rgba(21, 101, 192, 0.10);
+}
+
+[data-mode="dark"] .aee-course-badge--esnu {
+  color: #82b1ff;
+  background: rgba(130, 177, 255, 0.12);
+}
+
+/* ── Notes textarea — 16px to prevent iOS auto-zoom on focus ── */
+.aee-notes {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 76px;
+  transition: border-color 0.15s;
+}
+
+.aee-notes::placeholder { color: var(--text-muted); }
+.aee-notes:focus { outline: none; border-color: var(--gold); }
+
+/* ── Sync to Planner toggle ── */
+.aee-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.aee-toggle {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.2s;
+}
+.aee-toggle::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+.aee-toggle--on { background: var(--gold); }
+.aee-toggle--on::before { transform: translateX(18px); }
+
+/* ── Remove enrollment + inline confirm ── */
+.aee-delete-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  margin-top: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+  cursor: pointer;
+}
+
+.aee-delete-btn:hover { text-decoration: underline; }
+
+.aee-confirm {
+  background: var(--red-lt);
+  border: 1px solid #f5cfc6;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aee-confirm-msg {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+  margin: 0;
+}
+
+.aee-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.aee-confirm-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.aee-confirm-yes {
+  background: var(--red);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── Footer ── */
+.aee-sheet-footer {
+  display: flex;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.aee-cancel-btn {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.aee-cancel-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.aee-save-btn {
+  flex: 2;
+  background: var(--gold);
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.aee-save-btn:hover:not(:disabled) { background: var(--gold-light); }
+.aee-save-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Large phone (400–1023px) — scaled up for wide phones ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .aee-sheet-title    { font-size: 17px; }
+  .aee-sheet-body     { padding: 20px; gap: 18px; }
+  .aee-label          { font-size: 12px; }
+  .aee-readonly       { font-size: 15px; padding: 12px 14px; }
+  .aee-helper         { font-size: 13px; }
+  .aee-course-row     { padding: 12px 14px; gap: 14px; }
+  .aee-course-name    { font-size: 15px; }
+  .aee-course-curriculum { font-size: 13px; }
+  .aee-course-badge   { font-size: 11px; padding: 4px 10px; }
+  .aee-notes          { font-size: 16px; padding: 12px 14px; }
+  .aee-toggle         { width: 48px; height: 28px; }
+  .aee-toggle::before       { top: 4px; left: 4px; width: 20px; height: 20px; }
+  .aee-toggle--on::before   { transform: translateX(20px); }
+  .aee-delete-btn     { font-size: 14px; }
+  .aee-confirm-msg    { font-size: 14px; }
+  .aee-cancel-btn,
+  .aee-save-btn       { padding: 14px; font-size: 15px; }
+}
