@@ -1,4 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
+Current version: v0.22.12
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
@@ -187,7 +188,8 @@ packages/dashboard/src/tools/planner/
 │   └── useSettings.js           # students list + per-student subjects from Firestore
 ├── components/
 │   ├── PlannerLayout.jsx        # full page layout, all sheets, toggle handlers
-│   ├── PlannerLayout.css        # layout shell styles (360 lines — over 300 limit, pending split)
+│   ├── PlannerLayout.css        # layout shell styles
+│   ├── UndoSickSheet.css        # undo sick day confirmation sheet styles (99 lines)
 │   ├── Header.jsx               # 3-row 132px fixed header; students from Firestore
 │   ├── Header.css               # header styles
 │   ├── DayStrip.jsx             # sticky day tab selector
@@ -197,17 +199,18 @@ packages/dashboard/src/tools/planner/
 │   ├── EditSheet.jsx            # bottom sheet: lesson/note editor
 │   ├── EditSheet.css            # edit sheet styles
 │   ├── UploadSheet.jsx          # PDF import: picker → spinner → result
-│   ├── UploadSheet.css          # upload sheet styles (333 lines — over 300)
+│   ├── UploadSheet.css          # upload sheet styles
+│   ├── UploadResult.css         # parsed result preview + view log styles (89 lines)
 │   ├── AddSubjectSheet.jsx      # batch add: day pills + student pills + summary
-│   ├── AddSubjectSheet.css      # add sheet styles (408 lines — over 300)
+│   ├── AddSubjectSheet.css      # add sheet styles
+│   ├── AddSubjectSheetChrome.css  # sheet overlay/panel/header/confirm styles (113 lines)
+│   ├── AddSubjectDayPicker.css  # day pills + per-day detail styles (87 lines)
 │   ├── MonthSheet.jsx           # calendar bottom sheet, week jump
 │   ├── MonthSheet.css           # month sheet styles
 │   ├── SickDaySheet.jsx         # sick day checklist, cascade shift confirmation
 │   ├── SickDaySheet.css         # sick day sheet styles
 │   ├── DebugSheet.jsx           # PDF import log viewer
-│   ├── DebugSheet.css           # debug sheet styles
-│   ├── SettingsSheet.jsx        # RETIRED v0.22.6 — disconnected but kept on disk
-│   └── SettingsSheet.css        # RETIRED v0.22.6 — settings moved to shell SettingsTab
+│   └── DebugSheet.css           # debug sheet styles
 └── constants/
     ├── subjects.js              # SUBJECT_PRESETS array
     ├── days.js                  # DAY_NAMES, DAY_SHORT, date helpers, mondayWeekId
@@ -298,14 +301,8 @@ Desktop = shell sidebar at left + planner content column to the right.
 - If a file approaches 250 lines, stop and split before continuing
 - Never combine multiple components in one file
 
-### CSS files currently over 300 lines (known, pending split)
-- packages/dashboard/src/tools/planner/components/AddSubjectSheet.css  (408)
-- packages/dashboard/src/tabs/SettingsTab.css                          (376)
-- packages/dashboard/src/tools/planner/components/PlannerLayout.css    (360)
-- packages/dashboard/src/tools/planner/components/UploadSheet.css      (333)
-- packages/dashboard/src/tabs/HomeTab.css                              (324)
-All five will be split in a dedicated session — do not add more rules
-to these files without splitting first.
+All CSS files in packages/dashboard/src/ are currently under
+300 lines. The split was completed across v0.22.11 and v0.22.12.
 
 ---
 
@@ -367,9 +364,9 @@ Before closing, do both of these:
 4. Identify which files will be touched before writing any code
 
 ---
-## Tools status (v0.22.9)
+## Tools status (v0.22.12)
 - shared            → ✅ Complete — tokens, fonts, Firebase init, auth hook
-- dashboard         → ✅ Complete — unified app shell at v0.22.9; mobile bottom nav (56/68px) / desktop 200px left sidebar at ≥1024px; 6 tabs including unified Settings; shared dark-mode + student state lifted to App.jsx
+- dashboard         → ✅ Complete — unified app shell at v0.22.12; mobile bottom nav (56/68px) / desktop 200px left sidebar at ≥1024px; 6 tabs including unified Settings; shared dark-mode + student state lifted to App.jsx
 - planner           → ✅ Complete — integrated into shell at `packages/dashboard/src/tools/planner/`; batch add (day pills + student pills), large done checkbox, desktop card grid, PDF import via Anthropic Netlify Function
 - reward-tracker    → ✅ Complete — integrated into shell at `packages/dashboard/src/tools/reward-tracker/`; dark mode, award/deduct/spend sheets, cash conversion (15 pts = $1.00)
 - te-extractor      → ✅ Complete at v0.20.4 — vanilla HTML/CSS/JS, deployed at /te-extractor, links out from shell (React rewrite deferred to Phase 3)
@@ -417,22 +414,19 @@ packages/dashboard/src/
 │   ├── BottomNav.jsx        # 6-tab persistent nav (bottom bar / desktop sidebar); brand + student selector + footer desktop-only
 │   ├── BottomNav.css        # nav styles (mobile bottom bar, 400–1023 taller scaling, ≥1024 sidebar)
 │   ├── SignIn.jsx           # Google sign-in screen
-│   ├── SignIn.css
-│   ├── ToolCard.jsx         # DEAD — legacy tool card, no longer referenced (HomeTab rewrote its grid)
-│   ├── ToolCard.css         # DEAD
-│   ├── Header.jsx           # DEAD — old dashboard header, kept on disk, not imported
-│   ├── Header.css           # DEAD
-│   ├── Dashboard.jsx        # DEAD — old tool-card wrapper
-│   └── Dashboard.css        # DEAD
+│   └── SignIn.css
 ├── tabs/
 │   ├── HomeTab.jsx          # morning summary dashboard + mobile brand strip (hidden on desktop)
-│   ├── HomeTab.css          # home tab styles (324 lines — over 300 limit)
+│   ├── HomeTab.css          # home tab styles
+│   ├── HomeHeader.css       # brand header styles, mobile only (34 lines)
 │   ├── PlannerTab.jsx       # wires planner hooks + lifted student props into PlannerLayout
 │   ├── RewardsTab.jsx       # wires reward tracker hooks into RewardLayout
 │   ├── AcademicRecordsTab.jsx # Coming Soon placeholder (Phase 2)
 │   ├── PlaceholderTab.css   # shared styles for coming-soon tabs
 │   ├── SettingsTab.jsx      # unified settings: Appearance / Students / Planner / App / Sign Out / version
-│   └── SettingsTab.css      # settings tab styles (376 lines — over 300 limit)
+│   ├── SettingsTab.css      # settings tab styles
+│   ├── SettingsRow.css      # settings row + icon + body + actions styles (130 lines)
+│   └── SettingsSubjects.css # default subjects sub-section styles (63 lines)
 ├── hooks/
 │   ├── useDarkMode.js       # dark mode toggle (color-mode localStorage key, html data-mode)
 │   └── useHomeSummary.js    # live Firestore — students, today's subjects for active student, both students' points
@@ -442,8 +436,6 @@ packages/dashboard/src/
 └── tools/
     ├── planner/             # full planner tool (components, hooks, firebase, constants)
     └── reward-tracker/      # full reward tracker tool (components, hooks, firebase)
-
-Dead files (ToolCard/Header/Dashboard) will be deleted in a cleanup session.
 
 ### Bottom nav design rules
 - Background: always `#22252e` — never changes in dark mode (same as all headers)
@@ -611,7 +603,7 @@ Fields: { fileName, lessons, html, previewText (200 char), createdAt (serverTime
 - TE Extractor links out from the shell via `window.location.href` — a React rewrite is deferred to Phase 3 (do not migrate opportunistically).
 - Three-tier mobile responsive typography (distinct scales for small / medium / large phone) is deferred to Phase 4.
 - CLAUDE.md is explicitly exempt from the 300-line file-size rule.
-- Unified Settings tab owns all app settings — planner's `SettingsSheet` was retired in v0.22.6 (disconnected but kept on disk pending deletion).
+- Unified Settings tab owns all app settings — planner's `SettingsSheet` was retired in v0.22.6 and deleted in v0.22.10.
 - Planner student state is lifted to `App.jsx` so the desktop sidebar Student selector shares it with the Planner tab — do not re-scope to PlannerTab.
 
 ### Dark mode token rule
