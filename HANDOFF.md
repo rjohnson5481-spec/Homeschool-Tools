@@ -1,156 +1,254 @@
-# HANDOFF — v0.22.12 CLAUDE.md sync
+# HANDOFF — v0.23.0 Phase 2 Academic Records data layer
 
 ## What was completed this session
 
-No code changes. Single-file documentation session: applied 11
-surgical edits to CLAUDE.md to remove all stale entries left over
-from the v0.22.10–v0.22.12 cleanup work, add the seven new split
-CSS files to the file-structure trees, and bump the version
-references from v0.22.9 → v0.22.12.
+Six-commit Phase 2 kickoff. Built the complete data layer for
+Academic Records — folder scaffold, two constants files, and the
+Firestore I/O module. **No UI, no components, no tab wiring.** The
+foundation only. Next session can build hooks and components on top
+of this without revisiting the data shape.
 
-### Edits applied (11)
+### Commit 1 — `feat: scaffold academic-records folder structure (v0.23.0)`
 
-1. **Current version line** — added `Current version: v0.22.12`
-   as line 2 of CLAUDE.md, immediately under the title. Single
-   source of truth at the top of the file.
+Created `packages/dashboard/src/tools/academic-records/` with four
+empty subdirectories:
+- `constants/`
+- `firebase/`
+- `hooks/`
+- `components/`
 
-2. **Planner tree — RETIRED SettingsSheet entries** — deleted
-   `SettingsSheet.jsx` and `SettingsSheet.css` rows from the planner
-   `components/` tree. Both files were deleted from disk in
-   v0.22.10; the "RETIRED v0.22.6 — kept on disk" notes were stale.
+Mirrors the planner tool's layout exactly. Empty folders aren't
+trackable in git, so each got a `.gitkeep` placeholder. As real
+files land in each folder, the corresponding `.gitkeep` is removed:
+- Removed in commit 2: `constants/.gitkeep`
+- Removed in commit 4: `firebase/.gitkeep`
+- Still present (no files yet): `hooks/.gitkeep`, `components/.gitkeep`
 
-3. **Planner tree — stale line counts** — stripped the
-   "(NNN lines — over 300 limit, pending split)" annotations from
-   `PlannerLayout.css`, `UploadSheet.css`, and `AddSubjectSheet.css`.
-   All three files are now under 300 (260, 247, 215 respectively).
+### Commit 2 — `feat: add grading scales constants`
 
-4. **Planner tree — added 4 new split files** placed adjacent to
-   their parents (matching the existing tree's logical clustering
-   convention rather than strict alphabetical, since the existing
-   tree wasn't alphabetical):
-   - `UndoSickSheet.css` (99 lines) right after `PlannerLayout.css`
-     (it's the embedded sub-sheet split out from PlannerLayout)
-   - `UploadResult.css` (89 lines) right after `UploadSheet.css`
-   - `AddSubjectSheetChrome.css` (113 lines) right after `AddSubjectSheet.css`
-   - `AddSubjectDayPicker.css` (87 lines) right after Chrome
-   - The trailing `└── DebugSheet.css` line was re-anchored as the
-     final entry (last `└── ` connector) since SettingsSheet was the
-     previous final entry.
+`packages/dashboard/src/tools/academic-records/constants/scales.js`
+(26 lines, zero dependencies).
 
-5. **Dashboard shell tree — DEAD entries** — deleted six lines
-   (`ToolCard.jsx`/`.css`, shell-level `Header.jsx`/`.css`, shell-level
-   `Dashboard.jsx`/`.css`). All six files were deleted from disk in
-   v0.22.10. The planner's live `Header.jsx`/`.css` (in
-   `tools/planner/components/`) was preserved — different directory.
-   The trailing `└── ` connector on `SignIn.css` was updated since it
-   became the new last entry in `components/`.
+Three exported constants:
+- `LETTER_SCALE` — 5-row array: A (90–100), B (80–89), C (70–79),
+  D (60–69), F (0–59), each with `descriptor`.
+- `ESNU_SCALE` — 4-row array: E / S / N / U with descriptors.
+  No percentage thresholds (these are descriptive grades for
+  skills/conduct/electives — no numeric mapping).
+- `GRADING_TYPES` — `{ LETTER: 'letter', ESNU: 'esnu' }` enum
+  object.
 
-6. **Dashboard shell tree — stale line counts** — stripped
-   "(NNN lines — over 300 limit)" from `HomeTab.css` and
-   `SettingsTab.css`. Both now under (266 and 185).
+### Commit 3 — `feat: add academic records Firestore path builders`
 
-7. **Dashboard shell tree — trailing stale note** — deleted the
-   line "Dead files (ToolCard/Header/Dashboard) will be deleted in
-   a cleanup session." That cleanup was completed in v0.22.10.
+`packages/dashboard/src/tools/academic-records/constants/academics.js`
+(47 lines).
 
-8. **Dashboard shell tree — added 3 new split files** in
-   `tabs/`, adjacent to their parents:
-   - `HomeHeader.css` (34 lines) right after `HomeTab.css`
-   - `SettingsRow.css` (130 lines) right after `SettingsTab.css`
-   - `SettingsSubjects.css` (63 lines) right after `SettingsRow.css`
-   - The final `└── ` connector was re-anchored on `SettingsSubjects.css`.
+Modeled exactly on `tools/planner/constants/firestore.js`. Top-of-file
+data-model comment block summarizes the entire schema.
 
-9. **Tools status header** — bumped `(v0.22.9)` → `(v0.22.12)`.
-   Also updated the dashboard entry inline reference from
-   "unified app shell at v0.22.9" → "v0.22.12".
+**Path builders exported:**
+- `schoolYearDoc(uid, yearId)`
+- `quartersCol(uid, yearId)` + `quarterDoc(uid, yearId, quarterId)`
+- `coursesCol(uid)` + `courseDoc(uid, courseId)`
+- `enrollmentsCol(uid)` + `enrollmentDoc(uid, enrollmentId)`
+- `gradesCol(uid)` + `gradeDoc(uid, gradeId)`
 
-10. **CSS files over 300 lines list** — replaced the entire 8-line
-    block (intro + 5 file rows + 2-line trailing note) with a single
-    two-line current-state note: "All CSS files in
-    packages/dashboard/src/ are currently under 300 lines. The split
-    was completed across v0.22.11 and v0.22.12."
+**Plain string constants exported:**
+- `GRADING_TYPE_LETTER = 'letter'`
+- `GRADING_TYPE_ESNU = 'esnu'`
 
-11. **Key decisions — SettingsSheet** — updated the parenthetical
-    from "(disconnected but kept on disk pending deletion)" to
-    "and deleted in v0.22.10". Reflects current reality.
+These mirror the keys in `scales.js GRADING_TYPES` for code that
+imports from `academics.js` and doesn't want to pull `scales.js`
+just for the enum strings. Two source-of-truth values for the same
+two strings — kept in sync manually. Documented inline.
 
-### Deliberately preserved (historical context, not stale)
+**Schema design rationale (per data-model comment in the file):**
+- `schoolYears/` and its `quarters/` subcollection are nested —
+  a quarter only makes sense within a year.
+- `courses/`, `enrollments/`, `grades/` are top-level per-user
+  collections (NOT nested under schoolYears) so:
+  - A course can be re-used across years without duplication.
+  - A grade lookup doesn't need the year — `getGradesByEnrollment`
+    is a single collection query.
+  - Cross-references go by document id stored as fields
+    (`enrollment.courseId`, `enrollment.yearId`, `grade.enrollmentId`,
+    `grade.quarterId`).
 
-- Line 239 — `v0.22.9 to give wide phones (Galaxy S25 Ultra 412px,
-  Pixel 8 Pro etc.) a native-app feel.` This is in the "Mobile
-  layout — base styles" section describing when large-phone scaling
-  was added. Historical, accurate.
-- Line 534 — `### Phase 1 — ✅ COMPLETE at v0.22.9` in the
-  project-wide Phase roadmap. Phase 1 was indeed declared complete
-  at v0.22.9; v0.22.10–v0.22.12 are post-Phase-1 cleanup. Leaving
-  the "completed at v0.22.9" anchor preserves the actual milestone.
-- All planner Phase-1 log entries (v0.19.0 through v0.22.2). Pure
-  history.
-- `**Layout (current, v0.22+)**` design-system subsection. Still
-  accurate — v0.22.12 is in the v0.22 series.
+### Commit 4 — `feat: add academic records Firestore read/write layer`
 
-### Net diff
+`packages/dashboard/src/tools/academic-records/firebase/academicRecords.js`
+(183 lines — under the 300 hard limit, **no split needed**).
 
-CLAUDE.md: 785 → 777 lines (-8). Net: 20 insertions, 28 deletions.
-The over-300 list block trim and the six DEAD entries account for
-most of the deletions; the seven new split files account for most
-of the insertions.
+Modeled exactly on `tools/planner/firebase/planner.js`:
+- Top-of-file comment block: pure I/O, no business logic, all
+  paths from constants.
+- Imports `db` from `@homeschool/shared`.
+- Imports path builders from `../constants/academics.js`.
+- Imports Firestore primitives from `firebase/firestore`.
+- Each function preceded by a one-line JSDoc-style comment
+  describing inputs, outputs, and any sort/filter behavior.
+
+**Functions exported (16 total):**
+
+School Years (3): `getSchoolYears`, `saveSchoolYear`, `deleteSchoolYear`
+Quarters (3): `getQuarters`, `saveQuarter`, `deleteQuarter`
+Courses (4): `getCourses`, `saveCourse`, `addCourse`, `deleteCourse`
+Enrollments (4): `getEnrollments`, `saveEnrollment`, `addEnrollment`,
+  `deleteEnrollment`
+Grades (5): `getGrades`, `getGradesByEnrollment`, `saveGrade`,
+  `addGrade`, `deleteGrade`
+
+**Conventions baked in:**
+- All `save*` functions use `setDoc` with `merge: true` and append
+  `updatedAt: serverTimestamp()`. Caller can pass partial data
+  without wiping other fields. Same pattern as planner's `updateCell`.
+- All `add*` functions use `addDoc` and append
+  `createdAt: serverTimestamp()`. They return the new document id.
+- All `get*` functions return arrays of `{ id, ...data }` objects.
+  Single-collection reads sort client-side (small data sets, all
+  per-user, no scaling concerns).
+- All `delete*` functions for parent-of-something documents
+  (schoolYear / course / enrollment) include a comment noting the
+  caller is responsible for cleaning up dependent records — no
+  cascading deletes are performed automatically. The top-of-file
+  comment block summarizes this rule.
+
+**Sort orders (verbatim from spec):**
+- `getSchoolYears`: by `startDate` ascending
+- `getQuarters`: by `startDate` ascending
+- `getCourses`: by `name` ascending
+- `getEnrollments`: by `student` ascending, then `courseId` ascending
+- `getGrades`: by `createdAt` ascending (Firestore Timestamp `.toMillis()`
+  comparison; safe-defaulted to 0 for missing values)
+- `getGradesByEnrollment`: no explicit sort (caller can sort by
+  quarter if needed; small result set per enrollment)
+
+### Commit 5 — `chore: bump version to v0.23.0`
+
+- `packages/dashboard/package.json`:    0.22.12 → **0.23.0**
+- `packages/shared/package.json`:       0.22.12 → **0.23.0**
+- `packages/te-extractor/package.json`: 0.22.12 → **0.23.0**
+
+Minor version bump per the spec — Phase 2 kickoff is a new feature
+boundary, not a patch. Build verified clean at every commit
+(`@homeschool/dashboard@0.23.0`, `@homeschool/te-extractor@0.23.0`).
 
 ---
 
-## Verification
+## Spec deviation worth flagging
 
-After the edits, grepped CLAUDE.md for every stale marker the audit
-flagged (`DEAD`, `RETIRED`, `over 300`, `pending split`, `kept on
-disk pending`, `will be deleted`, the five stale parenthetical line
-counts, `v0.22.9` in the Tools status section). All stale matches
-gone — only the two intentional historical references remain (lines
-239 and 534, both flagged above).
+**`where` import added.** The spec's import list for
+`academicRecords.js` did NOT include `where`, but
+`getGradesByEnrollment(uid, enrollmentId)` requires a server-side
+filter (`query(...) + where('enrollmentId', '==', enrollmentId)`)
+to scale. Without it, the function would have to read every grade
+in the collection and client-side filter — fine at session-1 size,
+ugly at year-3 with hundreds of grades.
 
-Also verified all 7 new split files are now in the trees:
-- `UndoSickSheet.css` (192), `UploadResult.css` (203),
-  `AddSubjectSheetChrome.css` (206), `AddSubjectDayPicker.css` (207)
-- `HomeHeader.css` (421), `SettingsRow.css` (428),
-  `SettingsSubjects.css` (429)
-- `Current version: v0.22.12` (line 2)
+I added `where` to the imports and used `query/where` for that
+single function. Every other read function uses a plain
+`getDocs(collection(...))` per the spec.
+
+If Rob prefers strict spec adherence, flip
+`getGradesByEnrollment` to a client-side filter:
+```js
+const all = await getGrades(uid);
+return all.filter(g => g.enrollmentId === enrollmentId);
+```
+And remove `where` from the import. One-line change.
+
+---
+
+## What was NOT built (intentionally)
+
+Per spec: "Data layer only. No UI, no components, no tab changes."
+
+- ❌ No hook files in `hooks/` (e.g., `useSchoolYears`,
+  `useCourses`, `useEnrollments`, `useGrades`)
+- ❌ No component files in `components/` (forms, lists, tables)
+- ❌ `AcademicRecordsTab.jsx` still renders the Coming Soon
+  placeholder — not wired to anything from this session
+- ❌ No `cascadeDelete*` helpers — caller responsibility for now
+- ❌ No grade computation utilities (percent → letter conversion)
+- ❌ No CLAUDE.md updates documenting the new tool / data model
+
+All deferred to next session(s).
 
 ---
 
 ## What is currently incomplete / pending
 
-1. **Browser smoke test** — none required this session. CLAUDE.md is
-   docs-only; runtime unaffected.
+1. **Browser smoke test** — none required this session. The new
+   files are not imported anywhere yet; runtime is unchanged.
 
-2. **Carry-overs (untouched, still open):**
-   - iPad portrait breakpoint decision (still falls into large-phone band)
+2. **Suggested order for Phase 2 next session(s):**
+   1. Hooks layer — `useSchoolYears`, `useCourses`,
+      `useEnrollments`, `useGrades`. Live-subscription patterns
+      can mirror planner's `useSubjects.js` (use `onSnapshot`
+      instead of `getDocs` if real-time updates are needed).
+      The current `academicRecords.js` only has one-time `getDocs`
+      reads — `onSnapshot` versions can be added later or wrapped
+      in hooks.
+   2. CLAUDE.md update — add academic-records to the file-structure
+      tree, document the data model under "Firestore data model",
+      add a "Phase 2 — IN PROGRESS" entry under Tools status.
+   3. Components layer — forms (school year, course, enrollment,
+      grade entry), lists (year+quarter, courses, enrollments
+      grouped by student/year, grade tables).
+   4. Wire `AcademicRecordsTab.jsx` — replace the Coming Soon
+      placeholder with the real layout.
+   5. Cascading-delete UX — confirmation flows since the data
+      layer doesn't cascade.
+
+3. **Two-source-of-truth for grading-type strings.** `'letter'`
+   and `'esnu'` appear in BOTH `scales.js` (as
+   `GRADING_TYPES.LETTER` / `.ESNU`) AND `academics.js` (as
+   `GRADING_TYPE_LETTER` / `GRADING_TYPE_ESNU`). Per spec, both
+   are exported. Kept in sync manually for now. Could collapse to
+   one in the future (re-export from one file).
+
+4. **Carry-overs (untouched, still open):**
+   - iPad portrait breakpoint decision
    - iPhone SE 300px grid overflow
-   - Planner Phase 2 features (auto-roll, week history, copy last week, export PDF)
-   - Academic Records tab (Coming Soon placeholder)
-   - Import merge bug (inherited from v0.22.3) — still not documented
-     in CLAUDE.md, only in HANDOFF chain. Optional future addition.
-
-3. **No version bump this session** — CLAUDE.md sync is docs-only;
-   the live version stays at v0.22.12 (the version stamped in
-   CLAUDE.md's new top line).
+   - Planner Phase 2 features (auto-roll, week history, copy last
+     week, export PDF)
+   - Import merge bug (inherited from v0.22.3)
 
 ---
 
 ## What the next session should start with
 
-1. Read CLAUDE.md + HANDOFF.md (standard). CLAUDE.md is now fully
-   current — file trees match disk, version stamps consistent at
-   v0.22.12, no stale "DEAD" or "over 300" markers remain.
-2. Decide direction: feature work (Academic Records, planner Phase 2,
-   TE Extractor React rewrite) vs. carry-over hygiene (iPad portrait
-   breakpoint decision, iPhone SE grid overflow, import merge bug).
+1. Read CLAUDE.md + HANDOFF.md (standard).
+2. Confirm direction with Rob: hooks layer first (data shape locked),
+   or jump to UI design discussion before building hooks.
+3. Decide grade-string single-source-of-truth question (or accept
+   the duplication for now).
+4. CLAUDE.md sweep can happen before or after hooks — low-priority.
 
 ---
 
-## Key file locations (touched this session)
+## Key file locations (created this session)
 
 ```
-CLAUDE.md     # 11 surgical edits — version stamp, both file trees, over-300 block, key-decisions parenthetical
-HANDOFF.md    # this file
+packages/dashboard/
+├── package.json                                                    # v0.23.0
+├── src/
+│   └── tools/
+│       └── academic-records/                                       # NEW tool folder
+│           ├── components/
+│           │   └── .gitkeep                                        # placeholder, removed when first component lands
+│           ├── constants/
+│           │   ├── scales.js                                       # NEW — 26 lines (LETTER_SCALE, ESNU_SCALE, GRADING_TYPES)
+│           │   └── academics.js                                    # NEW — 47 lines (path builders + grading-type strings)
+│           ├── firebase/
+│           │   └── academicRecords.js                              # NEW — 183 lines (16 read/write functions)
+│           └── hooks/
+│               └── .gitkeep                                        # placeholder, removed when first hook lands
+packages/shared/package.json                                        # v0.23.0
+packages/te-extractor/package.json                                  # v0.23.0
 ```
 
-No source files were modified. No build needed. No version bump.
+Total: 3 source files created (256 lines combined), 1 new tool tree
+scaffolded, 4 .gitkeep placeholders added (2 already removed),
+3 package.json version bumps. No existing files modified beyond
+package.json. No build regressions.
