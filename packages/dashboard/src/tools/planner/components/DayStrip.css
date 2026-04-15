@@ -96,3 +96,12 @@
 /* No desktop overrides — the mobile horizontal pill layout is correct
    at every width. Shell-aware concerns (non-sticky behavior, sidebar
    offset) live in App.css; planner-only concerns live in PlannerLayout.css. */
+
+/* ── Large phone (400–1023px) — day strip sits under the taller 140px
+   header; pill padding + labels scaled up. ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .day-strip      { top: 140px; padding: 6px; }
+  .day-strip-tab  { padding: 10px 6px; }
+  .day-strip-name { font-size: 11px; }
+  .day-strip-date { font-size: 16px; }
+}

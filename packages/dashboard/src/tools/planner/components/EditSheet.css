@@ -210,3 +210,17 @@
 .edit-sheet-save:hover {
   background: var(--ink-light);
 }
+
+/* ── Large phone (400–1023px) — sheet scaled up ── */
+/* Textarea font-size raised to 16px to prevent iOS auto-zoom on focus. */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .edit-sheet-title    { font-size: 17px; }
+  .edit-sheet-body     { padding: 24px 20px; gap: 10px; }
+  .edit-sheet-label    { font-size: 13px; }
+  .edit-sheet-textarea { font-size: 16px; padding: 12px 14px; }
+  .edit-sheet-toggle   { padding: 12px; font-size: 14px; }
+  .edit-sheet-delete   { font-size: 14px; padding: 10px 16px; }
+  .edit-sheet-footer   { padding: 14px 20px 18px; }
+  .edit-sheet-cancel   { padding: 14px; font-size: 15px; }
+  .edit-sheet-save     { padding: 14px; font-size: 15px; }
+}

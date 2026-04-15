@@ -351,6 +351,20 @@
   font-weight: 300;
 }
 
+/* ── Large phone (400–1023px) — scaled up for wide phones ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .st-section-label { font-size: 11px; }
+  .st-row           { padding: 16px; }
+  .st-row-title     { font-size: 15px; }
+  .st-row-sub       { font-size: 12px; }
+  .st-row-icon      { width: 36px; height: 36px; font-size: 18px; }
+  .st-toggle        { width: 48px; height: 28px; }
+  .st-toggle::before       { top: 4px; left: 4px; width: 20px; height: 20px; }
+  .st-toggle--on::before   { transform: translateX(20px); }
+  .st-version-name  { font-size: 13px; }
+  .st-version-line  { font-size: 12px; }
+}
+
 /* ── Desktop: two-column grid ── */
 @media (min-width: 1024px) {
   .st-tab { padding: 24px 28px 32px; }

@@ -310,3 +310,24 @@
 }
 
 .upload-sheet-import-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Large phone (400–1023px) — sheet scaled up ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .upload-sheet-title        { font-size: 18px; }
+  .upload-sheet-body         { padding: 24px 20px; gap: 14px; }
+  .upload-sheet-file-hint    { font-size: 15px; }
+  .upload-sheet-filename     { font-size: 15px; }
+  .upload-sheet-wipe-row     { font-size: 14px; }
+  .upload-sheet-spinner-row  { font-size: 15px; }
+  .upload-sheet-error        { font-size: 14px; padding: 12px 14px; }
+  .upload-sheet-success      { font-size: 16px; padding: 16px; }
+  .upload-sheet-result-meta  { font-size: 15px; }
+  .upload-sheet-day-header   { font-size: 14px; }
+  .upload-sheet-lesson-row   { font-size: 14px; }
+  .upload-sheet-lesson-num   { font-size: 13px; }
+  .upload-sheet-result-footer{ font-size: 13px; }
+  .upload-sheet-footer       { padding: 14px 20px 18px; }
+  .upload-sheet-cancel       { padding: 14px; font-size: 15px; }
+  .upload-sheet-import-btn,
+  .upload-sheet-apply-btn    { padding: 14px; font-size: 15px; }
+}

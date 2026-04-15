@@ -31,6 +31,13 @@ body {
   overflow-y: auto;
 }
 
+/* ── Large phone (400–1023px): clear the taller 68px bottom nav ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .shell-content {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+}
+
 /* ── Desktop: sidebar replaces bottom nav ── */
 @media (min-width: 1024px) {
   /* Shell sidebar takes the first 200px of the viewport. */

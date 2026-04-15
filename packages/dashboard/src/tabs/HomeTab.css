@@ -275,6 +275,23 @@
 
 .home-action-btn--ghost:hover { border-color: var(--gold); color: var(--gold); }
 
+/* ── Large phone (400–1023px) — scaled up for wide phones like S25 Ultra ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .home-content        { padding: 24px 20px 32px; }
+  .home-date           { font-size: 13px; }
+  .home-greeting       { font-size: 26px; }
+  .home-summary-row    { gap: 12px; }
+  .home-summary-card   { padding: 20px 16px; }
+  .home-summary-value  { font-size: 28px; }
+  .home-summary-label  { font-size: 11px; }
+  .home-lesson-list    { gap: 10px; }
+  .home-lesson-row     { padding: 14px 16px; }
+  .home-lesson-subject { font-size: 15px; }
+  .home-lesson-text    { font-size: 13px; }
+  .home-actions        { gap: 12px; margin-top: 28px; }
+  .home-action-btn     { padding: 14px; font-size: 15px; }
+}
+
 /* ── Desktop (≥1024px) — full-width content; sidebar owns branding ── */
 /* Mobile layout above is COMPLETELY UNCHANGED. */
 @media (min-width: 1024px) {

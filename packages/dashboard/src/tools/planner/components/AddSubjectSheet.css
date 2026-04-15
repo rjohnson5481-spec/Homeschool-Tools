@@ -387,3 +387,22 @@
   opacity: 0.4;
   cursor: default;
 }
+
+/* ── Large phone (400–1023px) — sheet scaled up ── */
+/* Inputs raised to 16px to prevent iOS auto-zoom on focus. */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .add-sheet-title         { font-size: 17px; }
+  .add-sheet-body          { padding: 20px; gap: 16px; }
+  .add-sheet-input         { font-size: 16px; padding: 12px 14px; }
+  .add-sheet-detail-input  { font-size: 16px; }
+  .add-sheet-add-btn       { padding: 12px 20px; font-size: 15px; }
+  .add-sheet-section-label { font-size: 11px; }
+  .add-sheet-preset-btn    { padding: 8px 14px; font-size: 13px; }
+  .add-sheet-day-pill      { padding: 10px 6px; }
+  .add-sheet-day-short     { font-size: 11px; }
+  .add-sheet-day-date      { font-size: 16px; }
+  .add-sheet-student-pill  { padding: 8px 16px; font-size: 14px; }
+  .add-sheet-summary       { font-size: 14px; }
+  .add-sheet-confirm-btn   { padding: 14px; font-size: 15px; }
+  .add-sheet-allday-btn    { padding: 14px 18px; font-size: 15px; }
+}

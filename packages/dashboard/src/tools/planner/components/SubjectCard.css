@@ -202,3 +202,16 @@
 [data-mode="dark"] .subject-card-flag-btn--active {
   border-color: rgba(224, 82, 82, 0.4);
 }
+
+/* ── Large phone (400–1023px) — subject cards scaled up ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .subject-card             { padding: 18px 16px; gap: 14px; }
+  .subject-card-checkbox    { width: 40px; height: 40px; }
+  .subject-card-flag-btn    { width: 32px; height: 32px; font-size: 17px; }
+  .subject-card-name        { font-size: 12px; }
+  .subject-card-lesson      { font-size: 15px; }
+  .subject-card-hint        { font-size: 13px; }
+  .subject-card-empty       { font-size: 13px; }
+  .subject-card-allday-name { font-size: 17px; }
+  .subject-card-allday-note { font-size: 14px; }
+}

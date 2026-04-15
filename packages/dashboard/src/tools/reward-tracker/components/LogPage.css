@@ -115,3 +115,18 @@
 .log-entry-pts--award  { color: #2a9d4a; }
 .log-entry-pts--deduct { color: #c97c2a; }
 .log-entry-pts--spend  { color: var(--red); }
+
+/* ── Large phone (400–1023px) — log page scaled up ── */
+@media (min-width: 400px) and (max-width: 1023px) {
+  .log-body            { padding: 24px 20px; }
+  .log-student-bar     { padding: 16px 18px; }
+  .log-avatar          { font-size: 36px; }
+  .log-student-name    { font-size: 18px; }
+  .log-student-balance { font-size: 14px; }
+  .log-list            { gap: 10px; }
+  .log-entry           { padding: 14px 16px; }
+  .log-entry-icon      { font-size: 22px; }
+  .log-entry-note      { font-size: 15px; }
+  .log-entry-date      { font-size: 13px; }
+  .log-entry-pts       { font-size: 16px; }
+}
