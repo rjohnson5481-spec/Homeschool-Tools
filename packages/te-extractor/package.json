@@ -1,6 +1,6 @@
 {
   "name": "@homeschool/te-extractor",
-  "version": "0.20.4",
+  "version": "0.22.0",
   "private": true,
   "type": "module",
   "scripts": {
