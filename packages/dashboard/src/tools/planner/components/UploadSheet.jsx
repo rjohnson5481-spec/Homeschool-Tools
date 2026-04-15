@@ -2,6 +2,7 @@ import { useState } from 'react';
 import DebugSheet from './DebugSheet.jsx';
 import { DAY_SHORT, mondayWeekId } from '../constants/days.js';
 import './UploadSheet.css';
+import './UploadResult.css';
 
 // Extracts the day number from a lesson string like "Day 32 — Title" → "32".
 function extractDayNum(lesson) {
