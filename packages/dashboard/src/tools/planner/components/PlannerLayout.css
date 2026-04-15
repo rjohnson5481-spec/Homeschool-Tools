@@ -103,6 +103,9 @@
 /* ── Desktop-only day title header — hidden on mobile ── */
 .planner-day-header { display: none; }
 
+/* ── Desktop-only week nav (content area) — hidden on mobile ── */
+.planner-week-nav-desktop { display: none; }
+
 /* ── Show/Hide subjects toggle + Dashed add subject button ── */
 .planner-show-subjects-btn { width: 100%; background: transparent; border: none; color: var(--gold); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; padding: 8px 0 4px; text-align: center; transition: color 0.15s; }
 .planner-show-subjects-btn:hover { color: var(--gold-light); }
@@ -293,4 +296,27 @@
   .planner-day-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; margin: 0; }
   .planner-day-add-btn { background: var(--ink); color: var(--gold-light); border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
   .planner-day-add-btn:hover { background: var(--ink-light); }
+
+  .planner-week-nav-desktop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 14px 28px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .planner-week-nav-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--gold);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: inherit;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .planner-week-nav-btn:hover { color: var(--gold-light); }
 }

@@ -9,7 +9,7 @@ import AddSubjectSheet from './AddSubjectSheet.jsx';
 import MonthSheet      from './MonthSheet.jsx';
 import SickDaySheet    from './SickDaySheet.jsx';
 import SettingsSheet   from './SettingsSheet.jsx';
-import { getMondayOf, toWeekId, mondayWeekId, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
+import { getMondayOf, toWeekId, mondayWeekId, formatWeekLabel, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 
 export default function PlannerLayout({
@@ -130,6 +130,13 @@ export default function PlannerLayout({
       />
 
       <div className="planner-body">
+        {/* Desktop-only week nav — planner header is hidden in the shell at ≥768px */}
+        <div className="planner-week-nav-desktop">
+          <button className="planner-week-nav-btn" onClick={prevWeek} aria-label="Previous week">‹</button>
+          <span className="planner-week-nav-label">{formatWeekLabel(weekDates)}</span>
+          <button className="planner-week-nav-btn" onClick={nextWeek} aria-label="Next week">›</button>
+        </div>
+
         <DayStrip
           dates={weekDates}
           selected={day}
