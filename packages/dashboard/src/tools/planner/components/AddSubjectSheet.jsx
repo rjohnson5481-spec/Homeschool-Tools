@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { SUBJECT_PRESETS } from '../constants/subjects.js';
 import { DAY_SHORT } from '../constants/days.js';
 import './AddSubjectSheet.css';
+import './AddSubjectSheetChrome.css';
+import './AddSubjectDayPicker.css';
 
 // Props: existingSubjects (string[]), presets (string[]|undefined),
 //        weekDates (Date[5]), currentDayIndex (0-4), currentStudent (string),

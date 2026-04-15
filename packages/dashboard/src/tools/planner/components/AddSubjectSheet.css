@@ -1,87 +1,3 @@
-/* ── Backdrop ── */
-.add-sheet-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-/* ── Sheet panel ── */
-.add-sheet {
-  width: 100%;
-  max-width: 100%;
-  background: var(--bg-base);
-  border-radius: 20px 20px 0 0;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-  animation: add-sheet-up 0.25s ease;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-@keyframes add-sheet-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
-}
-
-.add-sheet-handle {
-  width: 40px;
-  height: 5px;
-  background: #d4cfc8;
-  border-radius: 3px;
-  margin: 10px auto 0;
-  flex-shrink: 0;
-}
-
-/* ── Header — ink background ── */
-.add-sheet-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 14px;
-  background: var(--ink);
-  flex-shrink: 0;
-}
-
-.add-sheet-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.add-sheet-close {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, .12);
-  border: none;
-  border-radius: 50%;
-  color: rgba(255, 255, 255, .8);
-  font-size: 13px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.15s;
-}
-
-.add-sheet-close:hover {
-  background: rgba(255, 255, 255, .22);
-  color: #fff;
-}
-
-/* ── Body ── */
-.add-sheet-body {
-  padding: 16px 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 /* ── Custom input row ── */
 .add-sheet-custom {
   display: flex;
@@ -238,85 +154,6 @@
 
 .add-sheet-link-btn:hover { color: var(--gold-light); }
 
-/* ── Day pills row (MON/TUE/WED/THU/FRI + date) ── */
-.add-sheet-day-pills {
-  display: flex;
-  gap: 6px;
-}
-
-.add-sheet-day-pill {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 4px;
-  font-family: inherit;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.add-sheet-day-pill--active {
-  background: #22252e;
-  border-color: #22252e;
-  color: #e8c97a;
-}
-
-.add-sheet-day-short {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.add-sheet-day-date {
-  font-size: 15px;
-  font-weight: 600;
-}
-
-/* ── Per-day lesson details (optional) ── */
-.add-sheet-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.add-sheet-detail-block {
-  margin-bottom: 10px;
-}
-
-.add-sheet-detail-block:last-child {
-  margin-bottom: 0;
-}
-
-.add-sheet-detail-label {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--gold);
-  margin-bottom: 4px;
-}
-
-.add-sheet-detail-input {
-  width: 100%;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 7px 10px;
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--text-primary);
-  transition: border-color 0.15s;
-}
-
-.add-sheet-detail-input:focus {
-  outline: none;
-  border-color: var(--gold);
-}
-
 /* ── Student pills ── */
 .add-sheet-student-pills {
   display: flex;
@@ -365,44 +202,14 @@
   font-weight: 600;
 }
 
-/* ── Confirm button ── */
-.add-sheet-confirm-btn {
-  width: 100%;
-  background: var(--ink);
-  border: none;
-  border-radius: 10px;
-  padding: 13px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gold-light);
-  cursor: pointer;
-  font-family: inherit;
-  margin-top: 4px;
-  transition: background 0.15s, opacity 0.15s;
-}
-
-.add-sheet-confirm-btn:hover:not(:disabled) { background: var(--ink-light); }
-
-.add-sheet-confirm-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* ── Large phone (400–1023px) — sheet scaled up ── */
-/* Inputs raised to 16px to prevent iOS auto-zoom on focus. */
+/* ── Large phone (400–1023px) — body content scaled up ── */
+/* .add-sheet-input raised to 16px to prevent iOS auto-zoom on focus. */
 @media (min-width: 400px) and (max-width: 1023px) {
-  .add-sheet-title         { font-size: 17px; }
-  .add-sheet-body          { padding: 20px; gap: 16px; }
   .add-sheet-input         { font-size: 16px; padding: 12px 14px; }
-  .add-sheet-detail-input  { font-size: 16px; }
   .add-sheet-add-btn       { padding: 12px 20px; font-size: 15px; }
   .add-sheet-section-label { font-size: 11px; }
   .add-sheet-preset-btn    { padding: 8px 14px; font-size: 13px; }
-  .add-sheet-day-pill      { padding: 10px 6px; }
-  .add-sheet-day-short     { font-size: 11px; }
-  .add-sheet-day-date      { font-size: 16px; }
   .add-sheet-student-pill  { padding: 8px 16px; font-size: 14px; }
   .add-sheet-summary       { font-size: 14px; }
-  .add-sheet-confirm-btn   { padding: 14px; font-size: 15px; }
   .add-sheet-allday-btn    { padding: 14px 18px; font-size: 15px; }
 }
