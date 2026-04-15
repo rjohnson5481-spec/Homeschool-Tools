@@ -1,147 +1,161 @@
-# HANDOFF — v0.22.10 cleanup pass
+# HANDOFF — v0.22.11 CSS file splits (2 of 5)
 
 ## What was completed this session
 
-Four-commit cleanup session tackling all the carry-overs flagged in
-the v0.22.9 HANDOFF plus a domain-URL freshness fix. No new features.
+Four-commit refactor session knocking out the two smallest over-300-line
+CSS files. Both drop under the hard limit; three splits remain for a
+later session.
 
-### Commit 1 — `fix: label, stepper, back-btn display fixes (v0.22.10)`
+### Commit 1 — `refactor: split HomeHeader.css from HomeTab.css (v0.22.11)`
 
-Three small display corrections, one per file:
+**Files touched (3):**
+- `packages/dashboard/src/tabs/HomeHeader.css` — NEW, 34 lines
+- `packages/dashboard/src/tabs/HomeTab.css` — 324 → 266 lines
+- `packages/dashboard/src/tabs/HomeTab.jsx` — +1 import line
 
-- **`packages/dashboard/src/tabs/HomeTab.jsx:58`** — summary card label
-  changed from `Today's Lessons` to `Lessons`. The CSS
-  (`.home-summary-label`: `text-transform: uppercase; white-space: nowrap;
-   overflow: hidden; text-overflow: ellipsis`) was rendering it as
-  "TODAY'S LESS…" on narrow phones. Shortening the literal is the
-  cleanest fix — keeps the CSS intact and the other two summary cards
-  (Orion / Malachi) still look consistent because their labels are
-  student names that already fit.
-- **`packages/dashboard/src/tools/reward-tracker/components/ActionSheet.css:207`**
-  — in the `@media (min-width: 400px) and (max-width: 1023px)` block,
-  `.action-stepper-value { font-size: 32px }` → `44px`. Base at line 91
-  is `40px`; scaling up from 40 → 44 matches the session's intent.
-  The 32px value was flagged as a likely spec typo in v0.22.9.
-- **`packages/dashboard/src/tools/reward-tracker/components/RewardHeader.css:103`**
-  — in the same large-phone @media, `.rh-back-btn { font-size: 14px }`
-  → `20px`. Base at line 25 is `18px`; 20px matches the scale-up
-  pattern (icon glyph gets slightly bigger on wide phones). Also
-  flagged as a likely spec typo in v0.22.9.
+**What moved:** Only the live brand-header rules (`.home-header`,
+`.home-header-brand`, `.home-header-logo`, `.home-header-name`,
+`.home-header-accent`) — exactly what `HomeTab.jsx:28-36` actually renders.
 
-### Commit 2 — `chore: delete 8 dead files`
+**What got deleted outright:** `.home-header-actions` and
+`.home-header-btn` (+ `:hover`) — approximately 22 lines of dead CSS
+that have had no JSX since v0.22.6 when the right-side icon buttons
+were removed. Not moved to HomeHeader.css; removed from the codebase.
+Flagged as dead in the v0.22.10 diagnostic.
 
-All eight dead files confirmed orphaned by diagnostic session, then
-deleted. Pre-delete grep confirmed zero live imports; post-delete
-grep re-confirmed nothing broke:
+**Comments cleaned up:**
+- Old line 1: `Outer wrapper — no padding; header is full-width` →
+  new: `Outer wrapper`. The "header is full-width" phrase was stale
+  (the outer wrapper never styled the header — it just contained it).
+- Old line 7: `Brand header — dark bar with dark mode toggle + sign-out`
+  → deleted with the block. In HomeHeader.css it becomes
+  `Brand header — dark bar with logo + school name (mobile only)`,
+  which matches the v0.22.6 reality.
 
-```
-packages/dashboard/src/components/ToolCard.jsx
-packages/dashboard/src/components/ToolCard.css
-packages/dashboard/src/components/Header.jsx
-packages/dashboard/src/components/Header.css
-packages/dashboard/src/components/Dashboard.jsx
-packages/dashboard/src/components/Dashboard.css
-packages/dashboard/src/tools/planner/components/SettingsSheet.jsx
-packages/dashboard/src/tools/planner/components/SettingsSheet.css
-```
+**@media blocks:** Left entirely untouched in HomeTab.css per spec.
+The desktop `@media (min-width: 1024px)` block still contains
+`.home-header { display: none }` — that rule targets a class now
+defined in HomeHeader.css, but CSS cascade works on the rendered
+element, not on file origin, so it's fine. Both files are imported
+by HomeTab.jsx in the same render so the cascade resolves correctly.
 
-Total deletions: 821 lines removed. The only live code mention
-remaining is a comment in `packages/dashboard/src/tabs/SettingsTab.jsx:60`
-referring to the retired planner SettingsSheet — it's historical
-context, not an import, safe to leave.
+**Import order in HomeTab.jsx:** `HomeTab.css` first, then
+`HomeHeader.css` immediately below. Base styles load in deterministic
+order; the desktop `display: none` override in HomeTab.css still fires
+because `@media` rules layer on top regardless of file source order.
 
-Build clean after deletion — nothing in the shell was depending on
-these files.
+### Commit 2 — `refactor: split UploadResult.css from UploadSheet.css`
 
-### Commit 3 — `fix: update settings footer URL to primary domain`
+**Files touched (3):**
+- `packages/dashboard/src/tools/planner/components/UploadResult.css`
+  — NEW, 89 lines
+- `packages/dashboard/src/tools/planner/components/UploadSheet.css`
+  — 333 → 247 lines
+- `packages/dashboard/src/tools/planner/components/UploadSheet.jsx`
+  — +1 import line
 
-**`packages/dashboard/src/tabs/SettingsTab.jsx:225`** — the
-`.st-version-line` footer displayed `ironandlight.netlify.app`
-(the Netlify default / fallback URL). Updated to
-`homeschool.grasphislove.com`, which has been the primary domain
-since 2026-04-15. The old Netlify URL still resolves — it's
-mentioned in CLAUDE.md as the fallback — but the Settings
-tab should point at the primary.
+**What moved to UploadResult.css:**
+- Result-preview block (lines 183–246 of the old file): `result-meta`,
+  `divider`, `lesson-list`, `day-group` (+ `:last-child`), `day-header`,
+  `lesson-row`, `lesson-subject`, `lesson-num`, `result-footer`.
+- View Log button (lines 248–262 of the old file): `.upload-sheet-log-btn`
+  + `:hover`. Moved because it only renders after a parsed result.
+- Scoped slice of the large-phone `@media (min-width: 400px) and
+  (max-width: 1023px)` block — specifically the 5 result/log overrides
+  (`result-meta`, `day-header`, `lesson-row`, `lesson-num`,
+  `result-footer`). A dedicated @media block was created in
+  UploadResult.css for these.
 
-Only `SettingsTab.jsx` was touched. CLAUDE.md and HANDOFF.md
-references to `ironandlight.netlify.app` are documentation of the
-fallback relationship and stay as-is.
+**What stayed in UploadSheet.css:**
+- Backdrop, sheet panel + slide-up + handle, ink header, body
+  container, file picker zone, wipe toggle, parsing spinner, error
+  pill, success banner, footer with cancel + import/apply buttons.
+- The large-phone @media block with the remaining 11 rules
+  (title, body, file-hint, filename, wipe-row, spinner-row, error,
+  success, footer, cancel, import/apply).
 
-### Commit 4 — `chore: bump version to v0.22.10`
+**No `@media (min-width: 1024px)` block existed in this file — so
+nothing desktop-related to worry about.**
 
-- `packages/dashboard/package.json`:    0.22.9 → 0.22.10
-- `packages/shared/package.json`:       0.22.9 → 0.22.10
-- `packages/te-extractor/package.json`: 0.22.9 → 0.22.10
+**Import order in UploadSheet.jsx:** `UploadSheet.css` first, then
+`UploadResult.css`. No cascade concerns — the two files have disjoint
+selectors.
+
+### Commit 3 — `chore: bump version to v0.22.11`
+
+- `packages/dashboard/package.json`:    0.22.10 → 0.22.11
+- `packages/shared/package.json`:       0.22.10 → 0.22.11
+- `packages/te-extractor/package.json`: 0.22.10 → 0.22.11
 
 Build verified clean at every commit
-(`@homeschool/dashboard@0.22.10`, `@homeschool/te-extractor@0.22.10`).
+(`@homeschool/dashboard@0.22.11`, `@homeschool/te-extractor@0.22.11`).
 
 ---
 
-## CLAUDE.md drift from this session
+## File size report (post-session)
 
-The v0.22.9 rewrite listed `ToolCard.{jsx,css}`, `Header.{jsx,css}`
-(shell), `Dashboard.{jsx,css}`, and `SettingsSheet.{jsx,css}` as
-DEAD with a note "will be deleted in a cleanup session." That's
-now done — those entries in the file-structure trees can be removed
-when CLAUDE.md is next touched. Not urgent; listing a nonexistent
-file as DEAD is self-consistent for now.
+| File | Before | After | Status |
+|---|---|---|---|
+| HomeTab.css | 324 | **266** | ✅ under 300 |
+| UploadSheet.css | 333 | **247** | ✅ under 300 |
+| HomeHeader.css | — | 34 | ✅ new, tiny |
+| UploadResult.css | — | 89 | ✅ new, tiny |
 
-The two "spec literal vs. intent follow-up" items in the v0.22.9
-HANDOFF are now resolved (32px → 44px, 14px → 20px). The new
-values are still not documented anywhere in CLAUDE.md — they'd
-only belong in a design-system subsection, which currently doesn't
-call out stepper or back-button sizing explicitly. Nothing to
-update unless Rob wants those spec'd.
+### Still over 300 (three files remain — next split session)
+
+| File | Lines | Suggested split (per v0.22.10 diagnostic) |
+|---|---|---|
+| AddSubjectSheet.css | 408 | Extract day-picker (day pills + per-day details, 78 lines) → ~330 |
+| SettingsTab.css | 376 | Extract Default Subjects sub-section (63 lines) → ~313; second split of row styles (122 lines) brings it under 200 |
+| PlannerLayout.css | 360 | Extract Undo Sick Day sheet (99 lines) → ~261. Largest single win; the sheet is fully self-contained |
+
+All three have suggested seams documented in the diagnostic. Easy next
+session.
 
 ---
 
 ## What is currently incomplete / pending
 
 1. **Browser smoke test** — not run. Priority checks:
-   - **HomeTab** summary row — first card now reads `LESSONS`
-     (no ellipsis) on narrow phones like iPhone SE.
-   - **Reward tracker award/deduct/spend sheets** on a wide phone
-     (Galaxy S25 Ultra portrait ≥400px) — stepper number renders
-     at 44px (up from the previous 32px), feels appropriately
-     scaled vs. 40px base.
-   - **Reward tracker LogPage** on a wide phone — back arrow `←`
-     renders at 20px (up from the previous 14px).
-   - **Settings tab version footer** — now reads
-     `v0.22.10 · homeschool.grasphislove.com`.
+   - HomeTab renders correctly on mobile (brand header bar at top, all
+     the same). HomeHeader.css carries the styles now; verify by
+     toggling dark mode (header should stay `#22252e` — still does).
+   - Desktop `@media (min-width: 1024px) { .home-header { display: none } }`
+     still hides the header above 1024px (rule still lives in HomeTab.css).
+   - UploadSheet result preview renders correctly after a successful
+     parse: meta line, per-day groups with bold day headers, indented
+     lesson rows, result footer, View Log button.
+   - Large-phone (400–1023px) overrides for result preview still apply:
+     meta 15px, day-header 14px, lesson-row 14px, lesson-num 13px,
+     result-footer 13px.
 
-2. **iPad portrait breakpoint decision** (carried from v0.22.7+)
-   — iPad portrait (~810px) still falls into the large-phone
-   mobile band. If Rob wants sidebar on iPad portrait, the
-   threshold needs to drop.
+2. **Three CSS files still over 300 lines** — see table above.
 
-3. **iPhone SE grid overflow** (carried from v0.22.8) —
-   `minmax(300px, 1fr)` grid in `.planner-subjects` / `.rl-body`
-   could overflow SE's 288px content area. Not touched.
+3. **Dead CSS deleted this session:** 22 lines of unused
+   `.home-header-actions` + `.home-header-btn` + `:hover` removed
+   from HomeTab.css. Not a regression — there was no JSX for these
+   since v0.22.6.
 
-4. **CSS files over 300 lines** — five files, targets suggested
-   in v0.22.9 HANDOFF. Priority split is HomeTab.css (324).
-
-5. **Planner Phase 2 features** — auto-roll flagged lessons,
-   week history browser, copy last week, export PDF. Still not
-   started.
-
-6. **Academic Records tab** — still a Coming Soon placeholder.
-
-7. **Import merge bug** (inherited from v0.22.3) — still open.
-
-8. **CLAUDE.md DEAD entries** — now stale since the eight files
-   are actually deleted. Low priority — fix on next CLAUDE.md touch.
+4. **Carry-overs from earlier sessions (untouched this session):**
+   - iPad portrait breakpoint decision (still falls into large-phone band)
+   - iPhone SE 300px grid overflow
+   - Planner Phase 2 features (auto-roll, week history, copy last week, export PDF)
+   - Academic Records tab (Coming Soon placeholder)
+   - Import merge bug (inherited from v0.22.3)
+   - CLAUDE.md DEAD-file entries — now stale since v0.22.10 deleted the
+     eight files they describe. Low priority.
 
 ---
 
 ## What the next session should start with
 
 1. Read CLAUDE.md + HANDOFF.md (standard).
-2. Smoke test v0.22.10 — the three display fixes + the Settings
-   footer URL.
-3. Pick a direction: iPad portrait decision, CSS file splits,
-   HomeTab.css 324 → split, or start Phase 2 (planner) work.
+2. Browser smoke test v0.22.11 — HomeTab and UploadSheet post-parse
+   preview.
+3. Pick the next split: biggest win is PlannerLayout.css (extract
+   Undo Sick Day sheet, 99 lines) or AddSubjectSheet.css (extract
+   day picker, 78 lines). SettingsTab.css is the largest but needs
+   two splits to get under 200.
 
 ---
 
@@ -149,29 +163,20 @@ update unless Rob wants those spec'd.
 
 ```
 packages/dashboard/
-├── package.json                                                    # v0.22.10
+├── package.json                                                    # v0.22.11
 ├── src/
-│   ├── components/                                                 # -6 dead files deleted
-│   │   ├── ToolCard.jsx  ┐
-│   │   ├── ToolCard.css  │
-│   │   ├── Header.jsx    │  all deleted
-│   │   ├── Header.css    │
-│   │   ├── Dashboard.jsx │
-│   │   └── Dashboard.css ┘
 │   ├── tabs/
-│   │   ├── HomeTab.jsx                                             # "Today's Lessons" → "Lessons"
-│   │   └── SettingsTab.jsx                                         # footer URL → homeschool.grasphislove.com
-│   └── tools/
-│       ├── planner/components/                                     # -2 dead files
-│       │   ├── SettingsSheet.jsx  ┐  both deleted
-│       │   └── SettingsSheet.css  ┘
-│       └── reward-tracker/components/
-│           ├── ActionSheet.css                                     # @400-1023 stepper-value 32 → 44
-│           └── RewardHeader.css                                    # @400-1023 back-btn 14 → 20
-packages/shared/package.json                                        # v0.22.10
-packages/te-extractor/package.json                                  # v0.22.10
+│   │   ├── HomeTab.jsx                                             # + import './HomeHeader.css'
+│   │   ├── HomeTab.css                                             # 324 → 266 (split + 22 dead lines removed)
+│   │   └── HomeHeader.css                                          # NEW — 34 lines
+│   └── tools/planner/components/
+│       ├── UploadSheet.jsx                                         # + import './UploadResult.css'
+│       ├── UploadSheet.css                                         # 333 → 247 (split)
+│       └── UploadResult.css                                        # NEW — 89 lines
+packages/shared/package.json                                        # v0.22.11
+packages/te-extractor/package.json                                  # v0.22.11
 ```
 
-Total: 12 source files touched (3 edited, 8 deleted, 3 package.json
-version bumps, 1 edited again for the domain URL = SettingsTab.jsx
-touched twice). 821 lines deleted, 7 lines edited.
+Total: 6 files touched (2 created, 2 edited + slimmed, 2 imports
+added), plus 3 package.json version bumps. Net diff: two files split
+cleanly, two files under the limit, 22 lines of dead CSS purged.
