@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.22.12
+Current version: v0.23.11
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
@@ -92,6 +92,7 @@ their redirects are removed. Both tools now live inside the dashboard shell.
 - VITE_FIREBASE_AUTH_DOMAIN 
 - VITE_FIREBASE_PROJECT_ID 
 - VITE_FIREBASE_APP_ID 
+- VITE_FIREBASE_STORAGE_BUCKET — Firebase Storage bucket (required for saved report PDFs, Blaze plan)
 
 ## Anthropic API pattern
 All Anthropic calls go through Netlify Functions — with one intentional exception (see below).
@@ -156,6 +157,31 @@ do not "normalize" it to match the planner's `weeks/{weekId}/students/{name}` sh
 Initial seed: Orion 50 pts, Malachi 60 pts. Seeding guarded by localStorage flag
 `rewardTracker_seeded_{uid}` — only runs once per browser on first visit after auth.
 Cash value: 15 pts = $1.00 (floor division). Next $1 threshold = next multiple of 15 above balance.
+
+## Academic Records — Firestore data model
+/users/{uid}/schoolYears/{yearId}
+  → { label, startDate, endDate }
+/users/{uid}/schoolYears/{yearId}/quarters/{quarterId}
+  → { label, startDate, endDate }
+/users/{uid}/schoolYears/{yearId}/breaks/{breakId}
+  → { label, startDate, endDate }
+/users/{uid}/courses/{courseId}
+  → { name, curriculum, gradingType }
+  gradingType: 'letter' | 'esnu'
+/users/{uid}/enrollments/{enrollmentId}
+  → { courseId, student, yearId, notes, syncPlanner, gradeLevel }
+/users/{uid}/grades/{gradeId}
+  → { enrollmentId, quarterId, grade, percent }
+  percent: number (0-100) for letter, null for esnu
+/users/{uid}/reportNotes/{noteId}
+  → { student, quarterId, notes }
+/users/{uid}/savedReports/{reportId}
+  → { student, periodLabel, yearLabel, generatedAt, storageUrl, notes, includeToggles }
+/users/{uid}/activities/{activityId}
+  → { student, name, startDate, endDate, ongoing, notes }
+
+Firebase Storage:
+  users/{uid}/reports/{reportId}.pdf — generated report/transcript PDF files
 
 ---
 
@@ -364,13 +390,13 @@ Before closing, do both of these:
 4. Identify which files will be touched before writing any code
 
 ---
-## Tools status (v0.22.12)
+## Tools status (v0.23.11)
 - shared            → ✅ Complete — tokens, fonts, Firebase init, auth hook
-- dashboard         → ✅ Complete — unified app shell at v0.22.12; mobile bottom nav (56/68px) / desktop 200px left sidebar at ≥1024px; 6 tabs including unified Settings; shared dark-mode + student state lifted to App.jsx
+- dashboard         → ✅ Complete — unified app shell at v0.23.11; mobile bottom nav (56/68px) / desktop 200px left sidebar at ≥1024px; 6 tabs including unified Settings; shared dark-mode + student state lifted to App.jsx
 - planner           → ✅ Complete — integrated into shell at `packages/dashboard/src/tools/planner/`; batch add (day pills + student pills), large done checkbox, desktop card grid, PDF import via Anthropic Netlify Function
 - reward-tracker    → ✅ Complete — integrated into shell at `packages/dashboard/src/tools/reward-tracker/`; dark mode, award/deduct/spend sheets, cash conversion (15 pts = $1.00)
 - te-extractor      → ✅ Complete at v0.20.4 — vanilla HTML/CSS/JS, deployed at /te-extractor, links out from shell (React rewrite deferred to Phase 3)
-- academic-records  → 🔒 Phase 2 — "Coming Soon" placeholder tab in shell
+- academic-records  → ✅ Complete at v0.23.11 — course catalog, enrollments, school years/quarters/breaks, grade entry (letter % + ESNU), attendance (weekdays − breaks − sick days), AI calendar import, Report/Transcript Generator, PDF generation, Firebase Storage for saved reports, activities tracking, AI curriculum import
 - school-year / ND compliance → 🔒 Phase 3
 
 ## Dashboard — app shell architecture
@@ -435,7 +461,14 @@ packages/dashboard/src/
 │   └── school.js            # school name constants
 └── tools/
     ├── planner/             # full planner tool (components, hooks, firebase, constants)
-    └── reward-tracker/      # full reward tracker tool (components, hooks, firebase)
+    ├── reward-tracker/      # full reward tracker tool (components, hooks, firebase)
+    └── academic-records/    # full academic records tool
+        ├── constants/       # scales.js, academics.js
+        ├── firebase/        # academicRecords.js, academicRecordsActivities.js
+        ├── hooks/           # useAcademicSummary, useCourses, useEnrollments, useGrades,
+        │                      useReportNotes, useSavedReports, useSchoolYears, useActivities
+        ├── components/      # all sheets and views (AcademicRecordsSheets, RecordsMainView, etc.)
+        └── utils/           # generateReportCardPDF.js
 
 ### Bottom nav design rules
 - Background: always `#22252e` — never changes in dark mode (same as all headers)
@@ -542,9 +575,9 @@ Phase 2 (do not build yet):
   - Responsive: 400–1023 large-phone scaling band, 1024 desktop breakpoint
   - TE Extractor: vanilla JS, served at /te-extractor/, links out from shell
 
-### Phase 2 — 🔒 NOT STARTED
-  - Academic Records tab (transcripts, cumulative view)
-  - Planner Phase 2 items (auto-roll flagged lessons, week history, copy last week, export PDF)
+### Phase 2 — ✅ COMPLETE at v0.23.11
+  - Academic Records tab — course catalog, enrollments, school years/quarters/breaks, grade entry, attendance, AI calendar import, Report/Transcript Generator, PDF generation, Firebase Storage, activities tracking, AI curriculum import
+  - Planner Phase 2 items (auto-roll flagged lessons, week history, copy last week, export PDF) — deferred to Phase 3
 
 ### Phase 3 — 🔒 NOT STARTED
   - School Year + ND compliance tracking
@@ -605,6 +638,14 @@ Fields: { fileName, lessons, html, previewText (200 char), createdAt (serverTime
 - CLAUDE.md is explicitly exempt from the 300-line file-size rule.
 - Unified Settings tab owns all app settings — planner's `SettingsSheet` was retired in v0.22.6 and deleted in v0.22.10.
 - Planner student state is lifted to `App.jsx` so the desktop sidebar Student selector shares it with the Planner tab — do not re-scope to PlannerTab.
+- Academic Records student list pulled from Firestore settings/students — never hardcoded
+- Grade entry saves both percent (number) and letter (computed from LETTER_SCALE) — both stored in Firestore
+- Attendance = weekdays in school year − break days − sick days. Sick days from planner sickDays collection. Break days from schoolYears/{yearId}/breaks subcollection.
+- PDF generation uses pdf-lib npm package (exact version) — browser-side, no server needed
+- Firebase Storage used for saved report PDFs — Blaze plan required, path: users/{uid}/reports/
+- Student is stored as name string (same as planner). Phase 4 note: will need migration to proper profile documents when multi-family support is added.
+- Cascading deletes not yet implemented — deleteCourse, deleteEnrollment, deleteSchoolYear log console.warn for orphaned children. Full cascade deferred to future session.
+- TE Extractor, CalendarImportSheet, and CurriculumImportSheet all call Anthropic API directly from browser using VITE_ANTHROPIC_API_KEY — family-internal tools, intentional exceptions.
 
 ### Dark mode token rule
 Never hardcode colors that need to work in both light and dark. Always
