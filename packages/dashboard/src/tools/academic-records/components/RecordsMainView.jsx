@@ -11,7 +11,8 @@ import { GRADING_TYPE_LETTER } from '../constants/academics.js';
 //   selectedQuarterId, setSelectedQuarterId
 //   summary               — output of useAcademicSummary
 //   courses               — Array<{ id, name, curriculum, gradingType }>
-//   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen — () => void
+//   grades                — Array<{ id, enrollmentId, quarterId, grade }> from useGrades
+//   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades — () => void
 
 const STUDENTS = ['Orion', 'Malachi'];
 const DOT_COLORS = [
@@ -34,10 +35,10 @@ function todayStr() {
 export default function RecordsMainView({
   selectedStudent, setSelectedStudent,
   selectedQuarterId, setSelectedQuarterId,
-  summary, courses,
-  onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen,
+  summary, courses, grades,
+  onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades,
 }) {
-  const { activeSchoolYear, studentEnrollments, courseCount, attendanceDays, grades } = summary;
+  const { activeSchoolYear, studentEnrollments, courseCount, attendanceDays } = summary;
   const today      = todayStr();
   const courseById = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
   const yearStart  = activeSchoolYear?.label?.split(/[–-]/)[0]?.trim() ?? '—';
@@ -109,7 +110,7 @@ export default function RecordsMainView({
           {studentEnrollments.map((enr, i) => {
             const course = courseById.get(enr.courseId);
             const gradingType = course?.gradingType ?? GRADING_TYPE_LETTER;
-            const grade = grades.find(g => g.enrollmentId === enr.id && g.quarterId === selectedQuarterId);
+            const grade = (grades ?? []).find(g => g.enrollmentId === enr.id && g.quarterId === selectedQuarterId);
             return (
               <div key={enr.id} className="ar-grade-row">
                 <span className="ar-course-dot" style={{ background: DOT_COLORS[i % DOT_COLORS.length] }} />
@@ -134,8 +135,8 @@ export default function RecordsMainView({
       )}
 
       <div className="ar-action-row">
-        <button className="ar-action-btn disabled" disabled>
-          <span>✏️ Enter Grades</span><span className="soon">Soon</span>
+        <button className="ar-action-btn" onClick={onEnterGrades}>
+          <span>✏️ Enter Grades</span><span>›</span>
         </button>
         <button className="ar-action-btn disabled" disabled>
           <span>📄 Generate Report</span><span className="soon">Soon</span>

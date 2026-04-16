@@ -4,7 +4,9 @@ import { useCourses }         from '../tools/academic-records/hooks/useCourses.j
 import { useEnrollments }     from '../tools/academic-records/hooks/useEnrollments.js';
 import { useSchoolYears }     from '../tools/academic-records/hooks/useSchoolYears.js';
 import { useAcademicSummary } from '../tools/academic-records/hooks/useAcademicSummary.js';
+import { useGrades }          from '../tools/academic-records/hooks/useGrades.js';
 import RecordsMainView        from '../tools/academic-records/components/RecordsMainView.jsx';
+import GradeEntrySheet        from '../tools/academic-records/components/GradeEntrySheet.jsx';
 import CourseCatalogSheet     from '../tools/academic-records/components/CourseCatalogSheet.jsx';
 import AddEditCourseSheet     from '../tools/academic-records/components/AddEditCourseSheet.jsx';
 import EnrollmentSheet        from '../tools/academic-records/components/EnrollmentSheet.jsx';
@@ -14,8 +16,8 @@ import AddEditSchoolYearSheet from '../tools/academic-records/components/AddEdit
 import './AcademicRecordsTab.css';
 
 // Phase 2 entry point. Tab-level wiring lives here:
-//   - 4 data hooks (catalog, enrollments, school years, summary)
-//   - 3 sheet flows (catalog, enrollments, school years) with stacked editors
+//   - 5 data hooks (catalog, enrollments, school years, summary, grades)
+//   - 4 sheet flows (catalog, enrollments, school years, grade entry) with stacked editors
 //   - main view JSX is in RecordsMainView.jsx (kept under the 300-line limit)
 export default function AcademicRecordsTab() {
   const { user } = useAuth();
@@ -35,6 +37,7 @@ export default function AcademicRecordsTab() {
   const [selectedStudent, setSelectedStudent]     = useState('Orion');
   const [selectedQuarterId, setSelectedQuarterId] = useState(null);
   const summary = useAcademicSummary(uid, selectedStudent, schoolYears, enrollments, courses);
+  const { grades, saveGrade, addGrade } = useGrades(uid);
 
   // Sync selectedQuarterId once the summary resolves the active quarter.
   useEffect(() => {
@@ -59,6 +62,9 @@ export default function AcademicRecordsTab() {
   const [editingSchoolYear, setEditingSchoolYear]                   = useState(null);
   const [editingQuarter, setEditingQuarter]                         = useState(null);
   const [activeYearId, setActiveYearId]                             = useState(null);
+
+  // Sheet state — grade entry
+  const [gradeEntrySheetOpen, setGradeEntrySheetOpen] = useState(false);
 
   // ─── Course handlers ───
   function closeCatalog()       { setCatalogSheetOpen(false); setAddEditSheetOpen(false); setEditingCourse(null); }
@@ -127,16 +133,28 @@ export default function AcademicRecordsTab() {
     ? editingSchoolYear
     : (editingQuarter ? editingQuarter.quarter : null);
 
+  // ─── Grade entry handler ───
+  async function handleSaveGrades(edits) {
+    if (!uid) { console.warn('AcademicRecordsTab: uid missing on save — grades will not persist'); return; }
+    for (const e of edits) {
+      if (e.existingId) await saveGrade(e.existingId, { enrollmentId: e.enrollmentId, quarterId: e.quarterId, grade: e.grade });
+      else await addGrade({ enrollmentId: e.enrollmentId, quarterId: e.quarterId, grade: e.grade });
+    }
+    setGradeEntrySheetOpen(false);
+  }
+  const activeQuarterLabel = (summary.activeSchoolYear?.quarters ?? []).find(q => q.id === selectedQuarterId)?.label ?? 'Quarter';
+
   return (
     <div className="ar-tab">
 
       <RecordsMainView
         selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent}
         selectedQuarterId={selectedQuarterId} setSelectedQuarterId={setSelectedQuarterId}
-        summary={summary} courses={courses}
+        summary={summary} courses={courses} grades={grades}
         onCatalogOpen={() => setCatalogSheetOpen(true)}
         onEnrollmentsOpen={() => setEnrollmentSheetOpen(true)}
         onSchoolYearOpen={() => setSchoolYearSheetOpen(true)}
+        onEnterGrades={() => setGradeEntrySheetOpen(true)}
       />
 
       <CourseCatalogSheet
@@ -171,6 +189,12 @@ export default function AcademicRecordsTab() {
         open={addEditSchoolYearSheetOpen} onClose={closeAddEditSchoolYear}
         onSave={handleSaveSchoolYearOrQuarter} onDelete={handleDeleteSchoolYearOrQuarter}
         mode={schoolYearSheetMode} yearId={activeYearId} item={editingItem}
+      />
+      <GradeEntrySheet
+        open={gradeEntrySheetOpen} onClose={() => setGradeEntrySheetOpen(false)}
+        onSave={handleSaveGrades}
+        enrollments={summary.studentEnrollments} courses={courses} grades={grades}
+        selectedQuarterId={selectedQuarterId} quarterLabel={activeQuarterLabel}
       />
 
     </div>
