@@ -40,6 +40,14 @@ export default function ReportCardGeneratorSheet({
     setNotes(existing?.notes ?? '');
   }, [localStudent, localQuarter, reportNotes]);
 
+  // Re-fill notes when reportNotes loads after the sheet is already open
+  useEffect(() => {
+    if (!open || localQuarter === 'annual') return;
+    if (notes.trim() !== '') return;
+    const existing = (reportNotes ?? []).find(n => n.student === localStudent && n.quarterId === localQuarter);
+    if (existing?.notes) setNotes(existing.notes);
+  }, [reportNotes]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => () => clearTimeout(savedTimer.current), []);
 
   const courseById = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
