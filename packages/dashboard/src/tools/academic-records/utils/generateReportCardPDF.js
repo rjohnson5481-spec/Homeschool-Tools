@@ -40,7 +40,7 @@ export async function generateReportCardPDF(config) {
   y -= 14;
   const tag = 'Faith · Knowledge · Strength';
   page.drawText(tag, { x: (W - fontR.widthOfTextAtSize(tag, 9)) / 2, y, font: fontR, size: 9, color: rgb(1, 1, 1) });
-  const rc = 'Report Card';
+  const rc = 'Report / Transcript';
   page.drawText(rc, { x: W - M - fontB.widthOfTextAtSize(rc, 11), y: H - 28, font: fontB, size: 11, color: GOLD });
   page.drawText(periodLabel, { x: W - M - fontR.widthOfTextAtSize(periodLabel, 9), y: H - 42, font: fontR, size: 9, color: GOLD });
 
@@ -143,12 +143,5 @@ export async function generateReportCardPDF(config) {
   const footer = 'Iron & Light Johnson Academy · homeschool.grasphislove.com';
   page.drawText(footer, { x: (W - fontR.widthOfTextAtSize(footer, 8)) / 2, y: 24, font: fontR, size: 8, color: GRAY });
 
-  const pdfBytes = await doc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `ReportCard_${student}_${periodLabel.replace(/\s+/g, '_')}.pdf`;
-  a.click();
-  URL.revokeObjectURL(url);
+  return doc.save();
 }

@@ -27,13 +27,13 @@ export default function SavedReportCardsSheet({
       <div className="src-sheet" onClick={e => e.stopPropagation()}>
         <div className="src-sheet-handle" aria-hidden="true" />
         <header className="src-sheet-header">
-          <h2 className="src-sheet-title">Saved Report Cards</h2>
+          <h2 className="src-sheet-title">Saved Reports</h2>
           <button className="src-sheet-close" onClick={onClose} aria-label="Close">✕</button>
         </header>
         <div className="src-sheet-body">
-          {loading && <p className="src-empty">Loading report cards…</p>}
+          {loading && <p className="src-empty">Loading reports…</p>}
           {!loading && (savedReports ?? []).length === 0 && (
-            <p className="src-empty">No report cards generated yet.</p>
+            <p className="src-empty">No reports generated yet.</p>
           )}
           {!loading && STUDENTS.map(student => {
             const reports = grouped[student] ?? [];
@@ -55,6 +55,7 @@ export default function SavedReportCardsSheet({
                       </div>
                     ) : (
                       <div className="src-actions">
+                        {r.storageUrl && <a className="src-icon-btn" href={r.storageUrl} target="_blank" rel="noopener noreferrer" title="Download PDF">⬇</a>}
                         <button className="src-icon-btn" onClick={() => onRegenerate(r)} title="Regenerate">↻</button>
                         <button className="src-icon-btn src-icon-btn--danger" onClick={() => setConfirmId(r.id)} title="Delete">🗑</button>
                       </div>

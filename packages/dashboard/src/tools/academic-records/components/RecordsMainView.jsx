@@ -165,10 +165,10 @@ export default function RecordsMainView({
           <span>🗓️ Manage School Year &amp; Quarters</span><span>›</span>
         </button>
         <button className="ar-action-btn" onClick={onGenerateReport}>
-          <span>📄 Generate Report Card</span><span>›</span>
+          <span>📄 Generate Report / Transcript</span><span>›</span>
         </button>
         <button className="ar-action-btn" onClick={onOpenSavedReports}>
-          <span>📋 Saved Report Cards</span><span>›</span>
+          <span>📋 Saved Reports</span><span>›</span>
         </button>
       </div>
     </>

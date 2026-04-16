@@ -71,26 +71,23 @@ export default function ReportCardGeneratorSheet({
   async function handleGenerate() {
     setGenerating(true);
     try {
-      await generateReportCardPDF({
+      const pdfBytes = await generateReportCardPDF({
         student: localStudent, gradeLevel: studentGradeLevel, periodLabel,
         yearLabel: activeSchoolYear?.label ?? '—', isAnnual,
         selectedQuarterId: localQuarter, studentEnrollments: studentEnr,
         courseById, grades, quarters, attendanceDays,
         includeGrades, includeAttendance: includeAttend, includeNotes, includeSignature: includeSig, notes,
       });
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ReportTranscript_${localStudent}_${periodLabel.replace(/\s+/g, '_')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
       if (onSaveReport) {
-        const snap = studentEnr.map(enr => {
-          const c = courseById.get(enr.courseId);
-          if (isAnnual) {
-            return { courseName: c?.name, curriculum: c?.curriculum, gradingType: c?.gradingType,
-              quarters: quarters.map(q => { const g = (grades ?? []).find(gr => gr.enrollmentId === enr.id && gr.quarterId === q.id); return { quarterId: q.id, quarterLabel: q.label, grade: g?.grade ?? null, percent: g?.percent ?? null }; }) };
-          }
-          const g = (grades ?? []).find(gr => gr.enrollmentId === enr.id && gr.quarterId === localQuarter);
-          return { courseName: c?.name, curriculum: c?.curriculum, gradingType: c?.gradingType, grade: g?.grade ?? null, percent: g?.percent ?? null, quarterId: localQuarter, quarterLabel };
-        });
-        await onSaveReport({ student: localStudent, periodLabel, yearLabel: activeSchoolYear?.label ?? '—',
-          gradesSnapshot: snap, attendanceSnapshot: { ...attendanceDays }, notes,
-          includeToggles: { includeGrades, includeAttendance: includeAttend, includeNotes, includeSignature: includeSig } });
+        await onSaveReport({ student: localStudent, periodLabel, yearLabel: activeSchoolYear?.label ?? '—', notes,
+          includeToggles: { includeGrades, includeAttendance: includeAttend, includeNotes, includeSignature: includeSig } }, pdfBytes);
       }
     } catch (err) { console.warn('PDF generation failed', err); }
     finally { setGenerating(false); }
@@ -103,7 +100,7 @@ export default function ReportCardGeneratorSheet({
       <div className="rcg-sheet" onClick={e => e.stopPropagation()}>
         <div className="rcg-sheet-handle" aria-hidden="true" />
         <header className="rcg-sheet-header">
-          <h2 className="rcg-sheet-title">Report Card Generator</h2>
+          <h2 className="rcg-sheet-title">Report / Transcript Generator</h2>
           <button className="rcg-sheet-close" onClick={onClose} aria-label="Close">✕</button>
         </header>
         <div className="rcg-sheet-body">
@@ -142,7 +139,7 @@ export default function ReportCardGeneratorSheet({
             <div className="rcg-preview-header">
               <div className="rcg-preview-school">IRON & LIGHT<br />JOHNSON ACADEMY</div>
               <div className="rcg-preview-tagline">Faith · Knowledge · Strength</div>
-              <div className="rcg-preview-type">Report Card — {periodLabel}</div>
+              <div className="rcg-preview-type">Report / Transcript — {periodLabel}</div>
             </div>
             <div className="rcg-preview-student">
               <span><strong>{localStudent}</strong>{studentGradeLevel ? ` · Grade ${studentGradeLevel}` : ''}</span>
