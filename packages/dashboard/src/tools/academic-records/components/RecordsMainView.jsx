@@ -15,7 +15,7 @@ import { GRADING_TYPE_LETTER } from '../constants/academics.js';
 //   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades, onCalendarImport — () => void
 //   onAttendanceDetail — () => void, opens the attendance detail sheet
 
-const STUDENTS = ['Orion', 'Malachi'];
+// Students passed as prop from AcademicRecordsTab (Firestore settings)
 const DOT_COLORS = [
   '#1565c0', '#c0392b', '#2e7d32', '#7b1fa2',
   '#e65100', '#00838f', '#558b2f', '#ad1457',
@@ -34,7 +34,7 @@ function todayStr() {
 }
 
 export default function RecordsMainView({
-  selectedStudent, setSelectedStudent,
+  students, selectedStudent, setSelectedStudent,
   selectedQuarterId, setSelectedQuarterId,
   summary, courses, grades,
   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades, onCalendarImport,
@@ -54,7 +54,7 @@ export default function RecordsMainView({
       </header>
 
       <div className="ar-student-row">
-        {STUDENTS.map(s => (
+        {(students ?? []).map(s => (
           <button
             key={s}
             className={`ar-student-pill${s === selectedStudent ? ' active' : ''}`}

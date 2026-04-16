@@ -31,7 +31,7 @@ export function useHomeSummary(uid) {
   const [students, setStudents]         = useState([]);
   const [activeStudent, setActiveStudent] = useState(null);
   const [subjects, setSubjects]         = useState({});
-  const [points, setPoints]             = useState({ Orion: null, Malachi: null });
+  const [points, setPoints]             = useState({});
   const [attendance, setAttendance]     = useState({});
 
   const weekId   = toWeekId(getMondayOf(new Date()));
@@ -59,10 +59,10 @@ export function useHomeSummary(uid) {
     });
   }, [uid, activeStudent, weekId, dayIndex]);
 
-  // Subscribe to Orion and Malachi's point balances
+  // Subscribe to each student's point balance
   useEffect(() => {
-    if (!uid) return;
-    const unsubs = ['Orion', 'Malachi'].map(name => {
+    if (!uid || !students.length) return;
+    const unsubs = students.map(name => {
       const ref = doc(db, `users/${uid}/rewardTracker/${name}`);
       return onSnapshot(ref, snap => {
         const pts = snap.data()?.points ?? 0;
@@ -70,11 +70,11 @@ export function useHomeSummary(uid) {
       });
     });
     return () => unsubs.forEach(u => u());
-  }, [uid]);
+  }, [uid, students]);
 
-  // One-shot: fetch attendance for both students
+  // One-shot: fetch attendance for all students
   useEffect(() => {
-    if (!uid) return;
+    if (!uid || !students.length) return;
     (async () => {
       try {
         const today = todayIso();
@@ -97,7 +97,7 @@ export function useHomeSummary(uid) {
         const sickSnap = await getDocs(collection(db, `users/${uid}/sickDays`));
         const sickDates = sickSnap.docs.map(d => d.id);
         const result = {};
-        for (const name of ['Orion', 'Malachi']) {
+        for (const name of students) {
           const sick = sickDates.filter(d => d >= active.startDate && d <= end).length;
           const attended = Math.max(0, schoolDays - breakDays - sick);
           result[name] = { attended, required: REQUIRED_DAYS };
@@ -107,7 +107,7 @@ export function useHomeSummary(uid) {
         console.warn('useHomeSummary: attendance fetch failed', err);
       }
     })();
-  }, [uid]);
+  }, [uid, students]);
 
   return { students, activeStudent, setActiveStudent, subjects, dayIndex, weekId, points, attendance };
 }

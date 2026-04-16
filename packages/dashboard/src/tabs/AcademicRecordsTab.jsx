@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@homeschool/shared';
+import { db } from '@homeschool/shared';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { useCourses }         from '../tools/academic-records/hooks/useCourses.js';
 import { useEnrollments }     from '../tools/academic-records/hooks/useEnrollments.js';
 import { useSchoolYears }     from '../tools/academic-records/hooks/useSchoolYears.js';
@@ -16,10 +18,19 @@ export default function AcademicRecordsTab() {
   const { user } = useAuth();
   const uid = user?.uid;
 
+  const [students, setStudents] = useState([]);
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
+      setStudents(snap.data()?.names ?? []);
+    });
+  }, [uid]);
+
   const { courses, loading, error, addCourse, updateCourse, removeCourse } = useCourses(uid);
   const { enrollments, loading: enrollmentsLoading, error: enrollmentsError, addEnrollment, updateEnrollment, removeEnrollment } = useEnrollments(uid, courses);
   const { schoolYears, loading: schoolYearsLoading, error: schoolYearsError, addSchoolYear, updateSchoolYear, removeSchoolYear, addQuarter, updateQuarter, removeQuarter, addBreak, updateBreak, removeBreak } = useSchoolYears(uid);
-  const [selectedStudent, setSelectedStudent]     = useState('Orion');
+  const [selectedStudent, setSelectedStudent]     = useState(null);
+  useEffect(() => { if (students.length && !selectedStudent) setSelectedStudent(students[0]); }, [students, selectedStudent]);
   const [selectedQuarterId, setSelectedQuarterId] = useState(null);
   const summary = useAcademicSummary(uid, selectedStudent, schoolYears, enrollments, courses);
   const { grades, saveGrade, addGrade } = useGrades(uid);
@@ -139,7 +150,7 @@ export default function AcademicRecordsTab() {
   return (
     <div className="ar-tab">
       <RecordsMainView
-        selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent}
+        students={students} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent}
         selectedQuarterId={selectedQuarterId} setSelectedQuarterId={setSelectedQuarterId}
         summary={summary} courses={courses} grades={grades}
         onCatalogOpen={() => setCatalogSheetOpen(true)} onEnrollmentsOpen={() => setEnrollmentSheetOpen(true)}
