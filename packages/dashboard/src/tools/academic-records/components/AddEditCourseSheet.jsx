@@ -8,14 +8,21 @@ import './AddEditCourseSheet.css';
 // catalog without dismissing it.
 //
 // Props:
-//   open      — boolean, controls visibility
-//   onClose   — () => void, dismisses this sheet only
-//   onSave    — (data) => void, called with { name, curriculum, gradingType }
-//   onDelete  — () => void, only invoked in Edit mode after inline confirmation
-//   course    — null in Add mode; { id, name, curriculum, gradingType } in Edit
+//   open         — boolean, controls visibility
+//   onClose      — () => void, dismisses this sheet only
+//   onSave       — (data) => void, called with { name, curriculum, gradingType }
+//   onDelete     — () => void, only invoked in Edit mode after inline confirmation
+//   course       — null in Add mode; { id, name, curriculum, gradingType } in Edit
+//   enrollments  — Array<{ courseId, ... }>; used in Edit mode to lock the name
+//                  field when this course already has enrollments. Renaming
+//                  would orphan the planner-sync subject + confuse historical
+//                  grades, so the name becomes read-only with a helper note.
 
-export default function AddEditCourseSheet({ open, onClose, onSave, onDelete, course }) {
+export default function AddEditCourseSheet({
+  open, onClose, onSave, onDelete, course, enrollments,
+}) {
   const isEdit = course != null;
+  const hasEnrollments = isEdit && (enrollments ?? []).some(e => e.courseId === course.id);
 
   // Local form state — initialized from `course` when it changes.
   const [name, setName]               = useState('');
@@ -55,7 +62,7 @@ export default function AddEditCourseSheet({ open, onClose, onSave, onDelete, co
 
         <div className="aec-sheet-body">
 
-          {/* Course name */}
+          {/* Course name — locked when this course already has enrollments */}
           <label className="aec-field">
             <span className="aec-label">Course name</span>
             <input
@@ -64,8 +71,15 @@ export default function AddEditCourseSheet({ open, onClose, onSave, onDelete, co
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Reading 3"
-              autoFocus
+              autoFocus={!hasEnrollments}
+              readOnly={hasEnrollments}
+              style={hasEnrollments ? { background: 'var(--bg-surface)' } : undefined}
             />
+            {hasEnrollments && (
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Course name cannot be changed after students are enrolled.
+              </p>
+            )}
           </label>
 
           {/* Curriculum (optional) */}

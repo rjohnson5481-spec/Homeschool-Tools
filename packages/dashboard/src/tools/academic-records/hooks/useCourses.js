@@ -67,7 +67,7 @@ export function useCourses(uid) {
   }, [uid, reload]);
 
   const removeCourse = useCallback(async (courseId) => {
-    if (!uid) return;
+    if (!uid) throw new Error('useCourses: uid is required');
     try {
       await fbDeleteCourse(uid, courseId);
       await reload();

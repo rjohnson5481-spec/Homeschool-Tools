@@ -178,6 +178,7 @@ export default function AcademicRecordsTab() {
         onSave={handleSaveCourse}
         onDelete={handleDeleteCourse}
         course={editingCourse}
+        enrollments={enrollments}
       />
 
       <EnrollmentSheet

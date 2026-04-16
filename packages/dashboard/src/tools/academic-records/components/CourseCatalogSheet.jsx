@@ -44,7 +44,7 @@ export default function CourseCatalogSheet({
           <p className="cc-section-label"><span>Courses</span></p>
 
           {error && (
-            <p className="cc-loading" role="alert">⚠ {error}</p>
+            <p className="cc-error" role="alert">⚠ {error}</p>
           )}
 
           {loading && (

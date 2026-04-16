@@ -21,7 +21,7 @@ export function useSettings(uid, plannerStudent) {
     });
   }, [uid]);
 
-  // Load subjects for activeStudent when it changes (lazy, cached).
+  // Load subjects for activeStudent when it changes (always fresh).
   useEffect(() => {
     if (!uid || !activeStudent) return;
     readSettingsSubjects(uid, activeStudent).then(subjects => {
