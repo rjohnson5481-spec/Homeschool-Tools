@@ -71,9 +71,10 @@ export const activitiesCol = (uid) =>
 export const activityDoc = (uid, activityId) =>
   `users/${uid}/activities/${activityId}`;
 
-// ── Grading type constants (mirror the keys in scales.js GRADING_TYPES) ───
-export const GRADING_TYPE_LETTER = 'letter';
-export const GRADING_TYPE_ESNU   = 'esnu';
+// ── Grading type constants (re-exported from scales.js — single source of truth) ──
+import { GRADING_TYPES } from './scales.js';
+export const GRADING_TYPE_LETTER = GRADING_TYPES.LETTER;
+export const GRADING_TYPE_ESNU   = GRADING_TYPES.ESNU;
 
 // ── Grade levels ──────────────────────────────────────────────────────────
 export const GRADE_LEVELS = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
