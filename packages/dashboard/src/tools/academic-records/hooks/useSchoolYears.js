@@ -6,14 +6,17 @@ import {
   getQuarters as fbGetQuarters,
   saveQuarter as fbSaveQuarter,
   deleteQuarter as fbDeleteQuarter,
+  getBreaks as fbGetBreaks,
+  saveBreak as fbSaveBreak,
+  deleteBreak as fbDeleteBreak,
 } from '../firebase/academicRecords.js';
 
 // Manages school years and their nested quarters.
 //
 // Each reload fetches every school year, then fetches that year's quarters
-// in parallel and attaches them as a `quarters: []` field on the year row.
+// and breaks in parallel, attaching as `quarters: []` and `breaks: []`.
 // Consumers see a single shaped tree:
-//   [{ id, label, startDate, endDate, quarters: [{ id, label, startDate, endDate }] }]
+//   [{ id, label, startDate, endDate, quarters: [...], breaks: [...] }]
 //
 // All mutators throw on missing uid (no silent returns).
 //
@@ -52,10 +55,13 @@ export function useSchoolYears(uid) {
     setError(null);
     try {
       const years = await fbGetSchoolYears(uid);
-      const yearsWithQuarters = await Promise.all(
-        years.map(async (y) => ({ ...y, quarters: await fbGetQuarters(uid, y.id) })),
+      const yearsWithChildren = await Promise.all(
+        years.map(async (y) => {
+          const [quarters, breaks] = await Promise.all([fbGetQuarters(uid, y.id), fbGetBreaks(uid, y.id)]);
+          return { ...y, quarters, breaks };
+        }),
       );
-      setSchoolYears(yearsWithQuarters);
+      setSchoolYears(yearsWithChildren);
     } catch (err) {
       setError(err?.message ?? 'Failed to load school years');
     } finally {
@@ -137,9 +143,46 @@ export function useSchoolYears(uid) {
     }
   }, [uid, reload]);
 
+  // ─── Breaks ───
+  const addBreak = useCallback(async (yearId, data) => {
+    if (!uid) throw new Error('useSchoolYears: uid is required');
+    try {
+      const id = genId();
+      await fbSaveBreak(uid, yearId, id, data);
+      await reload();
+      return id;
+    } catch (err) {
+      setError(err?.message ?? 'Failed to add break');
+      throw err;
+    }
+  }, [uid, reload]);
+
+  const updateBreak = useCallback(async (yearId, breakId, data) => {
+    if (!uid) throw new Error('useSchoolYears: uid is required');
+    try {
+      await fbSaveBreak(uid, yearId, breakId, data);
+      await reload();
+    } catch (err) {
+      setError(err?.message ?? 'Failed to update break');
+      throw err;
+    }
+  }, [uid, reload]);
+
+  const removeBreak = useCallback(async (yearId, breakId) => {
+    if (!uid) throw new Error('useSchoolYears: uid is required');
+    try {
+      await fbDeleteBreak(uid, yearId, breakId);
+      await reload();
+    } catch (err) {
+      setError(err?.message ?? 'Failed to delete break');
+      throw err;
+    }
+  }, [uid, reload]);
+
   return {
     schoolYears, loading, error,
     addSchoolYear, updateSchoolYear, removeSchoolYear,
     addQuarter, updateQuarter, removeQuarter,
+    addBreak, updateBreak, removeBreak,
   };
 }
