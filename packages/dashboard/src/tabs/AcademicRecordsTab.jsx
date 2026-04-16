@@ -6,6 +6,7 @@ import { useSchoolYears }     from '../tools/academic-records/hooks/useSchoolYea
 import { useAcademicSummary } from '../tools/academic-records/hooks/useAcademicSummary.js';
 import { useGrades }          from '../tools/academic-records/hooks/useGrades.js';
 import { useReportNotes }     from '../tools/academic-records/hooks/useReportNotes.js';
+import { useSavedReports }   from '../tools/academic-records/hooks/useSavedReports.js';
 import RecordsMainView        from '../tools/academic-records/components/RecordsMainView.jsx';
 import GradeEntrySheet        from '../tools/academic-records/components/GradeEntrySheet.jsx';
 import CourseCatalogSheet     from '../tools/academic-records/components/CourseCatalogSheet.jsx';
@@ -17,6 +18,7 @@ import AddEditSchoolYearSheet from '../tools/academic-records/components/AddEdit
 import CalendarImportSheet    from '../tools/academic-records/components/CalendarImportSheet.jsx';
 import AttendanceDetailSheet  from '../tools/academic-records/components/AttendanceDetailSheet.jsx';
 import ReportCardGeneratorSheet from '../tools/academic-records/components/ReportCardGeneratorSheet.jsx';
+import SavedReportCardsSheet from '../tools/academic-records/components/SavedReportCardsSheet.jsx';
 import './AcademicRecordsTab.css';
 
 // Phase 2 entry point. Tab-level wiring lives here:
@@ -44,6 +46,7 @@ export default function AcademicRecordsTab() {
   const summary = useAcademicSummary(uid, selectedStudent, schoolYears, enrollments, courses);
   const { grades, saveGrade, addGrade } = useGrades(uid);
   const { reportNotes, saveNote } = useReportNotes(uid);
+  const { savedReports, loading: reportsLoading, saveReport, removeReport } = useSavedReports(uid);
 
   // Sync selectedQuarterId once the summary resolves the active quarter.
   useEffect(() => {
@@ -79,8 +82,9 @@ export default function AcademicRecordsTab() {
   // Sheet state — attendance detail
   const [attendanceDetailOpen, setAttendanceDetailOpen] = useState(false);
 
-  // Sheet state — report card generator
+  // Sheet state — report card generator + saved reports
   const [reportCardOpen, setReportCardOpen] = useState(false);
+  const [savedReportsOpen, setSavedReportsOpen] = useState(false);
 
   // ─── Course handlers ───
   function closeCatalog()       { setCatalogSheetOpen(false); setAddEditSheetOpen(false); setEditingCourse(null); }
@@ -199,6 +203,7 @@ export default function AcademicRecordsTab() {
         onCalendarImport={summary.activeSchoolYear ? () => setCalendarImportOpen(true) : null}
         onAttendanceDetail={() => setAttendanceDetailOpen(true)}
         onGenerateReport={() => setReportCardOpen(true)}
+        onOpenSavedReports={() => setSavedReportsOpen(true)}
       />
 
       <CourseCatalogSheet
@@ -255,11 +260,18 @@ export default function AcademicRecordsTab() {
       />
       <ReportCardGeneratorSheet
         open={reportCardOpen} onClose={() => setReportCardOpen(false)}
+        onSaveReport={saveReport}
         student={selectedStudent} activeSchoolYear={summary.activeSchoolYear}
         selectedQuarterId={selectedQuarterId}
         enrollments={enrollments} courses={courses} grades={grades}
         attendanceDays={summary.attendanceDays}
         reportNotes={reportNotes} saveNote={saveNote}
+      />
+      <SavedReportCardsSheet
+        open={savedReportsOpen} onClose={() => setSavedReportsOpen(false)}
+        savedReports={savedReports} loading={reportsLoading}
+        onDelete={removeReport}
+        onRegenerate={() => { setSavedReportsOpen(false); setReportCardOpen(true); }}
       />
 
     </div>

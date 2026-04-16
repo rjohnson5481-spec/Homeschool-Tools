@@ -38,7 +38,7 @@ export default function RecordsMainView({
   selectedQuarterId, setSelectedQuarterId,
   summary, courses, grades,
   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades, onCalendarImport,
-  onAttendanceDetail, onGenerateReport,
+  onAttendanceDetail, onGenerateReport, onOpenSavedReports,
 }) {
   const { activeSchoolYear, studentEnrollments, courseCount, attendanceDays } = summary;
   const today      = todayStr();
@@ -166,6 +166,9 @@ export default function RecordsMainView({
         </button>
         <button className="ar-action-btn" onClick={onGenerateReport}>
           <span>📄 Generate Report Card</span><span>›</span>
+        </button>
+        <button className="ar-action-btn" onClick={onOpenSavedReports}>
+          <span>📋 Saved Report Cards</span><span>›</span>
         </button>
       </div>
     </>
