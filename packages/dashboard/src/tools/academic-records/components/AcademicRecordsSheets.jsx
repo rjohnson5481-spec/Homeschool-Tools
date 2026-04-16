@@ -11,13 +11,15 @@ import ReportCardGeneratorSheet from './ReportCardGeneratorSheet.jsx';
 import SavedReportCardsSheet  from './SavedReportCardsSheet.jsx';
 import ManageActivitiesSheet  from './ManageActivitiesSheet.jsx';
 import AddEditActivitySheet   from './AddEditActivitySheet.jsx';
+import CurriculumImportSheet from './CurriculumImportSheet.jsx';
 
 export default function AcademicRecordsSheets(p) {
   return (
     <>
       <CourseCatalogSheet open={p.catalogSheetOpen} onClose={p.closeCatalog}
         courses={p.courses} loading={p.loading} error={p.error}
-        onEditCourse={p.handleEditCourse} onAddCourse={p.handleAddCourse} />
+        onEditCourse={p.handleEditCourse} onAddCourse={p.handleAddCourse}
+        onImportCurriculum={p.onImportCurriculum} />
       <AddEditCourseSheet open={p.addEditSheetOpen} onClose={p.closeAddEdit}
         onSave={p.handleSaveCourse} onDelete={p.handleDeleteCourse}
         course={p.editingCourse} enrollments={p.enrollments} />
@@ -59,6 +61,8 @@ export default function AcademicRecordsSheets(p) {
       <AddEditActivitySheet open={p.addEditActivitySheetOpen} onClose={p.closeAddEditActivity}
         onSave={p.handleSaveActivity} onDelete={p.handleDeleteActivity}
         student={p.activityStudent} activity={p.editingActivity} />
+      <CurriculumImportSheet open={p.curriculumImportOpen} onClose={p.closeCurriculumImport}
+        onImport={p.handleCurriculumImport} courses={p.courses} />
     </>
   );
 }

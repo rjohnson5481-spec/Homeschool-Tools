@@ -25,7 +25,7 @@ const DOT_COLORS = [
 ];
 
 export default function CourseCatalogSheet({
-  open, onClose, courses, loading, error, onEditCourse, onAddCourse,
+  open, onClose, courses, loading, error, onEditCourse, onAddCourse, onImportCurriculum,
 }) {
   if (!open) return null;
 
@@ -41,7 +41,10 @@ export default function CourseCatalogSheet({
         </header>
 
         <div className="cc-sheet-body">
-          <p className="cc-section-label"><span>Courses</span></p>
+          <div className="cc-section-row">
+            <p className="cc-section-label"><span>Courses</span></p>
+            {onImportCurriculum && <button className="cc-import-btn" onClick={onImportCurriculum}>📥 Import Receipt</button>}
+          </div>
 
           {error && (
             <p className="cc-error" role="alert">⚠ {error}</p>

@@ -55,6 +55,7 @@ export default function AcademicRecordsTab() {
   const [addEditActivitySheetOpen, setAddEditActivitySheetOpen]     = useState(false);
   const [editingActivity, setEditingActivity]                       = useState(null);
   const [activityStudent, setActivityStudent]                       = useState(null);
+  const [curriculumImportOpen, setCurriculumImportOpen]             = useState(false);
 
   // ─── Course handlers ───
   function closeCatalog()       { setCatalogSheetOpen(false); setAddEditSheetOpen(false); setEditingCourse(null); }
@@ -128,6 +129,13 @@ export default function AcademicRecordsTab() {
   async function handleSaveActivity(data) { if (!uid) return; if (editingActivity) await fbUpdateActivity(editingActivity.id, data); else await fbAddActivity(data); closeAddEditActivity(); }
   async function handleDeleteActivity() { if (editingActivity) { await fbRemoveActivity(editingActivity.id); closeActivitiesSheets(); } }
 
+  // ─── Curriculum import ───
+  async function handleCurriculumImport(newCourses) {
+    if (!uid) return;
+    for (const c of newCourses) await addCourse(c);
+    setCurriculumImportOpen(false);
+  }
+
   return (
     <div className="ar-tab">
       <RecordsMainView
@@ -176,6 +184,9 @@ export default function AcademicRecordsTab() {
         addEditActivitySheetOpen={addEditActivitySheetOpen} closeAddEditActivity={closeAddEditActivity}
         handleSaveActivity={handleSaveActivity} handleDeleteActivity={handleDeleteActivity}
         editingActivity={editingActivity} activityStudent={activityStudent}
+        onImportCurriculum={() => setCurriculumImportOpen(true)}
+        curriculumImportOpen={curriculumImportOpen} closeCurriculumImport={() => setCurriculumImportOpen(false)}
+        handleCurriculumImport={handleCurriculumImport}
       />
     </div>
   );
