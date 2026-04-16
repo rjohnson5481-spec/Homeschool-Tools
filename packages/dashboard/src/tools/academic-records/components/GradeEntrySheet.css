@@ -77,7 +77,18 @@
   flex-shrink: 0;
 }
 
-/* ── Grade pills ── */
+/* ── Percentage input (letter scale) ── */
+.ge-grade-input-wrap { display: flex; align-items: center; gap: 10px; }
+.ge-percent-input {
+  width: 80px; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 16px; font-family: 'Lexend', sans-serif;
+  text-align: center; background: var(--bg-base); color: var(--text-primary);
+}
+.ge-percent-input:focus { border-color: var(--gold); outline: none; }
+.ge-computed-grade { font-size: 22px; font-weight: 700; color: var(--gold); min-width: 28px; text-align: center; }
+
+/* ── Grade pills (ESNU) ── */
 .ge-pills { display: flex; gap: 6px; flex-wrap: wrap; }
 .ge-pill {
   min-width: 40px; padding: 8px 12px;

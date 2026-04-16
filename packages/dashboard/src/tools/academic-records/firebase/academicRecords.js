@@ -161,14 +161,16 @@ export async function getGradesByEnrollment(uid, enrollmentId) {
 }
 
 // Updates an existing grade.
-// data shape: { enrollmentId, quarterId, grade }
+// data shape: { enrollmentId, quarterId, grade, percent }
+// percent is a number (0–100) for letter scale grades, null for ESNU grades.
 export function saveGrade(uid, gradeId, data) {
   const ref = doc(db, gradeDoc(uid, gradeId));
   return setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 // Adds a new grade. Returns the new document id.
-// data shape: { enrollmentId, quarterId, grade }
+// data shape: { enrollmentId, quarterId, grade, percent }
+// percent is a number (0–100) for letter scale grades, null for ESNU grades.
 export async function addGrade(uid, data) {
   const ref = await addDoc(collection(db, gradesCol(uid)), {
     ...data,
