@@ -1,28 +1,28 @@
-// HomeTab — morning summary dashboard with brand header.
-// Header is mobile-only branding; dark mode + sign-out now live in the
-// Settings tab. Header is hidden on desktop (sidebar provides branding).
+import { useState } from 'react';
 import { useAuth } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import { useHomeSummary } from '../hooks/useHomeSummary.js';
+import { updateCell } from '../tools/planner/firebase/planner.js';
+import { awardPoints } from '../tools/reward-tracker/firebase/rewardTracker.js';
+import StudentDetailSheet from './StudentDetailSheet.jsx';
 import './HomeTab.css';
 import './HomeHeader.css';
 
-const DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-function cashValue(pts) {
-  return (Math.floor(pts / 15 * 100) / 100).toFixed(2);
-}
-
 export default function HomeTab({ onTabChange }) {
   const { user } = useAuth();
-  const { students, activeStudent, setActiveStudent, subjects, points, attendance } = useHomeSummary(user?.uid);
+  const uid = user?.uid;
+  const { students, lessonsByStudent, pointsByStudent, attendance, weekId, dayIndex, todayLabel } = useHomeSummary(uid);
+  const [openSheet, setOpenSheet] = useState(null);
 
-  const today      = new Date();
-  const dateLabel  = `${DAY_NAMES[today.getDay()]}, ${MONTH_NAMES[today.getMonth()]} ${today.getDate()}`;
-  const subjectKeys  = Object.keys(subjects).filter(s => s !== 'allday');
-  const totalLessons = subjectKeys.length;
-  const doneLessons  = subjectKeys.filter(s => subjects[s].done).length;
+  function handleLessonToggle(student, di, subject, currentDone) {
+    if (!uid) return;
+    updateCell(uid, weekId, student, subject, di, { done: !currentDone });
+  }
+
+  function handleAwardPoints(student, amount) {
+    if (!uid) return;
+    awardPoints(uid, student, amount, '');
+  }
 
   return (
     <div className="home-tab">
@@ -36,90 +36,100 @@ export default function HomeTab({ onTabChange }) {
         </div>
       </header>
       <div className="home-content">
-
-        <div className="home-date-row">
-          <span className="home-date">{dateLabel}</span>
+        <div className="home-header-bar">
+          <span className="home-date">{todayLabel}</span>
           <span className="home-greeting">Good morning</span>
         </div>
 
-        {students.length > 1 && (
-          <div className="home-student-row">
-            {students.map(s => (
-              <button
-                key={s}
-                className={`home-student-pill${s === activeStudent ? ' home-student-pill--active' : ''}`}
-                onClick={() => setActiveStudent(s)}
-              >{s}</button>
-            ))}
-          </div>
-        )}
-
-        <div className="home-summary-row">
-          <div className="home-summary-card">
-            <div className="home-summary-label">Lessons</div>
-            <div className="home-summary-value">{doneLessons}/{totalLessons}</div>
-            <div className="home-summary-sub">
-              {totalLessons === 0 ? 'No lessons' : `${totalLessons - doneLessons} left`}
-            </div>
-          </div>
-          {['Orion', 'Malachi'].map(name => (
-            <div key={name} className="home-summary-card">
-              <div className="home-summary-label">{name}</div>
-              <div className="home-summary-value">
-                {points[name] !== null ? points[name] : '…'}
-              </div>
-              <div className="home-summary-sub">
-                {points[name] !== null ? `$${cashValue(points[name])}` : 'pts'}
-              </div>
-            </div>
-          ))}
-          {['Orion', 'Malachi'].map(name => {
-            const a = attendance[name];
-            if (!a) return null;
-            const pct = Math.min(100, Math.round((a.attended / a.required) * 100));
+        <div className="home-students">
+          {students.map(name => {
+            const lessons = lessonsByStudent[name] ?? [];
+            const pts = pointsByStudent[name] ?? { points: 0, cashValue: '0.00' };
+            const att = attendance[name] ?? { attended: 0, required: 175, sick: 0, breakDays: 0, schoolDays: 0 };
+            const total = lessons.length, done = lessons.filter(l => l.done).length;
+            const allDone = total > 0 && done === total;
+            const lessonPct = total > 0 ? Math.round((done / total) * 100) : 0;
+            const attPct = att.required > 0 ? Math.min(100, Math.round((att.attended / att.required) * 100)) : 0;
             return (
-              <div key={`att-${name}`} className="home-summary-card home-attendance-card">
-                <div className="home-summary-label">{name} Attend.</div>
-                <div className="home-summary-value home-attendance-value">{a.attended}</div>
-                <div className="home-summary-sub">of {a.required} days</div>
-                <div className="home-attendance-bar">
-                  <div className="home-attendance-fill" style={{ width: `${pct}%` }} />
+              <div key={name} className="home-student-card" onClick={() => setOpenSheet(name)}>
+                <div className="home-student-card-header">
+                  <span className="home-student-name">{name}</span>
+                  <span className={`home-student-tap-hint${allDone ? ' done' : ''}`}>{allDone ? 'All done ✓' : 'Tap for details'}</span>
+                </div>
+                <div className="home-student-stats">
+                  <div className="home-student-stat">
+                    <div className="home-student-stat-value">{total}</div>
+                    <div className="home-student-stat-label">Lessons</div>
+                  </div>
+                  <div className="home-student-stat">
+                    <div className="home-student-stat-value green">{done}</div>
+                    <div className="home-student-stat-label">Done</div>
+                  </div>
+                  <div className="home-student-stat">
+                    <div className="home-student-stat-value gold">{pts.points}</div>
+                    <div className="home-student-stat-label">Points</div>
+                  </div>
+                  <div className="home-student-stat">
+                    <div className="home-student-stat-value blue">{att.attended}</div>
+                    <div className="home-student-stat-label">Days</div>
+                  </div>
+                </div>
+                <div className="home-student-progress">
+                  <div className="home-progress-row">
+                    <div className="home-progress-labels">
+                      <span>{done} of {total} done</span>
+                      <span>${pts.cashValue}</span>
+                    </div>
+                    <div className="home-progress-track">
+                      <div className="home-progress-fill-lessons" style={{ width: `${lessonPct}%` }} />
+                    </div>
+                  </div>
+                  <div className="home-progress-row">
+                    <div className="home-progress-labels">
+                      <span>{att.attended} of {att.required} days · {attPct}%</span>
+                    </div>
+                    <div className="home-progress-track">
+                      <div className="home-progress-fill-attendance" style={{ width: `${attPct}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="home-lesson-list">
+                  {lessons.map(l => (
+                    <div key={l.subject} className="home-lesson-row" onClick={e => e.stopPropagation()}>
+                      <button className={`home-lesson-checkbox${l.done ? ' checked' : ''}`}
+                        onClick={() => handleLessonToggle(name, l.dayIndex, l.subject, l.done)}>{l.done ? '✓' : ''}</button>
+                      <span className="home-lesson-subject">{l.subject}</span>
+                      {l.lesson && <span className="home-lesson-text">{l.lesson}</span>}
+                      {l.flag && <span className="home-lesson-flag" />}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {totalLessons > 0 && (
-          <div className="home-section">
-            <p className="home-section-label">Today — {activeStudent}</p>
-            <div className="home-lesson-list">
-              {subjectKeys.map(subject => (
-                <button key={subject} className="home-lesson-row" onClick={() => onTabChange('planner')}>
-                  <span className={`home-lesson-dot${subjects[subject].done ? ' home-lesson-dot--done' : ''}`} />
-                  <div className="home-lesson-body">
-                    <span className="home-lesson-subject">{subject}</span>
-                    {subjects[subject].lesson && (
-                      <span className="home-lesson-text">{subjects[subject].lesson}</span>
-                    )}
-                  </div>
-                  <span className="home-lesson-chevron">›</span>
-                </button>
-              ))}
-            </div>
+        <div className="home-award-card" onClick={() => students.length && setOpenSheet(students[0])}>
+          <div>
+            <div className="home-award-label">🏅 Points & Rewards</div>
+            <div className="home-award-sub">{students.map(s => `${s} ${pointsByStudent[s]?.points ?? 0} pts`).join(' · ')}</div>
           </div>
-        )}
-
-        <div className="home-actions">
-          <button className="home-action-btn home-action-btn--primary" onClick={() => onTabChange('planner')}>
-            📅 Open Planner
-          </button>
-          <button className="home-action-btn home-action-btn--ghost" onClick={() => onTabChange('rewards')}>
-            🏅 Award Points
-          </button>
+          <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 18 }}>›</span>
         </div>
 
+        <div className="home-actions">
+          <button className="home-action-btn home-action-btn--primary" onClick={() => onTabChange('planner')}>📅 Open Planner</button>
+          <button className="home-action-btn home-action-btn--ghost" onClick={() => onTabChange('rewards')}>🏅 Award Points</button>
+        </div>
       </div>
+
+      {students.map(name => (
+        <StudentDetailSheet key={name} open={openSheet === name} onClose={() => setOpenSheet(null)}
+          student={name} lessons={lessonsByStudent[name] ?? []}
+          attendance={attendance[name]} points={pointsByStudent[name]}
+          uid={uid} weekId={weekId}
+          onLessonToggle={handleLessonToggle} onAwardPoints={handleAwardPoints} />
+      ))}
     </div>
   );
 }
