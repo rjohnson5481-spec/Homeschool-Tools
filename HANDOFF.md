@@ -1,40 +1,41 @@
-# HANDOFF — v0.27.1 Streamlined Parse→Review→Publish Flow
+# HANDOFF — v0.27.2 Scheduled Firestore Backup
 
 ## What was completed this session
 
-2 code commits + this docs commit on `main`:
+4 code commits + this docs commit on `main`:
 
 ```
-09b683b chore: bump to v0.27.1
-e9428ae feat: streamline import to Parse→Review→Publish flow (v0.27.1)
+7df7f02 chore: bump to v0.27.2
+2a2de46 chore: configure netlify functions bundler
+d28f434 feat: add 6-hour scheduled Firestore backup to Netlify Blobs (v0.27.2)
+f5cd64c chore: add @netlify/functions and firebase-admin dependencies
 ```
 
-### Commit 1 — Streamlined flow (`e9428ae`)
+### Commit 1 — Dependencies (`f5cd64c`)
+Added `@netlify/functions` 2.8.1 and `firebase-admin` 12.1.0 to root package.json (exact versions).
 
-**UploadSheet.jsx (149→109 lines):**
-- Auto-trigger diff when parse completes: `useEffect` fires `onApply(result, setDiff)` when `result` arrives, with `triggered` ref to prevent double-fire.
-- Removed intermediate "Review Changes" button — diff appears automatically after parse.
-- Removed the parsed result preview block (day-grouped lesson list) — no longer shown since diff replaces it.
-- Renamed: "Import" → **Parse**, "Confirm Import" → **Publish**, "Applied" → **Published**.
-- Shows "Comparing with existing…" spinner during diff comparison.
-- `reviewing` state tracks the diff comparison phase.
+### Commit 2 — Scheduled backup (`d28f434`)
+**netlify/functions/scheduled-backup.js** (113 lines, NEW):
+- Netlify scheduled function running every 6 hours (`0 */6 * * *`).
+- Discovers all user UIDs via collectionGroup queries across 10 collection types.
+- For each user: reads all 13 Firestore collections (same structure as client-side `exportAllData`), including nested subcollections (quarters, breaks, reward log, week/day/subjects).
+- Saves timestamped JSON to Netlify Blobs `backups` store.
+- Uses Firebase Admin SDK with `FIREBASE_SERVICE_ACCOUNT` env var (already set in Netlify dashboard).
+- Error handling: try/catch logs errors, returns 500 on failure.
 
-**ImportDiffPreview.jsx (49→45 lines):**
-- Removed `onCancel`/`onConfirm` props and the inline action buttons — UploadSheet footer handles Cancel/Publish.
+### Commit 3 — Netlify config (`2a2de46`)
+Added `[functions] node_bundler = "esbuild"` to netlify.toml.
 
-### Commit 2 — Version bump (`09b683b`)
-0.27.0 → **0.27.1** across all 3 packages.
-
-Build green. PlannerLayout.jsx not touched (still 353 lines).
+### Commit 4 — Version bump (`7df7f02`)
+0.27.1 → **0.27.2** across all 3 packages. Build green.
 
 ---
 
-## Import flow (v0.27.1)
+## Environment variables required
 
-1. Pick file → **Parse** button
-2. Parse → spinner → "Comparing with existing…" spinner
-3. Diff preview with NEW/CHANGED/UNCHANGED badges
-4. **Publish** → writes only new + changed cells → success
+| Variable | Where | Purpose |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | Netlify env vars | JSON string of Firebase service account key for Admin SDK |
 
 ---
 
@@ -42,21 +43,23 @@ Build green. PlannerLayout.jsx not touched (still 353 lines).
 
 | File | Lines |
 |---|---|
-| `UploadSheet.jsx` | 109 |
-| `ImportDiffPreview.jsx` | 45 |
+| `netlify/functions/scheduled-backup.js` | 113 |
 
 ---
 
 ## What the next session should start with
 
 1. Read CLAUDE.md + HANDOFF.md.
-2. Smoke test: pick PDF → Parse → auto-diff → Publish.
-3. Priority: split PlannerLayout.jsx (353 lines).
+2. Deploy to Netlify and verify the scheduled function appears in the Functions tab.
+3. Trigger a manual test run to confirm backup writes to Blobs.
+4. Check Netlify Blobs storage for the backup file.
 
 ## Key file locations
 
 ```
-packages/dashboard/src/tools/planner/components/
-├── UploadSheet.jsx                          # 149 → 109
-└── ImportDiffPreview.jsx                    # 49 → 45
+/package.json                                  # +@netlify/functions, +firebase-admin
+/netlify.toml                                  # +[functions] node_bundler
+/netlify/functions/
+├── parse-schedule.js                          # existing (untouched)
+└── scheduled-backup.js                        # NEW — 113 lines
 ```
