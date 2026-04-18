@@ -1,23 +1,24 @@
-# HANDOFF — v0.25.4 Fix Within-Day Reorder Direction
+# HANDOFF — v0.25.5 Fix Card-Level Drop Targets for Reorder
 
 ## What was completed this session
 
 2 code commits + this docs commit on `main`:
 
 ```
-21d0648 chore: bump to v0.25.4
-3e99b3c fix: closestCenter collision + correct reorder index for up/down drag (v0.25.4)
+9bea662 chore: bump to v0.25.5
+502adcf fix: cards are droppable targets for accurate up/down reorder (v0.25.5)
 ```
 
-### Commit 1 — Fix reorder direction (`3e99b3c`)
+### Commit 1 — Cards as droppable targets (`502adcf`)
 
-**CalendarWeekView.jsx (186→190 lines):**
-- Added `closestCenter` collision detection to `DndContext` — uses card midpoints as swap thresholds so upward and downward drags are equally responsive.
-- Fixed within-day reorder logic: `over.id` is now parsed as a card drag ID (not just a column drop ID) to find the target subject. Dragged item is removed from array first, then spliced in at the target subject's index — fixes off-by-one when dragging downward.
-- Cross-day drops still work: if `over.id` is a card in a different column, `overCard.day` gives the target column; if it's a column drop ID, `parseDropId` gives it.
+**CalendarWeekView.jsx (190→196 lines):**
+- `DraggableCard` now uses both `useDraggable` AND `useDroppable` on the same node with the same ID. A merged ref callback sets both refs.
+- Cards show a gold outline (`1px solid rgba(201,168,76,0.3)`) when hovered during a drag.
+- Switched `collisionDetection` from `closestCenter` to `pointerWithin` — uses pointer position directly to find the element under the cursor, which works correctly with the combined draggable+droppable pattern.
+- `over.id` now resolves to the card being hovered (not the column), so `parseDragId(over.id)` correctly identifies the target subject for within-day reordering in both directions.
 
-### Commit 2 — Version bump (`21d0648`)
-0.25.3 → **0.25.4** across all 3 packages.
+### Commit 2 — Version bump (`9bea662`)
+0.25.4 → **0.25.5** across all 3 packages.
 
 Build green. Mobile completely untouched.
 
@@ -27,21 +28,22 @@ Build green. Mobile completely untouched.
 
 | File | Lines |
 |---|---|
-| `CalendarWeekView.jsx` | 190 |
+| `CalendarWeekView.jsx` | 196 |
 
 ---
 
 ## What is currently incomplete / pending
 
 - **Browser smoke test** — not run. Walk:
-  - Drag a card upward within a column → card moves above the target.
-  - Drag a card downward within a column → card moves below the target.
-  - Drag a card to a different column → cross-day move (optimistic).
+  - Drag a card upward within a column → card inserts above the target card.
+  - Drag a card downward within a column → card inserts at the target position.
+  - Target card shows gold outline during hover.
+  - Cross-day drag still works (optimistic move).
   - Mobile: completely unchanged.
 
 ## Key file locations
 
 ```
 packages/dashboard/src/tools/planner/components/
-└── CalendarWeekView.jsx                # 186 → 190
+└── CalendarWeekView.jsx                # 190 → 196
 ```
