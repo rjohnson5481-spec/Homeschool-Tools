@@ -9,6 +9,7 @@ import AddSubjectSheet from './AddSubjectSheet.jsx';
 import MonthSheet      from './MonthSheet.jsx';
 import SickDaySheet    from './SickDaySheet.jsx';
 import CalendarWeekView from './CalendarWeekView.jsx';
+import { readCell, updateCell as fbWriteCell, deleteCell } from '../firebase/planner.js';
 import { getMondayOf, toWeekId, mondayWeekId, formatWeekLabel, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 import './UndoSickSheet.css';
@@ -122,6 +123,15 @@ export default function PlannerLayout({
 
   const isDesktop = useIsDesktop();
 
+  async function handleMoveCell(fromDay, subject, toDay) {
+    const uid = user?.uid;
+    if (!uid) return;
+    const data = await readCell(uid, weekId, student, fromDay, subject);
+    if (!data) return;
+    await fbWriteCell(uid, weekId, student, subject, toDay, data);
+    await deleteCell(uid, weekId, student, fromDay, subject);
+  }
+
   return (
     <div className={`planner${isDesktop ? ' cwv-active' : ''}`}>
       <Header
@@ -151,6 +161,7 @@ export default function PlannerLayout({
             loadWeekDataFrom={loadWeekDataFrom} student={student} weekId={weekId}
             onEditCell={(subject, di) => { setDay(di); setEditTarget({ subject, day: di }); }}
             onAddSubject={(di) => { setDay(di); setShowAddSubject(true); }}
+            onMoveCell={handleMoveCell}
           />
         )}
 
