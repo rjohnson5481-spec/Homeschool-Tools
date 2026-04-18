@@ -10,6 +10,7 @@ import MonthSheet      from './MonthSheet.jsx';
 import SickDaySheet    from './SickDaySheet.jsx';
 import CalendarWeekView from './CalendarWeekView.jsx';
 import { readCell, updateCell as fbWriteCell, deleteCell } from '../firebase/planner.js';
+import { compareWithExisting } from '../hooks/usePdfImport.js';
 import { getMondayOf, toWeekId, mondayWeekId, formatWeekLabel, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 import './UndoSickSheet.css';
@@ -86,32 +87,36 @@ export default function PlannerLayout({
     setShowUndoSickDay(false);
   }
 
-  // Writes parsed PDF schedule data to the week/student named in the PDF.
-  // wipe=true: deletes all existing cells first, then writes all imported cells.
-  // wipe=false: merge only — imported cells are skipped if they already exist.
-  // Does NOT auto-close — UploadSheet shows a success state; user closes manually.
-  async function handleApplySchedule(parsedData, wipe) {
+  async function handleApplySchedule(parsedData, onDiffReady) {
     const safeData = { ...parsedData, weekId: mondayWeekId(parsedData.weekId) };
-    pdfImport.addLog(`Applying — student: ${safeData.student}, week: ${safeData.weekId}${wipe ? ', wipe: true' : ''}`);
-    if (wipe) {
-      pdfImport.addLog('Wiping existing week...');
-      await wipeWeek(safeData.weekId, safeData.student);
-      pdfImport.addLog('Wipe complete.');
-    }
+    const uid = user?.uid; if (!uid) return;
+    pdfImport.addLog(`Comparing — student: ${safeData.student}, week: ${safeData.weekId}`);
     const cells = (safeData.days ?? []).flatMap(({ dayIndex, lessons }) =>
-      (lessons ?? []).map(({ subject, lesson }) => ({ dayIndex, subject, lesson }))
+      (lessons ?? []).map(({ subject }) => ({ dayIndex, subject }))
     );
-    cells.forEach(({ dayIndex, subject, lesson }) =>
-      pdfImport.addLog(`Writing: ${safeData.student} › ${DAY_SHORT[dayIndex]} › ${subject} › ${lesson}`)
+    const existing = {};
+    await Promise.all(cells.map(async ({ dayIndex, subject }) => {
+      const data = await readCell(uid, safeData.weekId, safeData.student, dayIndex, subject);
+      if (data) { (existing[dayIndex] ??= {})[subject] = data; }
+    }));
+    const diff = compareWithExisting(safeData, existing);
+    pdfImport.addLog(`Diff: ${diff.filter(d => d.status === 'new').length} new, ${diff.filter(d => d.status === 'changed').length} changed, ${diff.filter(d => d.status === 'unchanged').length} unchanged`);
+    onDiffReady(diff);
+  }
+
+  async function handleConfirmImport(diff) {
+    const result = pdfImport.result; if (!result) return;
+    const safeWeekId = mondayWeekId(result.weekId);
+    const toWrite = diff.filter(d => d.status === 'new' || d.status === 'changed');
+    toWrite.forEach(({ dayIndex, subject, lesson }) =>
+      pdfImport.addLog(`Writing: ${result.student} › ${DAY_SHORT[dayIndex]} › ${subject} › ${lesson}`)
     );
-    await Promise.all(cells.map(({ dayIndex, subject, lesson }) =>
-      importCell(safeData.weekId, safeData.student, subject, dayIndex,
-        { lesson, note: '', done: false, flag: false }, wipe)
+    await Promise.all(toWrite.map(({ dayIndex, subject, lesson }) =>
+      importCell(safeWeekId, result.student, subject, dayIndex, { lesson, note: '', done: false, flag: false }, true)
     ));
-    pdfImport.addLog(`Apply complete: Applied ${cells.length} cells`);
-    jumpToWeek(safeData.weekId);
-    setStudent(safeData.student);
-    pdfImport.addLog(`Navigation: jumping to week of ${safeData.weekId}, student=${safeData.student}`);
+    pdfImport.addLog(`Import complete: ${toWrite.length} cells written`);
+    jumpToWeek(safeWeekId);
+    setStudent(result.student);
   }
 
   const allDayData = dayData['allday'] ?? null, hasAllDay = Boolean(allDayData);
@@ -275,6 +280,7 @@ export default function PlannerLayout({
         <UploadSheet
           pdfImport={pdfImport}
           onApply={handleApplySchedule}
+          onConfirmImport={handleConfirmImport}
           onClose={() => { setShowUpload(false); pdfImport.reset(); }}
         />
       )}
