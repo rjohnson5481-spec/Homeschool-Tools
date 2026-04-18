@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, collectionGroup, doc, getDocs, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 
 async function readCol(path) {
@@ -37,18 +37,17 @@ export async function exportAllData(uid) {
     logs.forEach(l => rewardTrackerLog.push({ _student: rt._id, ...l }));
   }
 
-  const weeksSnap = await getDocs(collection(db, `${base}/weeks`));
+  const subjectsSnap = await getDocs(collectionGroup(db, 'subjects'));
   const weeks = [];
-  const studentNames = students?.names ?? [];
-  console.log('DEBUG weeks export — studentNames:', studentNames, 'weeksSnap size:', weeksSnap.size);
-  for (const wDoc of weeksSnap.docs) {
-    const wId = wDoc.id;
-    for (const sName of studentNames) {
-      for (let di = 0; di < 5; di++) {
-        const subjects = await readCol(`${base}/weeks/${wId}/students/${sName}/days/${di}/subjects`);
-        subjects.forEach(sub => weeks.push({ weekId: wId, student: sName, dayIndex: di, subject: sub._id, ...sub }));
-      }
-    }
+  for (const subDoc of subjectsSnap.docs) {
+    const path = subDoc.ref.path;
+    if (!path.startsWith(`users/${uid}/weeks/`)) continue;
+    const parts = path.split('/');
+    const weekId = parts[3];
+    const student = parts[5];
+    const dayIndex = Number(parts[7]);
+    const subject = parts[9];
+    weeks.push({ weekId, student, dayIndex, subject, ...subDoc.data() });
   }
 
   return {
