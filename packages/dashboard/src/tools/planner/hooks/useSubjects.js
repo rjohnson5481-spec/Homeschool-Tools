@@ -93,14 +93,18 @@ export function useSubjects(uid, weekId, student, day) {
   // Each subject's chain builds through consecutive scheduled days (Mon–Fri).
   // If the chain reaches Friday, the Friday content is displaced (not written
   // to the following week) — it is simply dropped. Then writes a sick day marker.
-  async function performSickDay(selectedSubjects) {
+  // sickDayIndex defaults to the parent's `day` (mobile path); desktop SickDaySheet
+  // pills pass an explicit value when the picked day differs.
+  async function performSickDay(selectedSubjects, sickDayIndex = day) {
     await Promise.all(selectedSubjects.map(async subject => {
-      const startData = dayData[subject];
+      const startData = sickDayIndex === day
+        ? dayData[subject]
+        : await dbReadCell(uid, weekId, student, sickDayIndex, subject);
       if (!startData) return;
 
       // Build unbroken chain from sick day through consecutive days in this week.
-      const chain = [{ dayIndex: day, data: startData }];
-      for (let d = day + 1; d <= 4; d++) {
+      const chain = [{ dayIndex: sickDayIndex, data: startData }];
+      for (let d = sickDayIndex + 1; d <= 4; d++) {
         const data = await dbReadCell(uid, weekId, student, d, subject);
         if (!data) break;
         chain.push({ dayIndex: d, data });
@@ -117,11 +121,11 @@ export function useSubjects(uid, weekId, student, day) {
       }
 
       // Delete the original sick-day cell.
-      await dbDeleteCell(uid, weekId, student, day, subject);
+      await dbDeleteCell(uid, weekId, student, sickDayIndex, subject);
     }));
 
-    // Write sick day marker using today's date string.
-    const dateString = toWeekId(getWeekDates(weekId)[day]);
+    // Write sick day marker for the picked day's date.
+    const dateString = toWeekId(getWeekDates(weekId)[sickDayIndex]);
     await dbWriteSickDay(uid, dateString, student, selectedSubjects);
   }
 

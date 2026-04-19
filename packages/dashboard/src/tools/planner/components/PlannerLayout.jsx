@@ -78,8 +78,8 @@ export default function PlannerLayout({
     setShowAddSubject(false);
   }
 
-  async function handleSickDayConfirm(selectedSubjects) {
-    await performSickDay(selectedSubjects);
+  async function handleSickDayConfirm(selectedSubjects, sickDayIndex) {
+    await performSickDay(selectedSubjects, sickDayIndex);
     setShowSickDay(false);
   }
 
