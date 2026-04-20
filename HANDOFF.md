@@ -1,59 +1,64 @@
-# HANDOFF — v0.28.3 Desktop Undo Sick Day Button
+# HANDOFF — v0.28.4 Mobile Sick Day Sheet Regression
 
 ## What was completed this session
 
 2 code commits + this docs commit on `main`. One-fix session —
-the Undo Sick Day button wasn't appearing in the planner action
-bar after a desktop sick day confirmation. Mobile already worked.
+mobile sick day sheet was rendering the desktop day pill row and
+the cascade-preview list, showing subjects from multiple days
+instead of just the selected day. Restored to pre-v0.27.6 mobile
+behavior.
 
 ```
-<docs>   docs: update HANDOFF v0.28.3
-8a46a05  chore: bump version to v0.28.3
-a113cf3  fix: undo sick day button appears correctly on desktop (v0.28.3)
+<docs>   docs: update HANDOFF v0.28.4
+9504779  chore: bump version to v0.28.4
+33de4f9  fix: mobile sick day sheet restored to single day display (v0.28.4)
 ```
 
-### Commit 1 — Undo button on desktop (`a113cf3`)
-File: `packages/dashboard/src/tools/planner/components/PlannerLayout.jsx`
+### Commit 1 — Mobile sick day sheet single-day fix (`33de4f9`)
+File: `packages/dashboard/src/tools/planner/components/SickDaySheet.jsx`
 
-**Bug** — `isSickDay` in PlannerLayout is derived from
-`sickDayIndices?.has(day)`. `day` is the parent's selected UI day
-(owned by usePlannerUI via the DayStrip). On mobile, the
-SickDaySheet reuses this same `day` value so `sickDayIndex` passed
-to `performSickDay` is always equal to `day`; after Firestore
-updates and sickDayIndices includes the new day, `isSickDay`
-evaluates true and the action bar swaps to Undo Sick Day.
+**Bug** — v0.27.6 added a desktop `activeDay` state, a day-pill
+row, and a multi-day cascade preview to the sick day sheet. The
+`isDesktop` gating was incomplete:
 
-On desktop, the SickDaySheet (v0.27.7+) carries its own day-pill
-picker that sets a local `activeDay` independent of the DayStrip.
-A user could have Thursday selected in the DayStrip, open the
-sheet, pick Wednesday via the pills, and confirm. `performSickDay`
-correctly wrote the Wednesday sick day marker, but the parent
-`day` state was still 3 (Thu) — so `sickDayIndices.has(3)`
-returned false and the Undo button never rendered. The user had
-to manually tap the Wednesday column in the DayStrip to bring the
-button back.
+- `sick-day-pills` rendered unconditionally — mobile saw the
+  desktop day selector it was never supposed to have.
+- `displayDays` on mobile was hardcoded to render `{day}` PLUS
+  every following day in the week. Opening the sheet for Monday
+  listed Monday, Tuesday, Wednesday, Thursday, Friday subjects
+  all stacked together. Friday was the only mobile day that
+  rendered a single column.
+- `loadWeekDataFrom(0)` was also running on mobile to populate
+  the now-removed cascade preview, adding Firestore reads that
+  mobile no longer needs.
 
-**Fix** — `handleSickDayConfirm` now calls `setDay(sickDayIndex)`
-immediately after `performSickDay` resolves, aligning the parent's
-selected day with the day that was actually marked sick. Since
-mobile's `sickDayIndex` already equals `day`, the extra `setDay`
-call is a no-op on mobile.
+**Fix** — three gates restore the mobile path:
 
-```js
-async function handleSickDayConfirm(selectedSubjects, sickDayIndex) {
-  await performSickDay(selectedSubjects, sickDayIndex);
-  setShowSickDay(false);
-  setDay(sickDayIndex);
-}
-```
+1. `sick-day-pills` wrapped in `{isDesktop && (...)}` so the day
+   pill row only appears at ≥1024px.
+2. `displayDays` on mobile collapses to a single entry:
+   `[{ dayIndex: day, dayData }]`. No cascade preview, no other
+   days visible. The cascade itself still runs in
+   `performSickDay` — it was never part of the sheet render.
+3. The `loadWeekDataFrom` effect bails early on mobile; `loading`
+   starts `false` since the `subjects` + `dayData` props already
+   contain everything the mobile sheet needs.
 
-No other handlers or render paths needed changes — `isSickDay`
-naturally re-evaluates when `day` updates, and the v0.28.2 useEffect
-that closes sheets on `weekId/student` change still fires at the
-right time (this fix doesn't change weekId or student).
+**Desktop unchanged.** Day pills still render, `pickDay`
+continues to swap which day the list shows, `allDaysData` is
+still populated by the initial fetch so switching pills doesn't
+re-query. The `onConfirm(selected, activeDay)` contract is
+intact — on mobile `activeDay` always equals `day` because pills
+are hidden, matching pre-v0.27.6 mobile's implicit `day === day`
+behavior.
 
-### Commit 2 — Version bump (`8a46a05`)
-0.28.2 → **0.28.3** across dashboard, shared, te-extractor. Patch
+The Friday warning banner (`sick-day-friday-warning`) still
+shows on mobile when `day < 4 && selected.size > 0`, reminding
+the user that any Friday lessons hit by the cascade will be
+dropped.
+
+### Commit 2 — Version bump (`9504779`)
+0.28.3 → **0.28.4** across dashboard, shared, te-extractor. Patch
 bump — single bug fix, no feature or API changes.
 
 ---
@@ -72,49 +77,45 @@ Carried over:
 - Deferred polish from v0.28.0: loading spinner during
   `generateRestoreDiff`, success toast, confirmation before
   many-DELETE restores, user-facing error surface.
-- `PlannerLayout.jsx` is now at 299 lines (↑ from 292) — right
-  against the 300-line hard cap. The next time any logic lands in
-  this file it MUST be split first. Obvious candidates:
-  - Pull the sick-day handlers
-    (`handleSickDayConfirm`, `handleUndoSickDay`, and the
-    v0.28.2 reset useEffect) into a small `useSickDayHandlers`
-    hook alongside `usePlannerUI`.
-  - Pull the PDF-import helpers (`handleApplySchedule`,
-    `handleConfirmImport`) into a `usePdfImportFlow` hook.
-  - Pull `handleMoveCell` into `useSubjects` since it's just a
-    read + write + delete trio of Firestore ops.
+- `PlannerLayout.jsx` remains at 299 lines (unchanged this
+  session). Next touch of that file requires a split — see the
+  v0.28.3 handoff entry for candidate cut points.
 
 ## What the next session should start with
 
 1. Read `CLAUDE.md` + this `HANDOFF.md`.
-2. Smoke test at ≥1024px:
-   - Sign in, planner tab, select a non-Monday column in DayStrip.
-   - Open Sick Day sheet → pick a different column via the desktop
-     day pills → Confirm.
-   - Verify: action bar now shows Undo Sick Day, red dot renders
-     on the correct DayStrip pill, and the lessons shifted in
-     the calendar grid reflect the chosen day (not the previously
-     selected DayStrip day).
-   - Hit Undo → action bar should revert to Sick Day / Clear Week.
-3. Smoke test at <1024px: same flow via mobile layout — should be
-   identical to before (setDay is a no-op).
-4. If any new planner logic is needed, SPLIT PlannerLayout.jsx
-   first. It is currently 1 line under the 300-line hard cap.
+2. Smoke test at <1024px:
+   - Sign in, planner tab, pick Monday via the DayStrip (a day
+     with subjects).
+   - Tap Sick Day → sheet opens.
+   - Verify: no day-pill row, only Monday subjects listed, "sick
+     day" tag on the single group header, Friday warning shows
+     if any subject is checked and today is not Friday.
+   - Confirm → action bar swaps to Undo Sick Day, lessons shifted
+     in the DayStrip.
+3. Smoke test on Friday: open Sick Day → sheet should show just
+   Friday's subjects, no Friday warning (since there's nothing
+   past Friday).
+4. Smoke test at ≥1024px: pills should still render, picking a
+   different pill should swap the displayed subject list without
+   a loading spinner (allDaysData was pre-fetched).
 
 ## Decisions made this session
 
-- **`day` is authoritative for the action bar's sick-day
-  indicator.** Anything that changes sick-day state in Firestore
-  from PlannerLayout must also align `day` with the affected
-  index, or the action bar won't re-evaluate correctly.
-  `setDay(sickDayIndex)` is the canonical post-cascade step for
-  any new sheet that picks a day independently of the DayStrip.
+- **`isDesktop` in SickDaySheet must gate every desktop-only
+  surface.** Day pills, cascade preview, and week-wide fetch
+  all belong inside `isDesktop` branches. Mobile should be a
+  single-day, no-fetch, no-pills sheet.
+- The cascade preview (showing what will happen across the week
+  before confirmation) is explicitly a desktop-only feature. If
+  mobile ever needs a preview, it must be designed separately,
+  not reusing the desktop render.
 
 ## Key file locations
 
 ```
-packages/dashboard/src/tools/planner/components/PlannerLayout.jsx  # handleSickDayConfirm aligns day with sickDayIndex
-packages/dashboard/package.json                                     # 0.28.3
-packages/shared/package.json                                        # 0.28.3
-packages/te-extractor/package.json                                  # 0.28.3
+packages/dashboard/src/tools/planner/components/SickDaySheet.jsx  # mobile branch: single day, no pills, no fetch
+packages/dashboard/package.json                                    # 0.28.4
+packages/shared/package.json                                       # 0.28.4
+packages/te-extractor/package.json                                 # 0.28.4
 ```
