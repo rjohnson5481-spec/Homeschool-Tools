@@ -21,15 +21,16 @@ const ALL_DAY_KEY = 'allday';
 //
 // When the current student has any non-allday lesson on Friday at confirm
 // time the cascade still runs normally (anything that would land past Friday
-// is dropped) and `showComingSoon` fires afterward to flag the temporary
-// limitation. Proper Friday handling ships with the month view.
+// is dropped) and `showFridayComingSoon` fires afterward so PlannerLayout
+// can render FridayComingSoonSheet — a modal the user must dismiss. Proper
+// Friday handling ships with the month view.
 export function useSickDay({
   uid, weekId, student, day,
   performSickDay, performUndoSickDay,
   setDay, setShowSickDay, setShowUndoSickDay,
 }) {
   const [sickDays, setSickDays] = useState({});
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [showFridayComingSoon, setShowFridayComingSoon] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
@@ -51,16 +52,9 @@ export function useSickDay({
   useEffect(() => {
     setShowSickDay(false);
     setShowUndoSickDay(false);
-    setShowComingSoon(false);
+    setShowFridayComingSoon(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekId, student]);
-
-  // Auto-dismiss the coming-soon toast after 5 seconds.
-  useEffect(() => {
-    if (!showComingSoon) return;
-    const t = setTimeout(() => setShowComingSoon(false), 5000);
-    return () => clearTimeout(t);
-  }, [showComingSoon]);
 
   async function hasFridayLessons() {
     const friday = await readDaySubjectsOnce(uid, weekId, student, 4);
@@ -90,7 +84,7 @@ export function useSickDay({
     setShowSickDay(false);
     const fridayHadLessons = await hasFridayLessons();
     await completeSickDay(selectedSubjects, sickDayIndex);
-    if (fridayHadLessons) setShowComingSoon(true);
+    if (fridayHadLessons) setShowFridayComingSoon(true);
   }
 
   async function handleUndoSickDay() {
@@ -98,13 +92,13 @@ export function useSickDay({
     setShowUndoSickDay(false);
   }
 
-  function dismissComingSoon() {
-    setShowComingSoon(false);
+  function handleFridayComingSoonDismiss() {
+    setShowFridayComingSoon(false);
   }
 
   return {
     sickDayIndices, hasSickDayThisWeek, isSickDay,
     handleSickDayConfirm, handleUndoSickDay,
-    showComingSoon, dismissComingSoon,
+    showFridayComingSoon, handleFridayComingSoonDismiss,
   };
 }
