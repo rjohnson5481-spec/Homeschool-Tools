@@ -11,10 +11,9 @@ import SickDaySheet    from './SickDaySheet.jsx';
 import CalendarWeekView from './CalendarWeekView.jsx';
 import PlannerActionBar from './PlannerActionBar.jsx';
 import UndoSickSheet   from './UndoSickSheet.jsx';
-import { readCell, updateCell as fbWriteCell, deleteCell } from '../firebase/planner.js';
-import { compareWithExisting } from '../hooks/usePdfImport.js';
 import { useSickDay } from '../hooks/useSickDay.js';
-import { getMondayOf, toWeekId, mondayWeekId, formatWeekLabel, DAY_SHORT, DAY_NAMES } from '../constants/days.js';
+import { usePlannerHelpers } from '../hooks/usePlannerHelpers.js';
+import { getMondayOf, toWeekId, formatWeekLabel, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 
 function useIsDesktop() {
@@ -79,37 +78,11 @@ export default function PlannerLayout({
     setShowAddSubject(false);
   }
 
-  async function handleApplySchedule(parsedData, onDiffReady) {
-    const safeData = { ...parsedData, weekId: mondayWeekId(parsedData.weekId) };
-    const uid = user?.uid; if (!uid) return;
-    pdfImport.addLog(`Comparing — student: ${safeData.student}, week: ${safeData.weekId}`);
-    const cells = (safeData.days ?? []).flatMap(({ dayIndex, lessons }) =>
-      (lessons ?? []).map(({ subject }) => ({ dayIndex, subject }))
-    );
-    const existing = {};
-    await Promise.all(cells.map(async ({ dayIndex, subject }) => {
-      const data = await readCell(uid, safeData.weekId, safeData.student, dayIndex, subject);
-      if (data) { (existing[dayIndex] ??= {})[subject] = data; }
-    }));
-    const diff = compareWithExisting(safeData, existing);
-    pdfImport.addLog(`Diff: ${diff.filter(d => d.status === 'new').length} new, ${diff.filter(d => d.status === 'changed').length} changed, ${diff.filter(d => d.status === 'unchanged').length} unchanged`);
-    onDiffReady(diff);
-  }
-
-  async function handleConfirmImport(diff) {
-    const result = pdfImport.result; if (!result) return;
-    const safeWeekId = mondayWeekId(result.weekId);
-    const toWrite = diff.filter(d => d.status === 'new' || d.status === 'changed');
-    toWrite.forEach(({ dayIndex, subject, lesson }) =>
-      pdfImport.addLog(`Writing: ${result.student} › ${DAY_SHORT[dayIndex]} › ${subject} › ${lesson}`)
-    );
-    await Promise.all(toWrite.map(({ dayIndex, subject, lesson }) =>
-      importCell(safeWeekId, result.student, subject, dayIndex, { lesson, note: '', done: false, flag: false }, true)
-    ));
-    pdfImport.addLog(`Import complete: ${toWrite.length} cells written`);
-    jumpToWeek(safeWeekId);
-    setStudent(result.student);
-  }
+  const { handleApplySchedule, handleConfirmImport, handleMoveCell } = usePlannerHelpers({
+    user, weekId, student,
+    pdfImport, importCell,
+    jumpToWeek, setStudent,
+  });
 
   const allDayData = dayData['allday'] ?? null, hasAllDay = Boolean(allDayData);
   const [showSubjects, setShowSubjects] = useState(false);
@@ -126,15 +99,6 @@ export default function PlannerLayout({
   const doneCount = regularSubjects.filter(s => dayData[s]?.done).length;
 
   const isDesktop = useIsDesktop();
-
-  async function handleMoveCell(fromDay, subject, toDay) {
-    const uid = user?.uid;
-    if (!uid) return;
-    const data = await readCell(uid, weekId, student, fromDay, subject);
-    if (!data) return;
-    await fbWriteCell(uid, weekId, student, subject, toDay, data);
-    await deleteCell(uid, weekId, student, fromDay, subject);
-  }
 
   return (
     <div className={`planner${isDesktop ? ' cwv-active' : ''}`}>
