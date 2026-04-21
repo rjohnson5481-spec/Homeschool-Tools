@@ -1,12 +1,10 @@
-# HANDOFF — v0.28.5 Sick day + backup restore complete
+# HANDOFF — v0.28.6 Netlify Blobs siteID + token fix
 
 ## What was completed this session
-- Backup restore diff view complete — desktop calendar +
-  mobile accordion, student selector, conflict highlighting
-- Sick day desktop day selector fixed end to end
-- Undo sick day button driven by Firestore not local state
-- CLAUDE.md split into CLAUDE.md / CLAUDE-DESIGN.md /
-  CLAUDE-HISTORY.md
+- Scheduled backup getStore call now passes siteID + token
+  explicitly — resolves MissingBlobsEnvironmentError on the
+  6-hour schedule
+- Version bump to v0.28.6
 
 ## What is broken or incomplete
 - Done circle in CalendarWeekView does nothing on desktop
@@ -14,10 +12,11 @@
   — collapse on next useSubjects touch
 - PDF helpers and handleMoveCell still in PlannerLayout.jsx
   — extract on next touch
-- Netlify Blobs auto-backup not producing backups — needs
-  diagnostic
 - Home tab greeting always says Good Morning — should match
   time of day
+- Netlify Blobs auto-backup fix is deployed but unverified —
+  confirm a backup appears in the Blobs store after the next
+  scheduled run (or invoke the function manually)
 
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
@@ -25,8 +24,7 @@
 3. Ask Rob what we are building today
 
 ## Key files changed recently
-- packages/dashboard/src/firebase/backup.js
-- packages/dashboard/src/firebase/RestoreDiffSheet.jsx
-- packages/dashboard/src/firebase/RestoreDiffCalendar.jsx
-- packages/dashboard/src/tools/planner/hooks/useSickDay.js
-- packages/dashboard/src/tools/planner/components/SickDaySheet.jsx
+- netlify/functions/scheduled-backup.js
+- packages/dashboard/package.json
+- packages/shared/package.json
+- packages/te-extractor/package.json
