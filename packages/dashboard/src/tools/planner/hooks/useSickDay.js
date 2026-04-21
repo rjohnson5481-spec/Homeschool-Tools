@@ -113,7 +113,18 @@ export function useSickDay({
   }
 
   async function handleUndoSickDay() {
+    // Capture the sick-day index before the marker is cleared — sickDayIndices
+    // holds exactly one entry for the active student this week.
+    const [sickIdx] = [...sickDayIndices];
     await performUndoSickDay();
+    if (sickIdx !== undefined) {
+      // Only clear the allday cell if it's the auto-written "Sick Day" label —
+      // a pre-existing custom allday the user placed themselves stays put.
+      const existing = await readCell(uid, weekId, student, sickIdx, ALL_DAY_KEY);
+      if (existing?.lesson === 'Sick Day') {
+        await deleteCell(uid, weekId, student, sickIdx, ALL_DAY_KEY);
+      }
+    }
     setShowUndoSickDay(false);
   }
 
