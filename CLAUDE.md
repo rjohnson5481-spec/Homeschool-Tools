@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.29.1
+Current version: v0.29.2
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
@@ -194,7 +194,7 @@ packages/dashboard/src/
     │   │   ├── UndoSickSheet.jsx
     │   │   ├── CalendarWeekView.jsx     ← desktop calendar grid
     │   │   ├── SickDaySheet.jsx
-    │   │   ├── FridayComingSoonSheet.jsx ← post-cascade modal when Friday had lessons
+    │   │   ├── FridayComingSoonSheet.jsx ← pre-confirm modal when Friday has lessons
     │   │   ├── UploadSheet.jsx
     │   │   ├── ImportDiffPreview.jsx
     │   │   └── [other sheets]
@@ -229,7 +229,7 @@ Desktop changes are always additive via @media (min-width: 1024px) — never mod
 
 ---
 
-## Tools status (v0.29.1)
+## Tools status (v0.29.2)
 - shared            → ✅ Complete
 - dashboard shell   → ✅ Complete — 6-tab nav, dynamic students, dark mode
 - Home Tab          → ✅ Complete — per-student cards, tappable/expanded, attendance
@@ -334,5 +334,5 @@ Do not open pull requests. Do not create branches named claude/* or feature/*.
 - Full Restore (Factory Reset) wipes all data then restores — two-step confirmation
 - Backup export filename uses email username + date
 - useSickDay hook owns sick day Firestore listener — Undo button driven by Firestore not local state
-- Sick day Friday overflow handling is deferred until the month view ships — for now the cascade runs normally (Friday content that would shift past Friday is dropped) and FridayComingSoonSheet is shown when Friday had lessons at confirm time. Modal, single "Got it" button — no auto-dismiss.
-- Sick day confirm auto-writes a "Sick Day" All Day Event — { lesson: 'Sick Day', note: '', done: false, flag: false } at the 'allday' key for the sick column, only if no allday cell already exists there.
+- Sick day Friday overflow handling is deferred until the month view ships — when Friday has any non-allday lesson at confirm time, FridayComingSoonSheet opens BEFORE any Firestore write. Confirm Sick Day deletes Friday's lessons and runs the cascade; Cancel leaves Firestore untouched.
+- Sick day confirm auto-writes a "Sick Day" All Day Event — { lesson: 'Sick Day', note: '', done: false, flag: false } at the 'allday' key for the sick column, only if no allday cell already exists there. Undo Sick Day deletes that auto-written allday cell (skipped if the user had placed their own custom allday).
