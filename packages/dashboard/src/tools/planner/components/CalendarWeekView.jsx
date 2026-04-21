@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DndContext, PointerSensor, pointerWithin, useSensor, useSensors, useDraggable, useDroppable } from '@dnd-kit/core';
+import { useAuth } from '@homeschool/shared';
+import { updateCell as fbUpdateCell } from '../firebase/planner.js';
 import { formatWeekLabel } from '../constants/days.js';
 import './CalendarWeekView.css';
 
@@ -64,6 +66,7 @@ export default function CalendarWeekView({
   loadWeekDataFrom, student, weekId,
   onEditCell, onAddSubject, onMoveCell,
 }) {
+  const { user } = useAuth();
   const [weekData, setWeekData] = useState({});
   const [activeId, setActiveId] = useState(null);
   const [optimistic, setOptimistic] = useState({});
@@ -80,6 +83,13 @@ export default function CalendarWeekView({
 
   useEffect(() => reload(), [reload, weekId, student]);
   useEffect(() => { setOptimistic({}); setDayOrder({}); }, [weekId, student]);
+
+  async function handleToggleDone(dayIndex, subject, cell) {
+    const uid = user?.uid;
+    if (!uid) return;
+    await fbUpdateCell(uid, weekId, student, subject, dayIndex, { ...cell, done: !cell.done });
+    reload();
+  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const rendered = mergeOptimistic(weekData, optimistic);
@@ -176,7 +186,12 @@ export default function CalendarWeekView({
                           <div className="cwv-card-top">
                             <span className="cwv-dot" style={{ background: subjectColor(subject) }} />
                             <span className="cwv-subject">{subject}</span>
-                            <span className={`cwv-status${isDone ? ' done' : ' undone'}`}>{isDone ? '✓' : ''}</span>
+                            <span
+                              className={`cwv-status${isDone ? ' done' : ' undone'}`}
+                              onClick={e => { e.stopPropagation(); handleToggleDone(di, subject, cell); }}
+                              role="button"
+                              aria-label={isDone ? 'Mark not done' : 'Mark done'}
+                            >{isDone ? '✓' : ''}</span>
                           </div>
                           {cell.lesson && <div className="cwv-lesson">{cell.lesson}</div>}
                           {cell.note && <div className="cwv-note">{cell.note}</div>}
