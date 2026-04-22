@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.30.0 — milestone: reward tracker and TE Extractor removed; 4-tab shell
+Current version: v0.30.1 — milestone: reward tracker and TE Extractor removed; 4-tab shell
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
