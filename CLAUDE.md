@@ -214,13 +214,43 @@ Desktop changes are always additive via @media (min-width: 810px) — never modi
 - shared            → ✅ Complete
 - dashboard shell   → ✅ Complete — 4-tab nav (Home / Planner / Records / Settings), dynamic students, dark mode
 - Home Tab          → ✅ Complete — per-student cards, tappable/expanded, attendance
-- Planner           → ✅ Complete — mobile DayStrip + desktop CalendarWeekView, drag-and-drop, sick day, mobile multi-select
+- Planner           → ✅ Complete — mobile DayStrip + desktop CalendarWeekView, drag-and-drop, sick day (auto-writes "Sick Day" All Day Event on confirm), mobile multi-select
 - Academic Records  → ✅ Complete — full Phase 2 feature
 - Backup            → ✅ Complete — Export / Restore from Backup (diff) / Factory Reset / Auto 6hr
 - Month view        → 🔒 Queued — also unlocks improved Friday sick-day cascading
 - School Days       → 🔒 Phase 3
 - Reward Tracker    → 🗑 Removed in v0.30.0
 - TE Extractor      → 🗑 Removed in v0.30.0
+
+---
+
+## Verification pending
+- Netlify Blobs auto-backup is running — still need to verify a backup actually appears in the Blobs store after a scheduled run.
+
+---
+
+## Roadmap
+
+### Phase 3 — School Days + External Tools
+- School Days compliance — user-entered days/hours requirement, hours toggle in settings, hours input per day in planner when enabled.
+- External Tools tab — card launcher in the empty 5th nav slot, links out to Johnson-Web-Tools and future external utilities.
+
+### Phase 4 — Multi-family / brand-agnostic shell
+- Strip hardcoded "Iron & Light Johnson Academy" references — brand-agnostic shell.
+- Multi-family support — student profiles migration (currently students stored as plain name strings).
+- Stripe integration + Free/Pro feature gating.
+- Admin dashboard (Rob-only access) — user management, revenue, manual override, usage stats.
+- 50-state compliance database.
+
+### Phase 5 — Calendar + Public Launch Polish
+- Month view — full grid with navigation, unlocks the proper Friday sick-day cascade fix.
+- Multi-week lesson import.
+- ICS import for breaks/holidays.
+- Event & appointment planning — non-lesson calendar items.
+- Offline support — service worker caching.
+- Privacy policy page.
+- Google Play Store — TWA wrapper.
+- iOS App Store — Median.co wrapper (after Google Play is live).
 
 ---
 
