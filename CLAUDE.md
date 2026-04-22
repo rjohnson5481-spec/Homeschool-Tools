@@ -231,7 +231,7 @@ Desktop changes are always additive via @media (min-width: 810px) — never modi
 
 ## Roadmap
 
-### Phase 3 — School Days + External Tools
+### Phase 3 — School Days
 - School Days compliance — user-entered days/hours requirement, hours toggle in settings, hours input per day in planner when enabled.
 
 ### Phase 4 — Multi-family / brand-agnostic shell
