@@ -11,11 +11,6 @@
   status = 200
 
 [[redirects]]
-  from = "/te-extractor/*"
-  to = "/te-extractor/index.html"
-  status = 200
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
