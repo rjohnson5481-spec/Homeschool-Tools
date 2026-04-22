@@ -1,24 +1,27 @@
-# HANDOFF — v0.29.6 Desktop breakpoint lowered to 810px
+# HANDOFF — v0.30.0 4-tab shell, rewards + TE Extractor removed
 
 ## What was completed this session
-- Global breakpoint change from 1024px → 810px and its paired
-  max `1023px` → `809px` across the entire codebase.
-- 3 JS/JSX files updated (matchMedia query + window.innerWidth
-  comparison): PlannerLayout.jsx, SickDaySheet.jsx,
-  RestoreDiffSheet.jsx.
-- 40 CSS files updated — every `min-width: 1024px`,
-  `max-width: 1023px`, and matching 400–1023 / ≥1024 comment
-  now reads 810 / 809. 86 breakpoint values replaced
-  one-for-one, no property values or colors touched.
-- CLAUDE.md canonical breakpoints block + key-decisions block
-  + multi-select decision line all updated to 810 / 809 /
-  400–809.
-- Four file-size math divisors (`/ 1024`) intentionally left
-  alone:
-  - packages/dashboard/src/tools/academic-records/components/CalendarImportSheet.jsx:49
-  - packages/dashboard/src/tools/academic-records/components/CurriculumImportSheet.jsx:35
-  - packages/dashboard/src/tools/planner/hooks/usePdfImport.js:40 / :50
-- Version bump to v0.29.6.
+- Rewards tab removed — RewardsTab.jsx deleted, entire
+  `packages/dashboard/src/tools/reward-tracker/` directory
+  (15 files) deleted, App.jsx no longer imports or renders
+  it, BottomNav TABS entry removed.
+- TE Extractor tab + package removed — entire
+  `packages/te-extractor/` directory (10 files) deleted,
+  workspaces reduced to `["packages/shared", "packages/dashboard"]`,
+  netlify.toml `/te-extractor/*` redirect block removed
+  (`[build]` block + `/api/*` + SPA catch-all preserved).
+- BottomNav tab order is now exactly Home / Planner / Records
+  / Settings.
+- App.jsx dead-prop pass `onTabChange={setActiveTab}` to
+  HomeTab removed (HomeTab never consumed it; it was only
+  there for cross-tab jumps to rewards).
+- HomeTab.jsx minimally touched to preserve the build: the
+  now-broken `import { awardPoints } from
+  '../tools/reward-tracker/firebase/rewardTracker.js'` is
+  gone and `handleAwardPoints` is a no-op.
+- Version bump to v0.30.0 — milestone. Only `@homeschool/dashboard`
+  and `@homeschool/shared` get the bump; te-extractor's
+  package.json was deleted.
 
 ## What is broken or incomplete
 - Netlify Blobs auto-backup fix (v0.28.6) is deployed but
@@ -28,18 +31,31 @@
   useSubjects (now undefined) and passes a dead sickDayIndices
   prop to PlannerLayout. Harmless — clean up on the next
   PlannerTab touch.
-- PlannerLayout.jsx is at 275 lines (under the 280 watch
-  line). The next addition will likely cross it — extract
-  before adding more.
-- Two stale breakpoint references remain in JSX comments
-  (outside the strict scope of this session's Fix 1 patterns):
-  PlannerLayout.jsx:133 (`≥1024px`) and MultiSelectBar.jsx:8
-  (`max-width: 1023px`). Behavior is unaffected. Sweep them
-  on the next touch of each file.
-- The key-decisions note in CLAUDE.md still reads "raised
-  from 768px — S25 Ultra compatibility" — technically still
-  true (810 > 768) but the surrounding context now describes
-  a lowering. Leave the historical parenthetical for now.
+- Two stale JSX comments (PlannerLayout.jsx:133 `≥1024px`,
+  MultiSelectBar.jsx:8 `max-width: 1023px`) still reference
+  the old breakpoint. Sweep on next touch of each file.
+- StudentDetailSheet's "Quick Award" UI is orphaned — the
+  sheet still renders +1/+5/+10 buttons and the confirm
+  button, but `onAwardPoints` is a no-op so the taps do
+  nothing. Remove the Quick Award block from
+  StudentDetailSheet.jsx (and matching CSS) on its next
+  touch.
+- `useHomeSummary.js` still subscribes to
+  `/users/{uid}/rewardTracker/{name}` and returns
+  `pointsByStudent`. HomeTab still renders a "Points" stat +
+  a `$cashValue` line. Data is now frozen (Firestore docs
+  remain but nothing writes). If desired, rip the points
+  path + UI on a follow-up.
+- `firebase/backup.js` still reads/writes the rewardTracker
+  collection so old backups continue to round-trip. Safe to
+  leave — nothing in the live app depends on it — but worth
+  trimming when the backup format is next revisited.
+- `constants/tools.js` is dead (no import sites) and still
+  lists reward-tracker + te-extractor entries. Leave or
+  delete on the next unrelated pass.
+- VITE_ANTHROPIC_API_KEY is still used by
+  CalendarImportSheet and CurriculumImportSheet (academic
+  records) — do not remove the env var.
 
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
@@ -47,11 +63,14 @@
 3. Ask Rob what we are building today
 
 ## Key files changed recently
-- packages/dashboard/src/tools/planner/components/PlannerLayout.jsx
-- packages/dashboard/src/tools/planner/components/SickDaySheet.jsx
-- packages/dashboard/src/firebase/RestoreDiffSheet.jsx
-- 40 .css files under packages/dashboard/src/
+- packages/dashboard/src/App.jsx
+- packages/dashboard/src/components/BottomNav.jsx
+- packages/dashboard/src/tabs/HomeTab.jsx
+- packages/dashboard/src/tabs/RewardsTab.jsx (deleted)
+- packages/dashboard/src/tools/reward-tracker/ (deleted, 15 files)
+- packages/te-extractor/ (deleted, 10 files)
+- package.json (workspaces)
+- netlify.toml (TE redirect removed)
 - packages/dashboard/package.json
 - packages/shared/package.json
-- packages/te-extractor/package.json
 - CLAUDE.md
