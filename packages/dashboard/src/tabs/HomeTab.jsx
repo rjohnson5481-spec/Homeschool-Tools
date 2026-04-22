@@ -3,7 +3,6 @@ import { useAuth } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import { useHomeSummary } from '../hooks/useHomeSummary.js';
 import { updateCell } from '../tools/planner/firebase/planner.js';
-import { awardPoints } from '../tools/reward-tracker/firebase/rewardTracker.js';
 import StudentDetailSheet from './StudentDetailSheet.jsx';
 import './HomeTab.css';
 import './HomeHeader.css';
@@ -27,10 +26,9 @@ export default function HomeTab({ onTabChange }) {
     updateCell(uid, weekId, student, subject, di, { done: !currentDone });
   }
 
-  function handleAwardPoints(student, amount) {
-    if (!uid) return;
-    awardPoints(uid, student, amount, '');
-  }
+  // Reward tracker removed in v0.30.0 — the StudentDetailSheet Quick Award
+  // button is now an orphaned no-op until that UI is removed.
+  function handleAwardPoints() {}
 
   return (
     <div className="home-tab">

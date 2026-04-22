@@ -4,7 +4,6 @@ import SignIn              from './components/SignIn';
 import BottomNav           from './components/BottomNav';
 import HomeTab             from './tabs/HomeTab';
 import PlannerTab          from './tabs/PlannerTab';
-import RewardsTab          from './tabs/RewardsTab';
 import AcademicRecordsTab  from './tabs/AcademicRecordsTab';
 import SettingsTab         from './tabs/SettingsTab';
 import { useSettings }     from './tools/planner/hooks/useSettings.js';
@@ -41,7 +40,6 @@ export default function App() {
             subjectsByStudent={subjectsByStudent}
           />
         )}
-        {activeTab === 'rewards'  && <RewardsTab />}
         {activeTab === 'academic' && <AcademicRecordsTab />}
         {activeTab === 'settings' && (
           <SettingsTab

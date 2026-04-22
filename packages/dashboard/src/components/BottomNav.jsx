@@ -5,8 +5,6 @@ import './BottomNav.css';
 const TABS = [
   { id: 'home',     icon: '🏠', label: 'Home' },
   { id: 'planner',  icon: '📅', label: 'Planner' },
-  { id: 'rewards',  icon: '🏅', label: 'Rewards' },
-  { id: 'te',       icon: '📄', label: 'TE Extractor', external: '/te-extractor/' },
   { id: 'academic', icon: '🎓', label: 'Records' },
   { id: 'settings', icon: '⚙️', label: 'Settings' },
 ];
