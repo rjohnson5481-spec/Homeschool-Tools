@@ -23,12 +23,10 @@ function countWeekdays(startStr, endStr) {
   while (c <= e) { const d = c.getDay(); if (d >= 1 && d <= 5) n++; c.setDate(c.getDate() + 1); }
   return n;
 }
-function cashValue(pts) { return (Math.floor(pts / 15 * 100) / 100).toFixed(2); }
 
 export function useHomeSummary(uid) {
   const [students, setStudents]             = useState([]);
   const [lessonsByStudent, setLessonsByStudent] = useState({});
-  const [pointsByStudent, setPointsByStudent] = useState({});
   const [attendance, setAttendance]         = useState({});
 
   const weekId   = toWeekId(getMondayOf(new Date()));
@@ -61,18 +59,6 @@ export function useHomeSummary(uid) {
     });
     return () => unsubs.forEach(u => u());
   }, [uid, students, weekId, dayIndex]);
-
-  // Subscribe to each student's point balance
-  useEffect(() => {
-    if (!uid || !students.length) return;
-    const unsubs = students.map(name => {
-      return onSnapshot(doc(db, `users/${uid}/rewardTracker/${name}`), snap => {
-        const pts = snap.data()?.points ?? 0;
-        setPointsByStudent(prev => ({ ...prev, [name]: { points: pts, cashValue: cashValue(pts) } }));
-      });
-    });
-    return () => unsubs.forEach(u => u());
-  }, [uid, students]);
 
   // One-shot: fetch attendance for all students
   useEffect(() => {
@@ -109,5 +95,5 @@ export function useHomeSummary(uid) {
     })();
   }, [uid, students]);
 
-  return { students, lessonsByStudent, pointsByStudent, attendance, weekId, dayIndex, todayLabel };
+  return { students, lessonsByStudent, attendance, weekId, dayIndex, todayLabel };
 }
