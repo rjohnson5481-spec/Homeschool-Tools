@@ -5,7 +5,7 @@ import './MultiSelectBar.css';
 // Mobile-only multi-select action bar. Renders fixed at the bottom of the
 // viewport with the same footprint as BottomNav (68px / 56px) and a higher
 // z-index so it covers the nav while select mode is active. All CSS is
-// scoped to max-width: 1023px — the bar never renders on desktop.
+// scoped to max-width: 809px — the bar never renders on desktop.
 //
 // Props: selectedCount, day, deleteConfirmPending,
 //        onSelectAll, onMarkDone, onMoveToDay(targetDayIndex), onDelete, onCancel

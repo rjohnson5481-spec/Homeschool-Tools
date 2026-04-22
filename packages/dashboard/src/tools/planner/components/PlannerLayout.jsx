@@ -130,7 +130,7 @@ export default function PlannerLayout({
       />
 
       <div className="planner-body">
-        {/* Desktop-only week nav — planner header is hidden in the shell at ≥1024px */}
+        {/* Desktop-only week nav — planner header is hidden in the shell at ≥810px */}
         <div className="planner-week-nav-desktop">
           <button className="planner-week-nav-btn" onClick={prevWeek} aria-label="Previous week">‹</button>
           <span className="planner-week-nav-label">{formatWeekLabel(weekDates)}</span>
