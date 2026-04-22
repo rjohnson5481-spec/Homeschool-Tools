@@ -54,26 +54,7 @@
 .sds-att-labels { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 .sds-att-detail { font-size: 10px; color: var(--text-muted); margin-top: 4px; display: flex; gap: 12px; }
 
-.sds-award-block { margin-bottom: 8px; }
-.sds-award-btns { display: flex; gap: 8px; margin-bottom: 10px; }
-.sds-award-btn {
-  flex: 1; padding: 10px; border-radius: 10px; font-size: 16px; font-weight: 700;
-  border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
-  font-family: inherit; cursor: pointer; text-align: center; transition: all 0.15s;
-}
-.sds-award-btn.selected { background: var(--gold-pale); border-color: var(--gold); color: var(--gold); }
-.sds-award-confirm {
-  width: 100%; padding: 12px; border-radius: 10px; background: var(--gold); border: none;
-  font-size: 14px; font-weight: 600; color: #fff; font-family: inherit; cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-}
-.sds-award-confirm:disabled { opacity: 0.4; cursor: default; }
-.sds-award-confirm:hover:not(:disabled) { background: var(--gold-light); }
-.sds-award-success { text-align: center; font-size: 14px; font-weight: 600; color: var(--gold); padding: 12px; }
-
 @media (min-width: 400px) and (max-width: 809px) {
   .sds-header-name { font-size: 18px; }
   .sds-lesson-subject { font-size: 15px; }
-  .sds-award-btn { padding: 12px; font-size: 18px; }
-  .sds-award-confirm { padding: 14px; font-size: 15px; }
 }
