@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.29.5
+Current version: v0.30.0 — milestone: reward tracker and TE Extractor removed; 4-tab shell
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
@@ -21,12 +21,12 @@ Every tool shares the same branding, design system, and Firebase project.
 ├── netlify.toml               ← global Netlify config
 ├── packages/
 │   ├── shared/                ← design system, Firebase init, auth, components
-│   ├── dashboard/             ← unified app shell; all tools live in src/tools/
-│   └── te-extractor/          ← vanilla HTML/CSS/JS tool, no React, served from dist/te-extractor/
+│   └── dashboard/             ← unified app shell; all tools live in src/tools/
 
-Root `package.json` workspaces: ["packages/shared", "packages/dashboard", "packages/te-extractor"].
-`packages/planner` and `packages/reward-tracker` were retired — both tools now live at
-`packages/dashboard/src/tools/{planner,reward-tracker}/` and render inside the dashboard shell.
+Root `package.json` workspaces: ["packages/shared", "packages/dashboard"].
+`packages/planner` and `packages/reward-tracker` were retired earlier — the planner
+now lives at `packages/dashboard/src/tools/planner/` and the reward tracker was
+removed entirely in v0.30.0. `packages/te-extractor` was also removed in v0.30.0.
 
 ---
 
@@ -54,7 +54,6 @@ All package.json entries use exact versions — no ^ or ~ prefixes.
 - Primary URL: `homeschool.grasphislove.com` (custom domain, live as of 2026-04-15)
 - Secondary URL: `ironandlight.netlify.app` (Netlify default, fallback)
 - App shell at root `/` — serves the dashboard (all tools as tabs)
-- TE Extractor at `/te-extractor/` (separate vanilla-JS build, links out from shell)
 - NOT GitHub Pages
 
 ## netlify.toml
@@ -65,11 +64,6 @@ All package.json entries use exact versions — no ^ or ~ prefixes.
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/te-extractor/*"
-  to = "/te-extractor/index.html"
   status = 200
 
 [[redirects]]
@@ -84,7 +78,7 @@ No base directory — build runs from repo root via workspaces.
 
 ## Environment variables (Netlify dashboard only — never in code)
 - ANTHROPIC_API_KEY — Netlify Functions only (parse-schedule), never client-side
-- VITE_ANTHROPIC_API_KEY — TE Extractor + CalendarImportSheet + CurriculumImportSheet (intentional exception)
+- VITE_ANTHROPIC_API_KEY — CalendarImportSheet + CurriculumImportSheet (intentional exception)
 - VITE_FIREBASE_API_KEY
 - VITE_FIREBASE_AUTH_DOMAIN
 - VITE_FIREBASE_PROJECT_ID
@@ -93,17 +87,15 @@ No base directory — build runs from repo root via workspaces.
 - FIREBASE_SERVICE_ACCOUNT — scheduled-backup.js (already set in Netlify)
 
 ## Anthropic API pattern
-All Anthropic calls go through Netlify Functions — with intentional exceptions below.
+All Anthropic calls go through Netlify Functions — with intentional exceptions
+(the two academic-records import sheets still call api.anthropic.com directly
+from the client using VITE_ANTHROPIC_API_KEY because the Netlify Function proxy
+caused 60 s gateway timeouts).
 Current functions:
 - netlify/functions/parse-schedule.js (planner PDF import)
   Client calls: POST /api/parse-schedule with { file: base64, mediaType }
   Returns: application/json { student, weekId, days }
 - netlify/functions/scheduled-backup.js (runs every 6 hours, saves to Netlify Blobs)
-
-## TE Extractor — intentional exception to API key rule
-Calls api.anthropic.com directly from client using VITE_ANTHROPIC_API_KEY.
-Family-internal tool, behind Google Auth, never public facing.
-Netlify Function proxy caused 60s gateway timeouts — do not revert.
 
 ---
 
@@ -130,15 +122,6 @@ dayIndex: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri
 CRITICAL: uid document does NOT exist in Firestore — only subcollections exist.
 Use collectionGroup('subjects') for any query traversing from uid level.
 
-### Reward Tracker
-/users/{uid}/rewardTracker/{studentName}
-  → { points: number }  ← NO 'students/' segment — do not add it
-
-/users/{uid}/rewardTracker/{studentName}/log/{docId}
-  → { type: 'award'|'deduct'|'spend', points: number, note: string, createdAt: serverTimestamp }
-
-Cash value: 15 pts = $1.00 (floor division).
-
 ### Academic Records
 /users/{uid}/schoolYears/{yearId}           → { label, startDate, endDate }
 /users/{uid}/schoolYears/{yearId}/quarters  → { label, startDate, endDate }
@@ -151,10 +134,6 @@ Cash value: 15 pts = $1.00 (floor division).
 /users/{uid}/activities/{activityId}        → { student, name, startDate, endDate, ongoing, notes }
 
 Firebase Storage: users/{uid}/reports/{reportId}.pdf
-
-### TE Extractor
-/users/{uid}/teExtractor/extractions/items/{docId}
-  → { fileName, lessons, html, previewText, createdAt }
 
 ### Firestore Security Rules
 Two rules — both required, never remove either:
@@ -173,7 +152,6 @@ packages/dashboard/src/
 ├── tabs/
 │   ├── HomeTab.jsx            ← per-student cards, tappable mobile / expanded desktop
 │   ├── PlannerTab.jsx
-│   ├── RewardsTab.jsx
 │   ├── AcademicRecordsTab.jsx
 │   ├── SettingsTab.jsx
 │   └── DataBackupSection.jsx  ← Export / Restore from Backup / Factory Reset Restore
@@ -213,7 +191,6 @@ packages/dashboard/src/
     │   └── constants/
     │       ├── days.js                  ← mondayWeekId() lives here
     │       └── [other constants]
-    ├── reward-tracker/
     └── academic-records/
 
 netlify/functions/
@@ -233,17 +210,17 @@ Desktop changes are always additive via @media (min-width: 810px) — never modi
 
 ---
 
-## Tools status (v0.29.5)
+## Tools status (v0.30.0)
 - shared            → ✅ Complete
-- dashboard shell   → ✅ Complete — 6-tab nav, dynamic students, dark mode
+- dashboard shell   → ✅ Complete — 4-tab nav (Home / Planner / Records / Settings), dynamic students, dark mode
 - Home Tab          → ✅ Complete — per-student cards, tappable/expanded, attendance
 - Planner           → ✅ Complete — mobile DayStrip + desktop CalendarWeekView, drag-and-drop, sick day, mobile multi-select
-- Reward Tracker    → ✅ Complete — award/deduct/spend/log, cash conversion
 - Academic Records  → ✅ Complete — full Phase 2 feature
-- TE Extractor      → ✅ Complete — vanilla JS at /te-extractor/
 - Backup            → ✅ Complete — Export / Restore from Backup (diff) / Factory Reset / Auto 6hr
 - Month view        → 🔒 Queued — also unlocks improved Friday sick-day cascading
 - School Days       → 🔒 Phase 3
+- Reward Tracker    → 🗑 Removed in v0.30.0
+- TE Extractor      → 🗑 Removed in v0.30.0
 
 ---
 
@@ -316,11 +293,10 @@ Do not open pull requests. Do not create branches named claude/* or feature/*.
 - No max-width on mobile — content fills viewport width
 - allday key (not __allday__) — Firestore rejects double-underscore
 - weekId always Monday — mondayWeekId() in constants/days.js
-- rewardTracker/{student} — no 'students/' segment
 - collectionGroup('subjects') for backup/restore — uid doc does not exist
 - Firestore collectionGroup subjects read rule must never be removed
-- TE Extractor links out via window.location.href — React rewrite deferred Phase 3
-- TE Extractor direct browser API call — Netlify Function caused 60s timeouts
+- Reward tracker and TE Extractor were removed in v0.30.0 — the planner is a pure lesson planning + academic records tool. Shell tab order is exactly Home / Planner / Records / Settings.
+- CalendarImportSheet and CurriculumImportSheet still call Anthropic API directly from browser using VITE_ANTHROPIC_API_KEY — Netlify Function proxy caused 60 s timeouts.
 - Unified Settings tab owns all settings
 - Student state lifted to App.jsx
 - CLAUDE.md, CLAUDE-DESIGN.md, CLAUDE-HISTORY.md all exempt from 300-line rule
