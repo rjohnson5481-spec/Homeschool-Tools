@@ -215,3 +215,27 @@
   .subject-card-allday-name { font-size: 17px; }
   .subject-card-allday-note { font-size: 14px; }
 }
+
+/* ── Mobile-only multi-select selected state ── */
+@media (max-width: 1023px) {
+  .subject-card { position: relative; }
+
+  .subject-card--selected {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.3);
+  }
+
+  .subject-card-select-check {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  }
+}
