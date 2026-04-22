@@ -18,7 +18,7 @@ export default function PlannerTab({ student, setStudent, students, subjectsBySt
   const {
     subjects, dayData, loading: subjectsLoading,
     updateCell, addSubject, removeSubject, importCell, deleteWeek, wipeWeek,
-    performSickDay, performUndoSickDay, sickDayIndices,
+    performSickDay, performUndoSickDay,
     loadWeekDataFrom,
   } = useSubjects(user?.uid, weekId, student, ui.day);
   const pdfImport = usePdfImport();
@@ -50,7 +50,6 @@ export default function PlannerTab({ student, setStudent, students, subjectsBySt
       wipeWeek={wipeWeek}
       performSickDay={performSickDay}
       performUndoSickDay={performUndoSickDay}
-      sickDayIndices={sickDayIndices}
       loadWeekDataFrom={loadWeekDataFrom}
       pdfImport={pdfImport}
       students={students}
