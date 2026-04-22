@@ -12,9 +12,9 @@ function formatDate(date) {
 }
 
 function useIsDesktop() {
-  const [d, setD] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+  const [d, setD] = useState(() => window.matchMedia('(min-width: 810px)').matches);
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
+    const mq = window.matchMedia('(min-width: 810px)');
     const h = e => setD(e.matches);
     mq.addEventListener('change', h);
     return () => mq.removeEventListener('change', h);

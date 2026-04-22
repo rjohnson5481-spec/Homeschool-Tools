@@ -5,7 +5,7 @@ import RestoreDiffCalendar from './RestoreDiffCalendar.jsx';
 import './RestoreDiffSheet.css';
 
 function useIsDesktop() {
-  const query = '(min-width: 1024px)';
+  const query = '(min-width: 810px)';
   const get = () => typeof window !== 'undefined' && window.matchMedia(query).matches;
   const [isDesktop, setIsDesktop] = useState(get);
   useEffect(() => {

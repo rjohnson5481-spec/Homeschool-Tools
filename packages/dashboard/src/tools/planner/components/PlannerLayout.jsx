@@ -19,8 +19,8 @@ import { getMondayOf, toWeekId, formatWeekLabel, DAY_NAMES } from '../constants/
 import './PlannerLayout.css';
 
 function useIsDesktop() {
-  const [d, setD] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
-  useEffect(() => { const mq = window.matchMedia('(min-width: 1024px)'); const h = e => setD(e.matches); mq.addEventListener('change', h); return () => mq.removeEventListener('change', h); }, []);
+  const [d, setD] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 810);
+  useEffect(() => { const mq = window.matchMedia('(min-width: 810px)'); const h = e => setD(e.matches); mq.addEventListener('change', h); return () => mq.removeEventListener('change', h); }, []);
   return d;
 }
 
