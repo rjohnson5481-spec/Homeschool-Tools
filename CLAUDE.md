@@ -233,7 +233,6 @@ Desktop changes are always additive via @media (min-width: 810px) — never modi
 
 ### Phase 3 — School Days + External Tools
 - School Days compliance — user-entered days/hours requirement, hours toggle in settings, hours input per day in planner when enabled.
-- External Tools tab — card launcher in the empty 5th nav slot, links out to Johnson-Web-Tools and future external utilities.
 
 ### Phase 4 — Multi-family / brand-agnostic shell
 - Strip hardcoded "Iron & Light Johnson Academy" references — brand-agnostic shell.
