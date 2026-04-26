@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { DndContext, PointerSensor, pointerWithin, useSensor, useSensors, useDraggable, useDroppable } from '@dnd-kit/core';
-import { formatWeekLabel } from '../constants/days.js';
+import { formatWeekLabel, toWeekId } from '../constants/days.js';
 import './CalendarWeekView.css';
 
 const DAY_SHORT = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
@@ -38,6 +38,30 @@ function DroppableCol({ id, children }) {
   return <div ref={setNodeRef} className="cwv-col-body" style={isOver ? { outline: '1px solid rgba(201,168,76,0.4)', outlineOffset: -1 } : undefined}>{children}</div>;
 }
 
+function CalendarHoursInput({ dateString, hoursLogged, onSave, onFlush }) {
+  const [value, setValue] = useState(hoursLogged === undefined || hoursLogged === null ? '' : String(hoursLogged));
+  const focusedRef = useRef(false);
+  useEffect(() => {
+    if (!focusedRef.current) setValue(hoursLogged === undefined || hoursLogged === null ? '' : String(hoursLogged));
+  }, [hoursLogged]);
+  function handleChange(e) {
+    const next = e.target.value;
+    setValue(next);
+    onSave(dateString, next === '' ? null : parseFloat(next));
+  }
+  return (
+    <input
+      className="cwv-col-hours-input"
+      type="number" inputMode="decimal" step="0.5" min="0"
+      placeholder="0.0"
+      value={value}
+      onChange={handleChange}
+      onFocus={() => { focusedRef.current = true; }}
+      onBlur={() => { focusedRef.current = false; onFlush(); }}
+    />
+  );
+}
+
 function mergeOptimistic(weekData, moves) {
   if (!Object.keys(moves).length) return weekData;
   const out = {};
@@ -63,6 +87,7 @@ export default function CalendarWeekView({
   weekDates, prevWeek, nextWeek, jumpToToday,
   loadWeekDataFrom, student, weekId,
   onEditCell, onAddSubject, onMoveCell, onToggleDone,
+  hoursEnabled, hoursByDate, onSaveHours, onFlushHours,
 }) {
   const [weekData, setWeekData] = useState({});
   const [activeId, setActiveId] = useState(null);
@@ -195,6 +220,17 @@ export default function CalendarWeekView({
                     );
                   })}
                   <button className="cwv-col-add" onClick={() => onAddSubject(di)}>+ add</button>
+                  {hoursEnabled && date && (
+                    <div className="cwv-col-hours">
+                      <span className="cwv-col-hours-label">Hrs:</span>
+                      <CalendarHoursInput
+                        dateString={toWeekId(date)}
+                        hoursLogged={hoursByDate?.[toWeekId(date)]}
+                        onSave={onSaveHours}
+                        onFlush={onFlushHours}
+                      />
+                    </div>
+                  )}
                 </DroppableCol>
               </div>
             );

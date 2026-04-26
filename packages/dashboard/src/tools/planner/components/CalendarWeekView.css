@@ -76,12 +76,44 @@
 .cwv-note { font-size: 11px; color: var(--text-secondary); font-style: italic; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Column add button ── */
+/* No margin-top: auto here — the hours footer (when present) becomes the
+   absolute foot via its own margin-top: auto. When hours is disabled, the
+   add button sits just below the cells; that's the intentional new layout. */
 .cwv-col-add {
   background: transparent; border: 1px dashed var(--border); border-radius: 8px;
   padding: 6px; font-size: 11px; color: var(--text-muted); font-family: inherit;
-  cursor: pointer; margin-top: auto; transition: border-color 0.15s, color 0.15s;
+  cursor: pointer; margin-bottom: 4px; transition: border-color 0.15s, color 0.15s;
 }
 .cwv-col-add:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── Column hours footer (compliance.hoursEnabled only) ── */
+.cwv-col-hours {
+  margin-top: auto;
+  padding: 6px 5px 8px;
+  border-top: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cwv-col-hours-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.cwv-col-hours-input {
+  width: 50px;
+  padding: 4px 6px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cwv-col-hours-input:focus { border-color: var(--gold); }
 
 /* ── Hide existing desktop week nav when calendar view is active ── */
 @media (min-width: 810px) {
