@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.30.2 — milestone: reward tracker and TE Extractor removed; 4-tab shell
+Current version: v0.31.0 — milestone: Phase 3 — School Days compliance Session 1 (settings + data model)
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy.
@@ -210,7 +210,7 @@ Desktop changes are always additive via @media (min-width: 810px) — never modi
 
 ---
 
-## Tools status (v0.30.2)
+## Tools status (v0.31.0)
 - shared            → ✅ Complete
 - dashboard shell   → ✅ Complete — 4-tab nav (Home / Planner / Records / Settings), dynamic students, dark mode
 - Home Tab          → ✅ Complete — per-student cards, tappable/expanded, attendance
