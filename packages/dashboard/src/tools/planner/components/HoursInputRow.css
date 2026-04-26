@@ -1,0 +1,41 @@
+.hours-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 14px 8px;
+  padding: 8px 14px;
+  background: var(--bg-card);
+  border-radius: 8px;
+}
+
+.hours-row-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.hours-row-input {
+  width: 70px;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.hours-row-input:focus { border-color: var(--gold); }
+
+/* Hide on desktop calendar view (matches the .cwv-active hide pattern). */
+@media (min-width: 810px) {
+  .cwv-active .hours-row { display: none; }
+}
+
+/* Large phone band — slightly bigger to match other planner controls. */
+@media (min-width: 400px) and (max-width: 809px) {
+  .hours-row       { padding: 10px 16px; }
+  .hours-row-label { font-size: 14px; }
+  .hours-row-input { font-size: 15px; width: 80px; padding: 8px 10px; }
+}
