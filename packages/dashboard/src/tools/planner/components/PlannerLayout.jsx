@@ -11,10 +11,12 @@ import CalendarWeekView from './CalendarWeekView.jsx';
 import PlannerActionBar from './PlannerActionBar.jsx';
 import SickDayManager  from './SickDayManager.jsx';
 import MultiSelectBar  from './MultiSelectBar.jsx';
+import HoursInputRow   from './HoursInputRow.jsx';
 import { useSickDay } from '../hooks/useSickDay.js';
 import { useMultiSelect } from '../hooks/useMultiSelect.js';
 import { usePlannerHelpers } from '../hooks/usePlannerHelpers.js';
 import { useCellToggles } from '../hooks/useCellToggles.js';
+import { useCompliance } from '../hooks/useCompliance.js';
 import { getMondayOf, toWeekId, formatWeekLabel, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 
@@ -101,6 +103,8 @@ export default function PlannerLayout({
   const { handleToggleDone, handleToggleFlag, toggleCellDone } =
     useCellToggles({ user, weekId, student, day, dayData, updateCell });
 
+  const compliance = useCompliance({ uid: user?.uid, weekDates });
+
   return (
     <div className={`planner${isDesktop ? ' cwv-active' : ''}`}>
       <Header
@@ -132,6 +136,10 @@ export default function PlannerLayout({
             onAddSubject={(di) => { setDay(di); setShowAddSubject(true); }}
             onMoveCell={handleMoveCell}
             onToggleDone={toggleCellDone}
+            hoursEnabled={compliance.hoursEnabled}
+            hoursByDate={compliance.hoursByDate}
+            onSaveHours={compliance.saveHours}
+            onFlushHours={compliance.flushPendingSave}
           />
         )}
 
@@ -147,6 +155,15 @@ export default function PlannerLayout({
 
         {isSickDay && (
           <div className="planner-sick-banner">Sick Day</div>
+        )}
+
+        {compliance.hoursEnabled && (
+          <HoursInputRow
+            selectedDate={weekDates[day]}
+            hoursLogged={compliance.hoursByDate[toWeekId(weekDates[day])]}
+            onSave={hours => compliance.saveHours(toWeekId(weekDates[day]), hours)}
+            onFlush={compliance.flushPendingSave}
+          />
         )}
 
         <main className="planner-main">
