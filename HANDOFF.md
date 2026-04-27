@@ -1,103 +1,91 @@
-# HANDOFF — v0.31.2 Phase 3 Session 3: Compliance UI moved to Academic Records
+# HANDOFF — v0.31.3 Phase 3 Session 3.5: Compliance collapsible + relocated to Quick Actions
 
 ## What was completed this session
-- Phase 3 Session 3 (structural refactor only — no
-  behavioral change). Compliance UI relocated from
-  Settings to Academic Records, where it conceptually
-  belongs alongside school years, quarters, and breaks.
-- `git mv` preserved file history:
-  - `packages/dashboard/src/tabs/SettingsCompliance.jsx`
-    → `packages/dashboard/src/tools/academic-records/components/ComplianceSection.jsx`
-  - `packages/dashboard/src/tabs/SettingsCompliance.css`
-    → `packages/dashboard/src/tools/academic-records/components/ComplianceSection.css`
-  Both renames detected by git as 100%/94% similarity
-  (relocation only, plus minimal internal updates).
-- Internal updates to `ComplianceSection.jsx`:
-  - Component renamed `SettingsCompliance` →
-    `ComplianceSection`.
-  - Import paths shifted up three levels to reach
-    `firebase/compliance.js` and `constants/compliance.js`
-    (from the new `tools/academic-records/components/`
-    location).
-  - CSS import updated to `./ComplianceSection.css`.
-  - JSX class names left unchanged (`st-*` and `sc-*`
-    prefixes both preserved). Settings CSS is loaded
-    eagerly at app boot via `App.jsx` importing
-    `SettingsTab`, so `st-toggle`, `st-card`, `st-row`,
-    etc. remain globally available even when rendered
-    inside Records. Per project rule "no gratuitous
-    renames"; class restyling deferred.
-- `RecordsMainView.jsx`: 179 → 183 lines. Added the
-  `ComplianceSection` import, a `uid` prop, and the
-  `<ComplianceSection uid={uid} />` render between the
-  stats row and the `Grades — {selectedStudent}`
-  section label.
-- `AcademicRecordsTab.jsx`: 205 → 206 lines. Added
-  `uid={uid}` prop pass to `<RecordsMainView ... />`.
-- `SettingsTab.jsx`: 237 → 234 lines. Removed the
-  `SettingsCompliance` import and the
-  `<SettingsCompliance uid={uid} />` render line. No
-  surrounding wrapper to clean up — `SettingsCompliance`
-  rendered its own `<section>` element internally.
-- `ComplianceSection.jsx` and `.css` line counts
-  unchanged at 116 and 56 respectively (relocation,
-  not rewrite).
-- Grep `grep -rn "SettingsCompliance" packages/`
-  returns zero matches in code after the move. Only
-  hit anywhere in the repo was a single historical
-  reference inside the prior HANDOFF's "Notes"
-  section, which this rewrite supersedes.
-- Version bumped to v0.31.2 (within-Phase-3 patch).
+- Phase 3 Session 3.5: UI presentation refactor only,
+  no behavioral change. Settings save, Firestore
+  subscription, and the planner hours input wiring all
+  unchanged.
+- `ComplianceSection.jsx` (116 → 125 lines, target
+  was under 140) is now collapsible. Local
+  `useState(false)` for `expanded`; toggle via tap on
+  the header row. Always opens collapsed on mount,
+  even when `daysEnabled` or `hoursEnabled` are true —
+  state is component-local, not persisted.
+- Header row uses the existing `.ar-action-btn`
+  class so it visually matches every other Quick
+  Actions row exactly (same padding, background,
+  border, radius, font, hover state). Icon: 🛡️.
+  Label: "Track Compliance" (verb-prefixed to match
+  "Manage Course Catalog" / "Manage Enrollments" /
+  etc.). Chevron rotates between `›` (collapsed) and
+  `▾` (expanded), mirroring the existing Settings
+  "Default Subjects" expandable row in SettingsTab.
+- Expanded panel renders the same helper text +
+  toggles + number inputs as before, wrapped in a new
+  `.cs-panel` div that tucks under the button via a
+  small negative margin so the two read as a single
+  grouping.
+- `ComplianceSection.css` (56 → 64 lines, target was
+  under 90) gained one block: the `.cs-panel`
+  wrapper. All existing `sc-*` and inherited `st-*`
+  classes preserved.
+- `RecordsMainView.jsx` (183 → 182 lines) — removed
+  the standalone `<ComplianceSection uid={uid} />`
+  render between the stats row and the Grades section
+  header; added it as the FIRST child inside
+  `<div className="ar-quick-actions">`, above
+  `Manage Course Catalog`. Net change: −1 line.
+- Version bumped to v0.31.3 (within-Phase-3 patch).
   Both workspace `package.json` files updated.
   CLAUDE.md line 2 milestone suffix updated to
   "Sessions 1–3 (settings + hours input + Records
-  relocation)" and Tools status header bumped to
-  (v0.31.2).
+  relocation + collapsible)" and Tools status header
+  bumped to (v0.31.3).
 
 ## Notes
-- Placement choice: `<ComplianceSection>` sits
-  between the stats row (Attendance / Courses /
-  School Year cards) and the Grades section header
-  inside `RecordsMainView`. Reasoning: visual flow
-  reads as "year stats → requirements for this year
-  → grades earned this year." Quick Actions remain at
-  the bottom as before.
-- Architecture decision: `RecordsMainView` is the
-  presentational composer for the Records tab body;
-  `AcademicRecordsTab` is a thin shell that owns
-  state and threads it down. Compliance was wired
-  into `RecordsMainView` (where the section flow
-  lives), not directly into the tab file.
-- File-size health: SettingsTab dropped 3 lines
-  toward simpler scope; AcademicRecordsTab grew by
-  one prop pass; RecordsMainView grew by one
-  import + one render block. All well under the 250
-  target / 300 hard limit.
+- `<ComplianceSection>` returns a React fragment with
+  two siblings: the button and (when expanded) the
+  panel. Inside `<div className="ar-quick-actions">`
+  (flex column, gap 8px), the fragment children render
+  as direct flex items — clean integration, no
+  wrapper div needed.
+- File-size health check after changes: JSX 125/140,
+  CSS 64/90, RecordsMainView 182/300. All comfortably
+  under their limits.
+- The placement decision (first row in Quick Actions)
+  matches the prompt's reasoning: Compliance is
+  foundational — what does this year require? — and
+  belongs above the curriculum/enrollment actions.
 
 ## Manual verification protocol for Rob (after Netlify deploy)
-1. Open Settings — confirm there is NO Compliance
-   section anywhere in Settings (it should be gone).
-2. Open Academic Records — confirm the Compliance
-   section appears, in its new placement (between the
-   stats cards and the Grades section heading).
-3. Toggle "Track required school days" ON in the new
-   location — value should save and persist on refresh.
-4. Open the Planner — confirm the hours input row STILL
-   appears when `hoursEnabled` is on (compliance data
-   wiring still works through the move).
-5. Toggle off in the new location — confirm the planner
-   hours input disappears as before.
+1. Open Records → confirm Compliance section is GONE
+   from between stats row and Grades.
+2. Scroll to Quick Actions → confirm Compliance is
+   the FIRST row, matching the visual style of
+   Manage Course Catalog and the other action rows.
+3. Tap Compliance row → confirm it expands smoothly
+   to show helper text, toggles, and number inputs.
+4. Tap the header again → confirm it collapses back
+   to just the row.
+5. Reload the page with compliance enabled
+   (`daysEnabled` or `hoursEnabled` true) → confirm
+   the section opens collapsed, NOT auto-expanded.
+6. Configure compliance (toggle on, set values) →
+   verify values persist to Firestore the same way
+   they did before this refactor.
+7. Open Planner → verify the hours input row still
+   works when `hoursEnabled` is on (data wiring
+   unchanged).
 
-If anything else is different after the move, that's
-a regression — the move was structural only.
+If anything else is different, that's a regression —
+this was a UI presentation refactor only.
 
 ## What is broken or incomplete
 (Verified each carried-forward item still describes a
-real condition in current code, per the
-verify-before-carry-forward rule. Dropped one bullet:
-"Phase 3 Session 3 next" — Session 3 was today.
-Renumbered the remaining session bullets to match the
-new 5-session-plus-deferred plan.)
+real condition in current code per the
+verify-before-carry-forward rule. Nothing dropped this
+session — UI presentation refactor didn't resolve any
+pending bullets.)
 
 - StudentDetailSheet header still renders a
   `{pts.points} pts` badge that always reads "0 pts"
@@ -170,11 +158,12 @@ new 5-session-plus-deferred plan.)
   this fix.
 - Phase 3 Session 4 next — Compliance dashboard
   component (`ComplianceCard`) plus
-  `useComplianceSummary` hook. Mount in Records (as
-  the detailed view) and on the Home tab (as a glance
-  summary). Days metric: `startingDays + count of
-  distinct dates with any done cell within active
-  school year`. Hours metric: `startingHours +
+  `useComplianceSummary` hook. Mount on the Home tab
+  (as a glance summary) and inside ComplianceSection
+  (now collapsible) in Records as the detailed view.
+  Days metric: `startingDays + count of distinct
+  dates with any done cell within active school
+  year`. Hours metric: `startingHours +
   sum(hoursLogged across schoolDays in same range)`.
   Recommended query is Option α from the design
   diagnostic: live `collectionGroup('subjects')
@@ -258,18 +247,17 @@ new 5-session-plus-deferred plan.)
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
 2. Verify on main, pull latest
-3. Begin Session 4: design `ComplianceCard` component
-   and `useComplianceSummary` hook (Option α query for
+3. Begin Session 4: `ComplianceCard` component +
+   `useComplianceSummary` hook (Option α query for
    days-completed, reuse `subscribeSchoolDays` for
-   hours-completed). Mount in Records (the detail
-   view) and on the Home tab (the summary glance).
+   hours-completed). Mount on Home as a summary
+   glance and inside the now-collapsible Records
+   ComplianceSection as the detail view.
 
 ## Key files changed recently
-- packages/dashboard/src/tools/academic-records/components/ComplianceSection.jsx (renamed from tabs/SettingsCompliance.jsx)
-- packages/dashboard/src/tools/academic-records/components/ComplianceSection.css (renamed from tabs/SettingsCompliance.css)
+- packages/dashboard/src/tools/academic-records/components/ComplianceSection.jsx
+- packages/dashboard/src/tools/academic-records/components/ComplianceSection.css
 - packages/dashboard/src/tools/academic-records/components/RecordsMainView.jsx
-- packages/dashboard/src/tabs/AcademicRecordsTab.jsx
-- packages/dashboard/src/tabs/SettingsTab.jsx
 - packages/dashboard/package.json
 - packages/shared/package.json
 - CLAUDE.md
