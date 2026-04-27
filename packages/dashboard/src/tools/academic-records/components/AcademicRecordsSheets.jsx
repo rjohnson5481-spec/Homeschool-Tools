@@ -12,6 +12,7 @@ import SavedReportCardsSheet  from './SavedReportCardsSheet.jsx';
 import ManageActivitiesSheet  from './ManageActivitiesSheet.jsx';
 import AddEditActivitySheet   from './AddEditActivitySheet.jsx';
 import CurriculumImportSheet from './CurriculumImportSheet.jsx';
+import ComplianceSheet       from './ComplianceSheet.jsx';
 
 export default function AcademicRecordsSheets(p) {
   return (
@@ -66,6 +67,8 @@ export default function AcademicRecordsSheets(p) {
         student={p.activityStudent} activity={p.editingActivity} />
       <CurriculumImportSheet open={p.curriculumImportOpen} onClose={p.closeCurriculumImport}
         onImport={p.handleCurriculumImport} courses={p.courses} />
+      <ComplianceSheet open={p.complianceSheetOpen} onClose={p.closeCompliance}
+        uid={p.uid} />
     </>
   );
 }

@@ -67,6 +67,7 @@ export default function AcademicRecordsTab() {
   const [editingActivity, setEditingActivity]                       = useState(null);
   const [activityStudent, setActivityStudent]                       = useState(null);
   const [curriculumImportOpen, setCurriculumImportOpen]             = useState(false);
+  const [complianceSheetOpen, setComplianceSheetOpen]               = useState(false);
 
   // ─── Course handlers ───
   function closeCatalog()       { setCatalogSheetOpen(false); setAddEditSheetOpen(false); setEditingCourse(null); }
@@ -150,7 +151,6 @@ export default function AcademicRecordsTab() {
   return (
     <div className="ar-tab">
       <RecordsMainView
-        uid={uid}
         students={students} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent}
         selectedQuarterId={selectedQuarterId} setSelectedQuarterId={setSelectedQuarterId}
         summary={summary} courses={courses} grades={grades}
@@ -159,6 +159,7 @@ export default function AcademicRecordsTab() {
         onCalendarImport={summary.activeSchoolYear ? () => setCalendarImportOpen(true) : null}
         onAttendanceDetail={() => setAttendanceDetailOpen(true)} onGenerateReport={() => setReportCardOpen(true)}
         onOpenSavedReports={() => setSavedReportsOpen(true)} onOpenActivities={() => setActivitiesSheetOpen(true)}
+        onComplianceOpen={() => setComplianceSheetOpen(true)}
       />
       <AcademicRecordsSheets
         students={students}
@@ -200,6 +201,8 @@ export default function AcademicRecordsTab() {
         onImportCurriculum={() => setCurriculumImportOpen(true)}
         curriculumImportOpen={curriculumImportOpen} closeCurriculumImport={() => setCurriculumImportOpen(false)}
         handleCurriculumImport={handleCurriculumImport}
+        complianceSheetOpen={complianceSheetOpen} closeCompliance={() => setComplianceSheetOpen(false)}
+        uid={uid}
       />
     </div>
   );

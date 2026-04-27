@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { GRADING_TYPE_LETTER } from '../constants/academics.js';
-import ComplianceSection from './ComplianceSection.jsx';
 
 // Pure presentation for the Academic Records tab body.
 // All data is owned by the parent (AcademicRecordsTab) and passed in as
@@ -35,12 +34,12 @@ function todayStr() {
 }
 
 export default function RecordsMainView({
-  uid,
   students, selectedStudent, setSelectedStudent,
   selectedQuarterId, setSelectedQuarterId,
   summary, courses, grades,
   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades, onCalendarImport,
   onAttendanceDetail, onGenerateReport, onOpenSavedReports, onOpenActivities,
+  onComplianceOpen,
 }) {
   const { activeSchoolYear, studentEnrollments, courseCount, attendanceDays } = summary;
   const today      = todayStr();
@@ -148,7 +147,9 @@ export default function RecordsMainView({
       <p className="ar-section-label">Quick Actions</p>
 
       <div className="ar-quick-actions">
-        <ComplianceSection uid={uid} />
+        <button className="ar-action-btn" onClick={onComplianceOpen}>
+          <span>🛡️ Track Compliance</span><span>›</span>
+        </button>
         <button className="ar-action-btn" onClick={onCatalogOpen}>
           <span>📚 Manage Course Catalog</span><span>›</span>
         </button>
