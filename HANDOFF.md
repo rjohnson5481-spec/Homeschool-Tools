@@ -125,6 +125,36 @@ verify-before-carry-forward rule. Dropped one bullet:
   key). May require a key-shape change from
   `{subject}` to `{subject}-{instance}` or similar to
   allow duplicates without overwriting.
+- Sick day cascade does not skip over existing all-day
+  events. When sick day is confirmed for a day, the
+  expected behavior is:
+  1. Lessons on the sick day cascade forward by one
+     position.
+  2. A "Sick Day" all-day event is created on that day
+     (this part is already working).
+  3. The cascade must skip over any later day that
+     already has an all-day event — those days stay
+     clear of regular lessons because the all-day event
+     blocks them.
+
+  Concrete example: this week has Co-op as an all-day
+  event on Wednesday. If a sick day fires on Monday,
+  Monday's lessons should land on Tuesday, and
+  Tuesday's lessons should jump past Wednesday and
+  land on Thursday. Wednesday stays clear (Co-op
+  preserved). Currently the cascade likely increments
+  `dayIndex` by one without checking for existing
+  all-day events on the destination day, so lessons
+  can land on top of Co-op or other all-day events.
+
+  Likely fix lives in `performSickDay` in
+  `useSubjects.js` (planner). The cascade loop needs
+  to check whether the destination day already has an
+  `'allday'` cell before writing — if so, skip to the
+  next day. End-of-week behavior (what happens if the
+  cascade falls off Friday) should match whatever the
+  current cascade does today, not be redesigned in
+  this fix.
 - Phase 3 Session 3 next — compliance dashboard on
   the Home tab and Settings. Reads
   `subscribeSchoolDays` over the active school year
