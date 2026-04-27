@@ -1,3 +1,11 @@
+/* Expanded panel for the collapsible Compliance row in Records → Quick
+   Actions. Tucks under the .ar-action-btn header so the two read as one
+   grouping. The button itself uses the existing .ar-action-btn style. */
+.cs-panel {
+  margin-top: -2px;
+  padding: 4px 4px 0;
+}
+
 .sc-helper {
   font-size: 12px;
   color: var(--text-muted);
