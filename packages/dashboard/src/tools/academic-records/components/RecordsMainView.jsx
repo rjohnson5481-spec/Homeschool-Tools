@@ -36,7 +36,7 @@ function todayStr() {
 export default function RecordsMainView({
   students, selectedStudent, setSelectedStudent,
   selectedQuarterId, setSelectedQuarterId,
-  summary, courses, grades,
+  summary, complianceSummary, courses, grades,
   onCatalogOpen, onEnrollmentsOpen, onSchoolYearOpen, onEnterGrades, onCalendarImport,
   onAttendanceDetail, onGenerateReport, onOpenSavedReports, onOpenActivities,
   onComplianceOpen,
@@ -46,6 +46,17 @@ export default function RecordsMainView({
   const courseById = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
   const yearStart  = activeSchoolYear?.label?.split(/[–-]/)[0]?.trim() ?? '—';
   const yearLabel  = activeSchoolYear?.label ?? 'not set';
+
+  // Attendance card: when compliance.daysEnabled is true, source from
+  // per-student compliance counts. Falls back to calendar-math
+  // attendance from useAcademicSummary when off.
+  const useCompliance     = !!complianceSummary?.daysEnabled;
+  const attendanceValue   = useCompliance
+    ? (complianceSummary.daysCompletedByStudent?.[selectedStudent] ?? 0)
+    : attendanceDays.attended;
+  const attendanceRequired = useCompliance
+    ? (complianceSummary.requiredByStudent?.[selectedStudent]?.requiredDays ?? 0)
+    : 175;
 
   return (
     <>
@@ -84,8 +95,8 @@ export default function RecordsMainView({
       <div className="ar-stats-row">
         <div className="ar-stat-card gold ar-stat-card--tappable" onClick={onAttendanceDetail} role="button" tabIndex={0}>
           <div className="ar-stat-label">Attendance</div>
-          <div className="ar-stat-value">{summary.loading ? '—' : attendanceDays.attended}</div>
-          <div className="ar-stat-sub">of 175 days required</div>
+          <div className="ar-stat-value">{summary.loading ? '—' : attendanceValue}</div>
+          <div className="ar-stat-sub">of {attendanceRequired} days required</div>
           <div className="ar-stat-detail-hint">View details ›</div>
         </div>
         <div className="ar-stat-card">

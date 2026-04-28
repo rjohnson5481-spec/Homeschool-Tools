@@ -10,6 +10,7 @@ import { useGrades }          from '../tools/academic-records/hooks/useGrades.js
 import { useReportNotes }     from '../tools/academic-records/hooks/useReportNotes.js';
 import { useSavedReports }    from '../tools/academic-records/hooks/useSavedReports.js';
 import { useActivities }      from '../tools/academic-records/hooks/useActivities.js';
+import { useComplianceSummary } from '../hooks/useComplianceSummary.js';
 import RecordsMainView        from '../tools/academic-records/components/RecordsMainView.jsx';
 import AcademicRecordsSheets  from '../tools/academic-records/components/AcademicRecordsSheets.jsx';
 import './AcademicRecordsTab.css';
@@ -33,6 +34,7 @@ export default function AcademicRecordsTab() {
   useEffect(() => { if (students.length && !selectedStudent) setSelectedStudent(students[0]); }, [students, selectedStudent]);
   const [selectedQuarterId, setSelectedQuarterId] = useState(null);
   const summary = useAcademicSummary(uid, selectedStudent, schoolYears, enrollments, courses);
+  const complianceSummary = useComplianceSummary(uid);
   const { grades, saveGrade, addGrade } = useGrades(uid);
   const { reportNotes, saveNote } = useReportNotes(uid);
   const { savedReports, loading: reportsLoading, saveReport, removeReport } = useSavedReports(uid);
@@ -153,7 +155,7 @@ export default function AcademicRecordsTab() {
       <RecordsMainView
         students={students} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent}
         selectedQuarterId={selectedQuarterId} setSelectedQuarterId={setSelectedQuarterId}
-        summary={summary} courses={courses} grades={grades}
+        summary={summary} complianceSummary={complianceSummary} courses={courses} grades={grades}
         onCatalogOpen={() => setCatalogSheetOpen(true)} onEnrollmentsOpen={() => setEnrollmentSheetOpen(true)}
         onSchoolYearOpen={() => setSchoolYearSheetOpen(true)} onEnterGrades={() => setGradeEntrySheetOpen(true)}
         onCalendarImport={summary.activeSchoolYear ? () => setCalendarImportOpen(true) : null}
