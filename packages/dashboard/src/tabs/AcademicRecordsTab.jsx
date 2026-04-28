@@ -14,7 +14,7 @@ import RecordsMainView        from '../tools/academic-records/components/Records
 import AcademicRecordsSheets  from '../tools/academic-records/components/AcademicRecordsSheets.jsx';
 import './AcademicRecordsTab.css';
 
-export default function AcademicRecordsTab({ pendingRecordsAction, setPendingRecordsAction }) {
+export default function AcademicRecordsTab() {
   const { user } = useAuth();
   const uid = user?.uid;
 
@@ -68,16 +68,6 @@ export default function AcademicRecordsTab({ pendingRecordsAction, setPendingRec
   const [activityStudent, setActivityStudent]                       = useState(null);
   const [curriculumImportOpen, setCurriculumImportOpen]             = useState(false);
   const [complianceSheetOpen, setComplianceSheetOpen]               = useState(false);
-
-  // Cross-tab: HomeTab can request the Compliance sheet to auto-open by
-  // setting pendingRecordsAction to 'compliance' before switching tabs.
-  // Clear the action after acting so re-closing the sheet doesn't reopen it.
-  useEffect(() => {
-    if (pendingRecordsAction === 'compliance') {
-      setComplianceSheetOpen(true);
-      setPendingRecordsAction?.(null);
-    }
-  }, [pendingRecordsAction, setPendingRecordsAction]);
 
   // ─── Course handlers ───
   function closeCatalog()       { setCatalogSheetOpen(false); setAddEditSheetOpen(false); setEditingCourse(null); }
