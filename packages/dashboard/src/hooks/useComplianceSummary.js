@@ -1,20 +1,24 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, collectionGroup, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, collectionGroup, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 import { subscribeCompliance, subscribeSchoolDays } from '../firebase/compliance.js';
 import { COMPLIANCE_DEFAULTS } from '../constants/compliance.js';
 
-// School-year-wide compliance metrics for the dashboard.
+// Per-student school-year-wide compliance metrics for downstream UI.
 //
-// daysCompleted = startingDays + count of distinct dates within the active
-//                 school year where any non-allday subject cell has done=true.
-// hoursCompleted = startingHours + sum of hoursLogged across schoolDays
-//                  in the same range.
+// daysCompletedByStudent[name]  = startingDays  + count of distinct dates
+//                                 within the active school year where any
+//                                 non-allday cell for THAT student has
+//                                 done=true.
+// hoursCompletedByStudent[name] = startingHours + sum of hoursByStudent
+//                                 [name] across schoolDays in range.
+// requiredByStudent passes through from settings/compliance (Session 4.1
+// migration). No fallback to deprecated top-level fields.
 //
-// Multi-family caveat: the days query uses a bare collectionGroup('subjects')
-// listener, which is correct for single-family today but reads cross-family
-// without a uid filter. Phase 4 prerequisite: tighten the R2 rule and add
-// a uid field to cells before any external testing family signs in.
+// Multi-family caveat: bare collectionGroup('subjects') listener reads
+// cross-family without a uid filter. Phase 4 prerequisite cluster (R2 rule
+// uid-scoping + uid field on cells + query rewrite) must land before any
+// external testing family signs in.
 
 function isoFromYMD(y, m, d) {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -24,24 +28,33 @@ function todayIso() {
   return isoFromYMD(t.getFullYear(), t.getMonth() + 1, t.getDate());
 }
 
-// Cell path → "YYYY-MM-DD" date string. Returns null for allday cells or
-// any path that doesn't match the planner cell shape.
-function cellPathToDateString(path) {
+// Cell path → { studentName, dateString }. Returns null for allday cells
+// or any path that doesn't match the planner cell shape.
+// Path: users/{uid}/weeks/{weekId}/students/{name}/days/{0-4}/subjects/{subject}
+function parseCellPath(path) {
   const parts = path.split('/');
-  if (parts.length !== 10 || parts[0] !== 'users' || parts[2] !== 'weeks' || parts[8] !== 'subjects') return null;
+  if (parts.length !== 10
+    || parts[0] !== 'users' || parts[2] !== 'weeks'
+    || parts[4] !== 'students' || parts[6] !== 'days'
+    || parts[8] !== 'subjects') return null;
   const weekId = parts[3];
+  const studentName = parts[5];
   const dayIndex = Number(parts[7]);
   const subject = parts[9];
   if (!Number.isFinite(dayIndex) || subject === 'allday') return null;
   const [y, m, d] = weekId.split('-').map(Number);
   if (!y || !m || !d) return null;
   const date = new Date(y, m - 1, d + dayIndex);
-  return isoFromYMD(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  return {
+    studentName,
+    dateString: isoFromYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
+  };
 }
 
 export function useComplianceSummary(uid) {
   const [settings, setSettings]                 = useState(COMPLIANCE_DEFAULTS);
-  const [doneDates, setDoneDates]               = useState(() => new Set());
+  const [students, setStudents]                 = useState([]);
+  const [studentDateSets, setStudentDateSets]   = useState({});
   const [hoursDocs, setHoursDocs]               = useState([]);
   const [activeSchoolYear, setActiveSchoolYear] = useState(null);
   const [yearsLoaded, setYearsLoaded]           = useState(false);
@@ -50,6 +63,13 @@ export function useComplianceSummary(uid) {
   useEffect(() => {
     if (!uid) return;
     return subscribeCompliance(uid, setSettings);
+  }, [uid]);
+
+  useEffect(() => {
+    if (!uid) return;
+    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
+      setStudents(snap.exists() ? (snap.data().names ?? []) : []);
+    });
   }, [uid]);
 
   useEffect(() => {
@@ -79,25 +99,29 @@ export function useComplianceSummary(uid) {
   const endRaw = activeSchoolYear?.endDate   ?? null;
   const end    = endRaw && todayIso() > endRaw ? endRaw : todayIso();
 
-  // Days: live collectionGroup subscription on done cells, filtered to the
-  // school-year window client-side via path-derived dateString.
+  // Days: live collectionGroup subscription on done cells, bucketed by
+  // student client-side via path-derived (studentName, dateString) pairs.
   useEffect(() => {
     if (!uid || !settings.daysEnabled || !start || !endRaw) {
-      setDoneDates(new Set());
+      setStudentDateSets({});
       return;
     }
     const q = query(collectionGroup(db, 'subjects'), where('done', '==', true));
     return onSnapshot(q, snap => {
-      const dates = new Set();
+      const sets = {};
       snap.docs.forEach(d => {
-        const ds = cellPathToDateString(d.ref.path);
-        if (ds && ds >= start && ds <= end) dates.add(ds);
+        const parsed = parseCellPath(d.ref.path);
+        if (!parsed) return;
+        if (parsed.dateString < start || parsed.dateString > end) return;
+        if (!sets[parsed.studentName]) sets[parsed.studentName] = new Set();
+        sets[parsed.studentName].add(parsed.dateString);
       });
-      setDoneDates(dates);
+      setStudentDateSets(sets);
     });
   }, [uid, settings.daysEnabled, start, endRaw, end]);
 
-  // Hours: reuse Session 1's date-range subscription.
+  // Hours: reuse Session 1's date-range subscription. Each schoolDay doc
+  // has its own hoursByStudent map (Session 4.1 migration).
   useEffect(() => {
     if (!uid || !settings.hoursEnabled || !start || !endRaw) {
       setHoursDocs([]);
@@ -106,24 +130,50 @@ export function useComplianceSummary(uid) {
     return subscribeSchoolDays(uid, start, end, setHoursDocs);
   }, [uid, settings.hoursEnabled, start, endRaw, end]);
 
-  const daysCompleted = useMemo(
-    () => (settings.startingDays ?? 0) + doneDates.size,
-    [settings.startingDays, doneDates],
-  );
-  const hoursCompleted = useMemo(
-    () => (settings.startingHours ?? 0) + hoursDocs.reduce((acc, d) => acc + (d.hoursLogged ?? 0), 0),
-    [settings.startingHours, hoursDocs],
-  );
+  // Normalize requiredByStudent to include every current student.
+  // Defensive zero-fill for any student missing from the settings doc.
+  const requiredByStudent = useMemo(() => {
+    const raw = settings.requiredByStudent ?? {};
+    const out = {};
+    for (const name of students) {
+      out[name] = raw[name] ?? { requiredDays: 0, requiredHours: 0 };
+    }
+    return out;
+  }, [students, settings.requiredByStudent]);
+
+  // Empty maps when disabled (UI gates render). When enabled but no school
+  // year, returns startingDays for every student (cells subscription bails).
+  const daysCompletedByStudent = useMemo(() => {
+    if (!settings.daysEnabled) return {};
+    const out = {};
+    for (const name of students) {
+      out[name] = (settings.startingDays ?? 0) + (studentDateSets[name]?.size ?? 0);
+    }
+    return out;
+  }, [settings.daysEnabled, students, settings.startingDays, studentDateSets]);
+
+  const hoursCompletedByStudent = useMemo(() => {
+    if (!settings.hoursEnabled) return {};
+    const out = {};
+    for (const name of students) {
+      let sum = 0;
+      for (const d of hoursDocs) sum += d.hoursByStudent?.[name] ?? 0;
+      out[name] = (settings.startingHours ?? 0) + sum;
+    }
+    return out;
+  }, [settings.hoursEnabled, students, settings.startingHours, hoursDocs]);
 
   return {
     enabled: !!(settings.daysEnabled || settings.hoursEnabled),
     daysEnabled: !!settings.daysEnabled,
     hoursEnabled: !!settings.hoursEnabled,
-    requiredDays: settings.requiredDays ?? 0,
-    requiredHours: settings.requiredHours ?? 0,
-    daysCompleted,
-    hoursCompleted,
+    startingDays:  settings.startingDays  ?? 0,
+    startingHours: settings.startingHours ?? 0,
+    requiredByStudent,
+    daysCompletedByStudent,
+    hoursCompletedByStudent,
     activeSchoolYear,
+    students,
     loading: !yearsLoaded,
     error,
   };
