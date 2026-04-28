@@ -1,29 +1,31 @@
-# HANDOFF — v0.32.5 Phase 3 Session 4.5: Per-student planner hours input
+# HANDOFF — v0.33.0 Phase 3 Session 5: Integration sweep complete
 
 ## What was completed this session
-- Phase 3 Session 4.5: planner hours input reworked
-  to read and write per-student data.
-- saveSchoolDayHours now writes
-  hoursByStudent.{student}: value using setDoc +
-  merge:true (creates doc if missing, preserves
-  other students' hours on the same day).
-- useCompliance reads hoursByStudent[student] for
-  the currently-selected student (treats undefined
-  as 0). Added student to hook signature and dep
-  arrays. if (!student) guard added.
-- PlannerLayout threads student to useCompliance.
-- HoursInputRow (mobile) + CalendarWeekView
-  (desktop) renamed hoursLogged prop to hours for
-  semantic accuracy. No behavior change.
-- constants/compliance.js data-model comment updated
-  to reflect current per-student shapes.
-- grep hoursLogged packages/: zero matches.
-- No visual UI changes — input placement, debounce,
-  and hoursEnabled gate unchanged.
-- Verified in Firebase Console: per-student writes
-  land correctly at hoursByStudent.{name};
-  merge:true creates new docs and preserves other
-  students on the same day.
+- Phase 3 Session 5: integration sweep complete.
+  Phase 3 is DONE.
+- Records Attendance card now sources from
+  daysCompletedByStudent[selectedStudent] and
+  requiredByStudent[selectedStudent].requiredDays
+  when daysEnabled is true. Falls back to calendar
+  math when off.
+- Home per-student cards now source days progress
+  from daysCompletedByStudent[student] and
+  requiredByStudent[student].requiredDays when
+  daysEnabled is true. Both the stat-grid "Days"
+  number and the progress row "X of Y days · Z%"
+  switch source. Falls back to calendar math when off.
+- useComplianceSummary now has two consumers:
+  AcademicRecordsTab and HomeTab. Called
+  independently in each (Firestore deduplicates
+  server-side).
+- Visual UI unchanged on both surfaces — same
+  cards, same progress bars, same layout.
+- Per-student values: Orion shows his required
+  count, Malachi shows his. Switching students on
+  Records updates the card.
+- Calendar-math fallback preserved when daysEnabled
+  is false (existing useAcademicSummary +
+  useHomeSummary paths intact).
 
 ## What is broken or incomplete
 Apply verify-before-carry-forward.
@@ -35,39 +37,36 @@ Apply verify-before-carry-forward.
 - "School Year — Coming Soon" placeholder in SettingsTab
 - Calendar import duplicate-subject bug
 - Sick day cascade all-day-event bug
-- Firestore subjects.done index auto-creation note
+- Firestore subjects.done index auto-creation —
+  first run of compliance dashboard may need one-
+  time index creation via browser console link
+- StudentDetailSheet (drilldown from Home cards)
+  still receives calendar-math attendance — minor
+  inconsistency vs the Home card that opened it.
+  Out of scope for Session 5; flag for follow-up.
 - Firebase data cleanup TODO from 2026-04-26 backup
   audit (subjectLists, teExtractor, rewardTracker
   collections also visible in console — stale,
   manual cleanup only)
 
-Phase 3: all per-student data-write surfaces done.
-Session 5 is the final session — integration sweep
-that switches Records Attendance card and Home
-per-student progress rows to source from
-useComplianceSummary instead of calendar math when
-daysEnabled is true. See CLAUDE.md for the plan.
-
-Phase 4 multi-family launch readiness — still
-required before any external testing family signs in.
-See CLAUDE.md for prerequisite cluster.
+Phase 3 complete. Phase 4 multi-family launch
+readiness is next — required before any external
+testing family signs in. See CLAUDE.md for the
+prerequisite cluster (R2 rule tightening, uid field
+on cells, query rewrite).
 
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
 2. Verify on main, pull latest
-3. Begin Session 5: Records Attendance card sources
-   from daysCompletedByStudent[selectedStudent] when
-   daysEnabled. Home per-student progress row sources
-   from same. Calendar math stays as fallback when
-   daysEnabled is false.
+3. Discuss Phase 4 kickoff — multi-family launch
+   readiness prerequisites (R2 rule, uid field on
+   cells, query rewrite) before any testing family
+   signs in
 
 ## Key files changed recently
-- packages/dashboard/src/firebase/compliance.js
-- packages/dashboard/src/constants/compliance.js
-- packages/dashboard/src/tools/planner/hooks/useCompliance.js
-- packages/dashboard/src/tools/planner/components/PlannerLayout.jsx
-- packages/dashboard/src/tools/planner/components/HoursInputRow.jsx
-- packages/dashboard/src/tools/planner/components/CalendarWeekView.jsx
+- packages/dashboard/src/tabs/AcademicRecordsTab.jsx
+- packages/dashboard/src/tools/academic-records/components/RecordsMainView.jsx
+- packages/dashboard/src/tabs/HomeTab.jsx
 - packages/dashboard/package.json
 - packages/shared/package.json
 - CLAUDE.md
