@@ -1,0 +1,73 @@
+/* ComplianceCard — dashboard summary for School Days Compliance.
+   Reuses .ar-stat-card / .ar-stat-label / .ar-stat-value / .ar-stat-sub
+   from AcademicRecordsTab.css (loaded globally). Only adds wrapper +
+   progress-bar + clickable styles here. */
+
+.cc { display: block; }
+.cc--home  { margin: 0 16px 12px; }
+.cc--sheet { margin: 0 0 12px; }
+
+.cc-row {
+  display: flex;
+  gap: 12px;
+}
+
+/* Stretch each card so two side-by-side metrics share width evenly. */
+.cc-card { flex: 1; min-width: 0; }
+
+/* Empty-state full-width card when no school year is defined. */
+.cc-empty { padding: 14px 16px; }
+
+/* Clickable wrapper (home variant only) — strips native button chrome
+   so the inner .ar-stat-card cards keep their look. */
+.cc-clickable {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: block;
+}
+.cc-clickable .cc-card { transition: border-color 0.15s, box-shadow 0.15s; }
+.cc-clickable:hover .cc-card {
+  border-color: var(--gold-light);
+  box-shadow: 0 4px 16px rgba(201, 168, 76, 0.12);
+}
+
+.cc-detail-hint {
+  font-size: 10px;
+  color: var(--gold);
+  text-align: right;
+  margin-top: 6px;
+  padding-right: 4px;
+}
+
+/* Thin gold progress bar — matches .home-progress-fill-attendance gradient. */
+.cc-progress-track {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.cc-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* Large-phone band — match other tabs' scaled padding. */
+@media (min-width: 400px) and (max-width: 809px) {
+  .cc--home  { margin: 0 20px 14px; }
+  .cc-row    { gap: 14px; }
+}
+
+/* Desktop ≥810px — wider gutter + slightly larger stat values, mirroring
+   the AcademicRecordsTab.css desktop tweak that bumps .ar-stat-value to
+   30px (already applied globally to the cards inside). */
+@media (min-width: 810px) {
+  .cc--home  { margin: 0 28px 16px; }
+}
