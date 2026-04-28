@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import { useHomeSummary } from '../hooks/useHomeSummary.js';
+import { useComplianceSummary } from '../hooks/useComplianceSummary.js';
 import { updateCell } from '../tools/planner/firebase/planner.js';
 import StudentDetailSheet from './StudentDetailSheet.jsx';
 import './HomeTab.css';
@@ -18,6 +19,7 @@ export default function HomeTab() {
   const { user } = useAuth();
   const uid = user?.uid;
   const { students, lessonsByStudent, attendance, weekId, dayIndex, todayLabel } = useHomeSummary(uid);
+  const compliance = useComplianceSummary(uid);
   const [openSheet, setOpenSheet] = useState(null);
   const greeting = greetingForHour(new Date().getHours());
 
@@ -54,7 +56,16 @@ export default function HomeTab() {
             const total = lessons.length, done = lessons.filter(l => l.done).length;
             const allDone = total > 0 && done === total;
             const lessonPct = total > 0 ? Math.round((done / total) * 100) : 0;
-            const attPct = att.required > 0 ? Math.min(100, Math.round((att.attended / att.required) * 100)) : 0;
+            // When compliance.daysEnabled, source per-student days from
+            // compliance counts; otherwise fall back to calendar-math attendance.
+            const useCompliance = !!compliance?.daysEnabled;
+            const daysAttended = useCompliance
+              ? (compliance.daysCompletedByStudent?.[name] ?? 0)
+              : att.attended;
+            const daysRequired = useCompliance
+              ? (compliance.requiredByStudent?.[name]?.requiredDays ?? 0)
+              : att.required;
+            const attPct = daysRequired > 0 ? Math.min(100, Math.round((daysAttended / daysRequired) * 100)) : 0;
             return (
               <div key={name} className="home-student-card" onClick={() => setOpenSheet(name)}>
                 <div className="home-student-card-header">
@@ -71,7 +82,7 @@ export default function HomeTab() {
                     <div className="home-student-stat-label">Done</div>
                   </div>
                   <div className="home-student-stat">
-                    <div className="home-student-stat-value blue">{att.attended}</div>
+                    <div className="home-student-stat-value blue">{daysAttended}</div>
                     <div className="home-student-stat-label">Days</div>
                   </div>
                 </div>
@@ -86,7 +97,7 @@ export default function HomeTab() {
                   </div>
                   <div className="home-progress-row">
                     <div className="home-progress-labels">
-                      <span>{att.attended} of {att.required} days · {attPct}%</span>
+                      <span>{daysAttended} of {daysRequired} days · {attPct}%</span>
                     </div>
                     <div className="home-progress-track">
                       <div className="home-progress-fill-attendance" style={{ width: `${attPct}%` }} />
