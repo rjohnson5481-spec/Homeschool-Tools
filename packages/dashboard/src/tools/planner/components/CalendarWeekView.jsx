@@ -219,6 +219,8 @@ export default function CalendarWeekView({
                       </DraggableCard>
                     );
                   })}
+                </DroppableCol>
+                <div className="cwv-col-foot">
                   <button className="cwv-col-add" onClick={() => onAddSubject(di)}>+ add</button>
                   {hoursEnabled && date && (
                     <div className="cwv-col-hours">
@@ -231,7 +233,7 @@ export default function CalendarWeekView({
                       />
                     </div>
                   )}
-                </DroppableCol>
+                </div>
               </div>
             );
           })}
