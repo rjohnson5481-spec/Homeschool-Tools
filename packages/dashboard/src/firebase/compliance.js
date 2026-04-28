@@ -3,7 +3,7 @@
 // constants/compliance.js.
 
 import {
-  collection, doc, onSnapshot, setDoc, query, where, documentId,
+  collection, doc, onSnapshot, setDoc, updateDoc, query, where, documentId,
 } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 import {
@@ -20,11 +20,16 @@ export function subscribeCompliance(uid, cb) {
   });
 }
 
-// Writes the full compliance settings doc with merge: true so concurrent
-// writes from different fields don't clobber each other. No validation —
-// the UI is responsible for coercing types.
-export function saveCompliance(uid, settings) {
-  return setDoc(doc(db, compliancePath(uid)), settings, { merge: true });
+// Partial-update writer for the compliance settings doc. Caller passes a
+// flat object whose keys may be nested field paths (e.g.
+// 'requiredByStudent.Orion.requiredDays') and whose values may include
+// FieldValue.deleteField() to remove deprecated fields. Thin wrapper —
+// no merging logic of its own; updateDoc handles nested-field syntax
+// natively. Used by ComplianceSheet's per-input granular saves and the
+// lazy contract migration of the deprecated top-level requiredDays /
+// requiredHours fields.
+export function saveCompliance(uid, partial) {
+  return updateDoc(doc(db, compliancePath(uid)), partial);
 }
 
 // Writes hoursLogged for a single calendar date. merge: true preserves any
