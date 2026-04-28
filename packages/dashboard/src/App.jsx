@@ -12,6 +12,10 @@ import { useDarkMode }     from './hooks/useDarkMode.js';
 export default function App() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
+  // Cross-tab pending action: HomeTab's ComplianceCard sets this to
+  // 'compliance' to request that the academic-records tab open the
+  // Compliance sheet on mount. AcademicRecordsTab clears it after acting.
+  const [pendingRecordsAction, setPendingRecordsAction] = useState(null);
   // Planner student is lifted here so the desktop sidebar can show a
   // student selector when the planner tab is active. Mobile planner
   // header still uses these same props — behavior is unchanged.
@@ -31,7 +35,12 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="shell-content">
-        {activeTab === 'home'     && <HomeTab />}
+        {activeTab === 'home'     && (
+          <HomeTab
+            setActiveTab={setActiveTab}
+            setPendingRecordsAction={setPendingRecordsAction}
+          />
+        )}
         {activeTab === 'planner'  && (
           <PlannerTab
             student={plannerStudent}
@@ -40,7 +49,12 @@ export default function App() {
             subjectsByStudent={subjectsByStudent}
           />
         )}
-        {activeTab === 'academic' && <AcademicRecordsTab />}
+        {activeTab === 'academic' && (
+          <AcademicRecordsTab
+            pendingRecordsAction={pendingRecordsAction}
+            setPendingRecordsAction={setPendingRecordsAction}
+          />
+        )}
         {activeTab === 'settings' && (
           <SettingsTab
             user={user}
