@@ -22,13 +22,15 @@
   200 target), .css 121 → 144 (under 150 target).
 - CLAUDE.md compliance data model note updated to
   reflect lazy contract migration.
+- Verified end-to-end in Firebase Console: deprecated
+  top-level fields removed on first save; per-student
+  writes target correct paths.
 
-Also captured in this snapshot — Session 4.3 (which
-shipped at v0.32.3 just before this session):
-useComplianceSummary returns per-student maps
-(daysCompletedByStudent, hoursCompletedByStudent,
-requiredByStudent). Hook still has zero consumers
-until Session 4.5.
+Also captured in this snapshot — Session 4.3 (v0.32.3,
+shipped just before this session): useComplianceSummary
+returns per-student maps (daysCompletedByStudent,
+hoursCompletedByStudent, requiredByStudent). Hook
+still has zero consumers until Sessions 4.5 and 5.
 
 ## What is broken or incomplete
 Apply verify-before-carry-forward.
