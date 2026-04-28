@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.32.3 — milestone: Phase 3 mid-rework: per-student data shape + hook reworked; Sessions 4.4–5 pending
+Current version: v0.32.4 — milestone: Phase 3 mid-rework: per-student data + hook + sheet UI; Sessions 4.5 + 5 pending
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy. Growing toolset; new tools added over time. Every tool shares branding, design system, and Firebase project.
@@ -91,7 +91,7 @@ CRITICAL: users/{uid} parent doc does NOT exist as a Firestore document. Use col
 ### Compliance (Phase 3)
 /users/{uid}/settings/compliance
   → { daysEnabled, hoursEnabled, startingDays, startingHours,
-      requiredDays, requiredHours,    // DEPRECATED top-level — preserved through Session 4.4, deleted then
+      requiredDays, requiredHours,    // DEPRECATED top-level — removed via lazy migration on first save in Session 4.4 onwards. Doc may still contain them if no save has happened yet.
       requiredByStudent: { [name]: { requiredDays, requiredHours } }
     }
 
@@ -164,7 +164,7 @@ Desktop is always 810px — never lower. Large phone band always bounded `(min-w
 
 ---
 
-## Tools status (v0.32.3)
+## Tools status (v0.32.4)
 - shared, dashboard shell, Home Tab, Planner, Academic Records, Backup → ✅ Complete
 - School Days → 🔧 Phase 3 mid-rework (data shape migrated; app code rework Sessions 4.2–5 pending)
 - Month view → 🔒 Queued for Phase 5
