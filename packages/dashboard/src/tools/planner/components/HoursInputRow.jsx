@@ -5,11 +5,11 @@ import './HoursInputRow.css';
 // when compliance.hoursEnabled is true. Hidden on desktop via CSS.
 //
 // Local state mirrors the input string so typing feels instant; the parent
-// (useCompliance) handles debounced saves. External hoursLogged updates are
+// (useCompliance) handles debounced saves. External hours updates are
 // only mirrored into local state when the input is NOT focused, so they
 // never clobber an in-progress edit.
-export default function HoursInputRow({ selectedDate, hoursLogged, onSave, onFlush }) {
-  const [value, setValue]   = useState(formatHours(hoursLogged));
+export default function HoursInputRow({ selectedDate, hours, onSave, onFlush }) {
+  const [value, setValue]   = useState(formatHours(hours));
   const focusedRef          = useRef(false);
   const prevDateRef         = useRef(selectedDate);
 
@@ -17,15 +17,15 @@ export default function HoursInputRow({ selectedDate, hoursLogged, onSave, onFlu
     if (prevDateRef.current !== selectedDate) {
       onFlush();
       prevDateRef.current = selectedDate;
-      setValue(formatHours(hoursLogged));
+      setValue(formatHours(hours));
     }
-  // hoursLogged is intentionally omitted — it's resynced via the focus-guarded effect below.
+  // hours is intentionally omitted — it's resynced via the focus-guarded effect below.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {
-    if (!focusedRef.current) setValue(formatHours(hoursLogged));
-  }, [hoursLogged]);
+    if (!focusedRef.current) setValue(formatHours(hours));
+  }, [hours]);
 
   function handleChange(e) {
     const next = e.target.value;

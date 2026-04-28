@@ -103,7 +103,7 @@ export default function PlannerLayout({
   const { handleToggleDone, handleToggleFlag, toggleCellDone } =
     useCellToggles({ user, weekId, student, day, dayData, updateCell });
 
-  const compliance = useCompliance({ uid: user?.uid, weekDates });
+  const compliance = useCompliance({ uid: user?.uid, weekDates, student });
 
   return (
     <div className={`planner${isDesktop ? ' cwv-active' : ''}`}>
@@ -160,7 +160,7 @@ export default function PlannerLayout({
         {compliance.hoursEnabled && (
           <HoursInputRow
             selectedDate={weekDates[day]}
-            hoursLogged={compliance.hoursByDate[toWeekId(weekDates[day])]}
+            hours={compliance.hoursByDate[toWeekId(weekDates[day])]}
             onSave={hours => compliance.saveHours(toWeekId(weekDates[day]), hours)}
             onFlush={compliance.flushPendingSave}
           />

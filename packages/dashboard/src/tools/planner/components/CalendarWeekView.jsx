@@ -38,12 +38,12 @@ function DroppableCol({ id, children }) {
   return <div ref={setNodeRef} className="cwv-col-body" style={isOver ? { outline: '1px solid rgba(201,168,76,0.4)', outlineOffset: -1 } : undefined}>{children}</div>;
 }
 
-function CalendarHoursInput({ dateString, hoursLogged, onSave, onFlush }) {
-  const [value, setValue] = useState(hoursLogged === undefined || hoursLogged === null ? '' : String(hoursLogged));
+function CalendarHoursInput({ dateString, hours, onSave, onFlush }) {
+  const [value, setValue] = useState(hours === undefined || hours === null ? '' : String(hours));
   const focusedRef = useRef(false);
   useEffect(() => {
-    if (!focusedRef.current) setValue(hoursLogged === undefined || hoursLogged === null ? '' : String(hoursLogged));
-  }, [hoursLogged]);
+    if (!focusedRef.current) setValue(hours === undefined || hours === null ? '' : String(hours));
+  }, [hours]);
   function handleChange(e) {
     const next = e.target.value;
     setValue(next);
@@ -225,7 +225,7 @@ export default function CalendarWeekView({
                       <span className="cwv-col-hours-label">Hrs:</span>
                       <CalendarHoursInput
                         dateString={toWeekId(date)}
-                        hoursLogged={hoursByDate?.[toWeekId(date)]}
+                        hours={hoursByDate?.[toWeekId(date)]}
                         onSave={onSaveHours}
                         onFlush={onFlushHours}
                       />
