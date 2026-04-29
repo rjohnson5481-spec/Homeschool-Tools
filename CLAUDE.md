@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.33.9 — milestone: Phase 3 complete + cleanup sessions A-E
+Current version: v0.34.0 — milestone: Phase 3 complete + cleanup sessions A-F done. Ready for Phase 4.
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy. Growing toolset; new tools added over time. Every tool shares branding, design system, and Firebase project.
@@ -164,7 +164,7 @@ Desktop is always 810px — never lower. Large phone band always bounded `(min-w
 
 ---
 
-## Tools status (v0.33.8)
+## Tools status (v0.34.0)
 - shared, dashboard shell, Home Tab, Planner, Academic Records, Backup → ✅ Complete
 - School Days → ✅ Phase 3 complete — per-student compliance tracking. Records Attendance card and Home progress rows source from compliance data when daysEnabled.
 - Month view → 🔒 Queued for Phase 5
