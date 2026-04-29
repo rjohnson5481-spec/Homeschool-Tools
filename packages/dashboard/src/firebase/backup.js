@@ -29,14 +29,6 @@ export async function exportAllData(uid) {
     breaks: await readCol(`${base}/schoolYears/${y._id}/breaks`),
   })));
 
-  const rewardTrackerRaw = await readCol(`${base}/rewardTracker`);
-  const rewardTracker = rewardTrackerRaw;
-  const rewardTrackerLog = [];
-  for (const rt of rewardTrackerRaw) {
-    const logs = await readCol(`${base}/rewardTracker/${rt._id}/log`);
-    logs.forEach(l => rewardTrackerLog.push({ _student: rt._id, ...l }));
-  }
-
   const subjectsSnap = await getDocs(collectionGroup(db, 'subjects'));
   const weeks = [];
   for (const subDoc of subjectsSnap.docs) {
@@ -52,7 +44,7 @@ export async function exportAllData(uid) {
 
   return {
     exportedAt: new Date().toISOString(), version: '1', uid,
-    data: { students, subjectPresets, weeks, sickDays, rewardTracker, rewardTrackerLog, schoolYears, courses, enrollments, grades, reportNotes, activities, savedReports },
+    data: { students, subjectPresets, weeks, sickDays, schoolYears, courses, enrollments, grades, reportNotes, activities, savedReports },
   };
 }
 
@@ -103,8 +95,6 @@ export async function importMerge(uid, backup) {
     for (const q of (y.quarters ?? [])) { (await writeIfMissing(`${base}/schoolYears/${y._id}/quarters/${q._id}`, stripId(q))) ? imported++ : skipped++; }
     for (const b of (y.breaks ?? [])) { (await writeIfMissing(`${base}/schoolYears/${y._id}/breaks/${b._id}`, stripId(b))) ? imported++ : skipped++; }
   }
-  for (const rt of (d.rewardTracker ?? [])) { (await writeIfMissing(`${base}/rewardTracker/${rt._id}`, stripId(rt))) ? imported++ : skipped++; }
-  for (const l of (d.rewardTrackerLog ?? [])) { (await writeIfMissing(`${base}/rewardTracker/${l._student}/log/${l._id}`, stripId(l))) ? imported++ : skipped++; }
   for (const w of (d.weeks ?? [])) {
     const { weekId, student, dayIndex, subject, ...cell } = w;
     const path = `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`;
@@ -129,9 +119,6 @@ export async function importFullRestore(uid, backup) {
     await deleteCol(`${base}/schoolYears/${s.id}/breaks`);
   }
   await deleteCol(`${base}/schoolYears`);
-  const rtSnap = await getDocs(collection(db, `${base}/rewardTracker`));
-  for (const r of rtSnap.docs) await deleteCol(`${base}/rewardTracker/${r.id}/log`);
-  await deleteCol(`${base}/rewardTracker`);
   // Enumerate every existing subject doc under this uid via collectionGroup.
   // weeks/{weekId}, students/{name}, and days/{di} are ghost path segments
   // (no real docs) so a plain collection() walk returns empty and misses leaf
@@ -162,8 +149,6 @@ export async function importFullRestore(uid, backup) {
     for (const q of (quarters ?? [])) { await setDoc(doc(db, `${base}/schoolYears/${y._id}/quarters/${q._id}`), stripId(q)); restored++; }
     for (const b of (breaks ?? [])) { await setDoc(doc(db, `${base}/schoolYears/${y._id}/breaks/${b._id}`), stripId(b)); restored++; }
   }
-  for (const rt of (d.rewardTracker ?? [])) { await setDoc(doc(db, `${base}/rewardTracker/${rt._id}`), stripId(rt)); restored++; }
-  for (const l of (d.rewardTrackerLog ?? [])) { await setDoc(doc(db, `${base}/rewardTracker/${l._student}/log/${l._id}`), stripId(l)); restored++; }
   for (const w of (d.weeks ?? [])) {
     const { weekId, student, dayIndex, subject, ...cell } = w;
     await setDoc(doc(db, `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`), cell); restored++;
