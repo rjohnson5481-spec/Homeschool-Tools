@@ -1,25 +1,32 @@
-# HANDOFF — v0.33.7 Session C: rewardTracker backup cleanup
+# HANDOFF — v0.33.8 Session D: PlannerLayout split
 
 ## What was completed this session
-- Removed rewardTracker collection from
-  backup export (exportAllData) — new exports
-  no longer include rewardTracker data.
-- Removed rewardTracker from import/restore
-  functions — old backup files with rewardTracker
-  data are skipped gracefully on import.
-- grep verified: zero rewardTracker references
-  remaining in source code files.
+- Extracted EditSheet, UploadSheet, AddSubjectSheet,
+  MonthSheet renders from PlannerLayout.jsx into
+  new PlannerSheets.jsx component matching the
+  AcademicRecordsSheets pattern.
+- PlannerLayout.jsx: 278 → 258 lines (saved 20 lines;
+  still 8 over 250 soft limit but under 300 hard
+  limit — remaining excess is structural JSX
+  verbosity in SickDayManager/CalendarWeekView/
+  MultiSelectBar prop spreads, not extractable
+  logic).
+- PlannerSheets.jsx: new file, 33 lines.
+- Note: the prior HANDOFF bullet "PDF helpers +
+  handleMoveCell still in PlannerLayout" was stale
+  — usePlannerHelpers.js already contained those
+  functions since v0.30.2. Dropped from list.
 
 ## What is broken or incomplete
 Apply verify-before-carry-forward.
-- PDF helpers + handleMoveCell still in PlannerLayout
-  (must extract before adding new code)
 - Emoji maps hardcoded for Orion/Malachi (deferred
   to Phase 4)
 - Calendar import duplicate-subject bug
 - Sick day cascade all-day-event bug
 - Firebase data cleanup TODO from 2026-04-26
   backup audit
+- CalendarWeekView.jsx at 252 lines — just over
+  soft limit, worth watching
 
 Phase 4 multi-family launch readiness — required
 before any external testing family signs in.
@@ -28,14 +35,14 @@ See CLAUDE.md for prerequisite cluster.
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
 2. Verify on main, pull latest
-3. Begin Session D: extract PDF helpers and
-   handleMoveCell from PlannerLayout.jsx into
-   usePlannerHelpers.js. PlannerLayout is at
-   ~278/300 lines — must split before adding
-   any new code.
+3. Begin Session E: investigate and fix calendar
+   import duplicate-subject bug
+   (handleBatchAddSubject in PlannerLayout and
+   the importCell write logic)
 
 ## Key files changed recently
-- packages/dashboard/src/firebase/backup.js
+- packages/dashboard/src/tools/planner/components/PlannerSheets.jsx (new)
+- packages/dashboard/src/tools/planner/components/PlannerLayout.jsx
 - packages/dashboard/package.json
 - packages/shared/package.json
 - CLAUDE.md
