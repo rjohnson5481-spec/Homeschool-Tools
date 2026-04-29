@@ -94,7 +94,7 @@ export default function RecordsMainView({
 
       <div className="ar-stats-row">
         <div className="ar-stat-card gold ar-stat-card--tappable" onClick={onAttendanceDetail} role="button" tabIndex={0}>
-          <div className="ar-stat-label">Attendance</div>
+          <div className="ar-stat-label">{useCompliance ? 'Days Completed' : 'Attendance'}</div>
           <div className="ar-stat-value">{summary.loading ? '—' : attendanceValue}</div>
           <div className="ar-stat-sub">of {attendanceRequired} days required</div>
           <div className="ar-stat-detail-hint">View details ›</div>
