@@ -1,18 +1,12 @@
-# HANDOFF — v0.33.5 Session B: Attendance detail sheet fix
+# HANDOFF — v0.33.6 Session B complete: attendance label fix
 
 ## What was completed this session
-- Fixed Attendance detail sheet inconsistency.
-  When daysEnabled is true, "Days Attended" row
-  now shows compliance days completed and label
-  changes to "Days Completed". "Days Required"
-  row now shows per-student compliance required
-  value (Orion 180, Malachi 190) instead of
-  calendar math hardcode.
-- Calendar breakdown rows (Sick Days, Break Days,
-  School Days) unchanged — still show calendar math
-  as useful context.
-- Falls back to calendar math when daysEnabled
-  is false.
+- Records Attendance card section label now reads
+  "DAYS COMPLETED" when daysEnabled is true,
+  "ATTENDANCE" when false.
+- One-line change in RecordsMainView.jsx.
+- Session B (Attendance detail sheet fix) is now
+  fully complete.
 
 ## What is broken or incomplete
 Apply verify-before-carry-forward.
@@ -37,9 +31,7 @@ See CLAUDE.md for prerequisite cluster.
    round-trip from firebase/backup.js
 
 ## Key files changed recently
-- packages/dashboard/src/tools/academic-records/components/AttendanceDetailSheet.jsx
-- packages/dashboard/src/tools/academic-records/components/AcademicRecordsSheets.jsx
-- packages/dashboard/src/tabs/AcademicRecordsTab.jsx
+- packages/dashboard/src/tools/academic-records/components/RecordsMainView.jsx
 - packages/dashboard/package.json
 - packages/shared/package.json
 - CLAUDE.md
