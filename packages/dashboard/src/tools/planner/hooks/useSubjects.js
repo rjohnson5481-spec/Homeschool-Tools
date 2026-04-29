@@ -76,33 +76,54 @@ export function useSubjects(uid, weekId, student, day) {
   }
 
   // Cascades selected subjects forward within the current week only.
-  // Each subject's chain builds through consecutive scheduled days (Mon–Fri).
-  // If the chain reaches Friday, the Friday content is displaced (not written
-  // to the following week) — it is simply dropped. Then writes a sick day marker.
-  // sickDayIndex defaults to the parent's `day` (mobile path); desktop SickDaySheet
-  // pills pass an explicit value when the picked day differs.
+  // Days with an all-day event (Co-Op, etc.) are treated as transparent:
+  // the chain skips over them rather than landing on top of them.
+  // If the chain exhausts the week, displaced lessons are dropped — same
+  // behavior as the existing past-Friday drop.
+  // sickDayIndex defaults to the parent's `day` (mobile path); desktop
+  // SickDaySheet pills pass an explicit value when the picked day differs.
   async function performSickDay(selectedSubjects, sickDayIndex = day) {
+    // Read all-day event presence for each weekday upfront (5 reads, constant
+    // regardless of subject count). Sick day is the source, not a destination,
+    // so it is never treated as blocked.
+    const allDayReads = await Promise.all(
+      [0, 1, 2, 3, 4].map(d => dbReadCell(uid, weekId, student, d, 'allday'))
+    );
+    const blockedDays = {};
+    allDayReads.forEach((cell, d) => { blockedDays[d] = !!cell; });
+    blockedDays[sickDayIndex] = false;
+
+    function findNextOpenDay(from) {
+      let d = from + 1;
+      while (d <= 4) {
+        if (!blockedDays[d]) return d;
+        d++;
+      }
+      return null;
+    }
+
     await Promise.all(selectedSubjects.map(async subject => {
       const startData = sickDayIndex === day
         ? dayData[subject]
         : await dbReadCell(uid, weekId, student, sickDayIndex, subject);
       if (!startData) return;
 
-      // Build unbroken chain from sick day through consecutive days in this week.
+      // Build chain from sick day through scheduled days, skipping blocked
+      // days (all-day events) transparently. Stop at first empty non-blocked day.
       const chain = [{ dayIndex: sickDayIndex, data: startData }];
       for (let d = sickDayIndex + 1; d <= 4; d++) {
+        if (blockedDays[d]) continue;
         const data = await dbReadCell(uid, weekId, student, d, subject);
         if (!data) break;
         chain.push({ dayIndex: d, data });
       }
 
       // Write in reverse (safe — no read-after-write collisions).
-      // Links whose dayIndex+1 > 4 (i.e., were on Friday) are not written —
-      // their content is intentionally dropped at the end of the week.
+      // findNextOpenDay skips blocked days; null means past end of week — drop.
       for (let i = chain.length - 1; i >= 0; i--) {
-        const targetDay = chain[i].dayIndex + 1;
-        if (targetDay <= 4) {
-          await dbUpdateCell(uid, weekId, student, subject, targetDay, chain[i].data);
+        const target = findNextOpenDay(chain[i].dayIndex);
+        if (target !== null) {
+          await dbUpdateCell(uid, weekId, student, subject, target, chain[i].data);
         }
       }
 
