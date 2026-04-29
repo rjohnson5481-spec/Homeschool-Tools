@@ -19,6 +19,27 @@ function timestamp() {
   return `[${h}:${m}:${s}]`;
 }
 
+// Renames 2nd+ occurrences of the same (dayIndex, subject) pair within a day
+// to "{subject} (2)", "{subject} (3)" etc. Prevents silent data loss when a
+// parsed PDF contains duplicate subject names on the same day (Firestore uses
+// subject as the doc ID, so duplicates would overwrite each other on write).
+function dedupeSubjects(days) {
+  const seen = {};
+  const renames = [];
+  const dedupedDays = (days ?? []).map(day => ({
+    ...day,
+    lessons: (day.lessons ?? []).map(lesson => {
+      const key = `${day.dayIndex}:${lesson.subject}`;
+      if (!seen[key]) { seen[key] = 1; return lesson; }
+      seen[key]++;
+      const renamed = `${lesson.subject} (${seen[key]})`;
+      renames.push({ dayIndex: day.dayIndex, original: lesson.subject, renamed });
+      return { ...lesson, subject: renamed };
+    }),
+  }));
+  return { dedupedDays, renames };
+}
+
 // Manages PDF import state, the fetch call to /api/parse-schedule, and an
 // import debug log. Never calls the Anthropic API directly.
 export function usePdfImport() {
@@ -66,15 +87,19 @@ export function usePdfImport() {
       const data = JSON.parse(text);
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
 
-      const totalLessons = (data.days ?? []).reduce((n, d) => n + (d.lessons?.length ?? 0), 0);
-      const dayNames = (data.days ?? []).map(d => DAY_SHORT[d.dayIndex]).join(', ');
+      const { dedupedDays, renames } = dedupeSubjects(data.days);
+      const totalLessons = dedupedDays.reduce((n, d) => n + (d.lessons?.length ?? 0), 0);
+      const dayNames = dedupedDays.map(d => DAY_SHORT[d.dayIndex]).join(', ');
       const allSubjects = [...new Set(
-        (data.days ?? []).flatMap(d => (d.lessons ?? []).map(l => l.subject))
+        dedupedDays.flatMap(d => (d.lessons ?? []).map(l => l.subject))
       )];
-      addLog(`Parsed: ${data.student} · ${data.weekId} · ${data.days?.length ?? 0} days (${dayNames})`);
+      addLog(`Parsed: ${data.student} · ${data.weekId} · ${dedupedDays.length} days (${dayNames})`);
       addLog(`Subjects (${allSubjects.length}): ${allSubjects.join(', ')}`);
+      if (renames.length > 0) {
+        addLog(`Renamed ${renames.length} duplicate(s): ${renames.map(r => `${DAY_SHORT[r.dayIndex]} "${r.original}" → "${r.renamed}"`).join(', ')}`);
+      }
       addLog(`Total: ${totalLessons} lessons`);
-      setResult(data);
+      setResult({ ...data, days: dedupedDays });
     } catch (err) {
       const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
       addLog(`Error: ${msg}`);
