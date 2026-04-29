@@ -8,6 +8,9 @@
   clears the action bar.
 - CSS-only fix, one rule added inside
   @media (min-width: 810px).
+- Desktop CalendarWeekView hours input is now
+  fully accessible: footer bar always visible,
+  scrollable when needed, no per-column scrollbars.
 
 ## What is broken or incomplete
 Apply verify-before-carry-forward.
@@ -37,6 +40,8 @@ See CLAUDE.md for prerequisite cluster.
 
 ## Key files changed recently
 - packages/dashboard/src/tools/planner/components/CalendarWeekView.css
+  (or PlannerLayout.css — whichever was edited)
+- packages/dashboard/src/tools/planner/components/CalendarWeekView.jsx
 - packages/dashboard/package.json
 - packages/shared/package.json
 - CLAUDE.md
