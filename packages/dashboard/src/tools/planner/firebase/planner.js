@@ -24,7 +24,7 @@ export function subscribeDaySubjects(uid, weekId, student, dayIndex, cb) {
 // Creating a cell document IS adding that subject to that day.
 export function updateCell(uid, weekId, student, subject, dayIndex, data) {
   const ref = doc(db, cellPath(uid, weekId, student, dayIndex, subject));
-  return setDoc(ref, data, { merge: true });
+  return setDoc(ref, { ...data, uid }, { merge: true });
 }
 
 // Reads one day cell. Returns data object or null if the document doesn't exist.

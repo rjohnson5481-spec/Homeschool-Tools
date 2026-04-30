@@ -97,6 +97,7 @@ export async function importMerge(uid, backup) {
   }
   for (const w of (d.weeks ?? [])) {
     const { weekId, student, dayIndex, subject, ...cell } = w;
+    cell.uid = uid;
     const path = `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`;
     (await writeIfMissing(path, cell)) ? imported++ : skipped++;
   }
@@ -151,6 +152,7 @@ export async function importFullRestore(uid, backup) {
   }
   for (const w of (d.weeks ?? [])) {
     const { weekId, student, dayIndex, subject, ...cell } = w;
+    cell.uid = uid;
     await setDoc(doc(db, `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`), cell); restored++;
   }
   return { restored };
@@ -225,7 +227,7 @@ export async function applyRestoreDiff(uid, diff) {
         if (!item.checked || item.status === 'MATCH') continue;
         const path = `${weeksPrefix}${weekId}/students/${item.student}/days/${dayIndex}/subjects/${item.subject}`;
         if (item.status === 'DELETE') ops.push(deleteDoc(doc(db, path)));
-        else ops.push(setDoc(doc(db, path), item.backup));
+        else { item.backup.uid = uid; ops.push(setDoc(doc(db, path), item.backup)); }
       }
     }
   }
