@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.36.0 — Phase 4 Block 1 Session 2: R2 rule uid-scoped + compliance query uid-filtered.
+Current version: v0.36.1 — bugfix: compliance settings save fails on fresh account (updateDoc → setDoc+merge).
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy. Growing toolset; new tools added over time. Every tool shares branding, design system, and Firebase project.
