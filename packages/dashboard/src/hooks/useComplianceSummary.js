@@ -15,10 +15,8 @@ import { COMPLIANCE_DEFAULTS } from '../constants/compliance.js';
 // requiredByStudent passes through from settings/compliance (Session 4.1
 // migration). No fallback to deprecated top-level fields.
 //
-// Multi-family caveat: bare collectionGroup('subjects') listener reads
-// cross-family without a uid filter. Phase 4 prerequisite cluster (R2 rule
-// uid-scoping + uid field on cells + query rewrite) must land before any
-// external testing family signs in.
+// Phase 4 Block 1 complete: R2 rule uid-scoped, uid field on all cell writes,
+// and collectionGroup query filtered by uid. Safe for multi-family use.
 
 function isoFromYMD(y, m, d) {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -106,7 +104,8 @@ export function useComplianceSummary(uid) {
       setStudentDateSets({});
       return;
     }
-    const q = query(collectionGroup(db, 'subjects'), where('done', '==', true));
+    // Requires composite index on subjects: uid ASC, done ASC — create via Firebase console link on first run
+    const q = query(collectionGroup(db, 'subjects'), where('uid', '==', uid), where('done', '==', true));
     return onSnapshot(q, snap => {
       const sets = {};
       snap.docs.forEach(d => {

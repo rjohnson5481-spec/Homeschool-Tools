@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.35.0 — Phase 4 Block 1 Session 1: uid field added to all subject cell writes.
+Current version: v0.36.0 — Phase 4 Block 1 Session 2: R2 rule uid-scoped + compliance query uid-filtered.
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy. Growing toolset; new tools added over time. Every tool shares branding, design system, and Firebase project.
@@ -115,9 +115,9 @@ Firebase Storage: users/{uid}/reports/{reportId}.pdf
 
 ### Firestore Security Rules
 match /users/{userId}/{document=**} { allow read, write: if request.auth.uid == userId; }
-match /{path=**}/subjects/{subjectId} { allow read: if request.auth != null; }
+match /{path=**}/subjects/{subjectId} { allow read: if request.auth != null && resource.data.uid == request.auth.uid; }
 
-R2 (the second rule) is auth-only, NOT uid-scoped. Phase 4 launch blocker — see roadmap. Never remove either rule.
+R2 is uid-scoped as of v0.36.0. Never remove either rule.
 
 ---
 
@@ -188,10 +188,12 @@ Sessions remaining:
 - 6 deferred: planned days view.
 
 ### Phase 4 — Multi-family launch readiness
-Launch blockers (required before any external testing family signs in):
-1. Tighten Firestore R2 rule to uid-scope subjects reads.
-2. Add `uid` field to subject cell writes + backfill migration.
-3. Rewrite useComplianceSummary collectionGroup query to filter on uid.
+Launch blockers — Phase 4 Block 1 complete as of v0.36.0:
+1. ✅ Add `uid` field to subject cell writes (v0.35.0)
+2. ✅ Tighten Firestore R2 rule to uid-scope subjects reads (v0.36.0)
+3. ✅ Rewrite useComplianceSummary collectionGroup query to filter on uid (v0.36.0)
+Note: composite index on subjects (uid ASC, done ASC) must be created in Firebase
+console — Firestore will log a link on first run of compliance summary.
 
 Phase 4 broader scope: brand-agnostic shell, student profiles migration (currently name strings), Stripe + Free/Pro gating, admin dashboard, 50-state compliance database.
 
@@ -298,7 +300,7 @@ Always work directly on main. Never create feature branches. Commit and push aft
 - weekId always Monday via mondayWeekId()
 - collectionGroup('subjects') for backup/restore + dashboard query
 - collectionGroup('settings') for user discovery
-- R2 read rule never removed (collectionGroup support); uid-scoping is Phase 4 work
+- R2 read rule never removed (collectionGroup support); uid-scoped as of v0.36.0
 - Reward Tracker + TE Extractor removed v0.30.0; tabs are exactly Home/Planner/Records/Settings
 - CalendarImportSheet + CurriculumImportSheet call Anthropic directly (Netlify proxy timeouts)
 - Settings tab owns settings except compliance (Compliance lives in Records as Quick Action sheet)

@@ -6,7 +6,7 @@ service cloud.firestore {
         && request.auth.uid == userId;
     }
     match /{path=**}/subjects/{subjectId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
     }
   }
 }
