@@ -13,6 +13,8 @@ import { useStudents }       from './hooks/useStudents.js';
 import { useSchoolSettings } from './hooks/useSchoolSettings.js';
 import { useDarkMode }       from './hooks/useDarkMode.js';
 
+const HAS_STUDENTS_KEY = 'ila_has_students';
+
 export default function App() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
@@ -22,7 +24,19 @@ export default function App() {
   const { students, loading: studentsLoading } = useStudents(user?.uid);
   const { schoolName, tagline, loading: schoolSettingsLoading } = useSchoolSettings(user?.uid);
   const { subjectsByStudent } = useSettings(user?.uid, plannerStudent);
+  const cachedHasStudents = localStorage.getItem(HAS_STUDENTS_KEY) === 'true';
   useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0].studentId); }, [students, plannerStudent]);
+  // Sync localStorage flag when Firestore confirms student list.
+  useEffect(() => {
+    if (!studentsLoading) {
+      if (students.length > 0) localStorage.setItem(HAS_STUDENTS_KEY, 'true');
+      else localStorage.removeItem(HAS_STUDENTS_KEY);
+    }
+  }, [students, studentsLoading]);
+  // Clear flag on sign-out so a new family starting fresh sees onboarding.
+  useEffect(() => {
+    if (!loading && !user) localStorage.removeItem(HAS_STUDENTS_KEY);
+  }, [loading, user]);
   // Dark-mode state lives at the shell so the Settings tab (and the
   // BottomNav sidebar, if ever needed again) can share a single source
   // of truth. The hook writes to `localStorage.color-mode` and the
@@ -55,7 +69,8 @@ export default function App() {
     </div>
   );
 
-  if (students.length === 0) return (
+  const hasStudents = students.length > 0 || cachedHasStudents;
+  if (!hasStudents) return (
     <OnboardingFlow uid={user.uid} onComplete={() => {}} />
   );
 

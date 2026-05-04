@@ -66,6 +66,7 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
           });
         }));
       }
+      localStorage.setItem('ila_has_students', 'true');
       onComplete();
     } finally {
       setFinishing(false);
