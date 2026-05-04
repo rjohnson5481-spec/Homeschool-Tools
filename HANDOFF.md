@@ -1,15 +1,10 @@
-# HANDOFF — v0.44.0
+# HANDOFF — v0.44.1
 
 ## Completed this session
-Bundle fix: Header duplication + onboarding flash + compliance display.
+Bug fix: onboarding flash persistent fix — replaced useState/useEffect latch with synchronous ref-based gate.
 
 ### What was done
-
-**FIX 1 — Header.css** — Added `.header-brand { display: none; }` inside the existing `@media (min-width: 810px)` block. The whole `.header` was already hidden at desktop; this adds an explicit brand rule for clarity.
-
-**FIX 2 — HomeTab.jsx + App.jsx** — Removed the `<header className="home-header">` brand block from HomeTab entirely (JSX + logo import + schoolName prop). App.jsx updated to call `<HomeTab />` with no props. Also wrapped the attendance progress row in `{daysRequired > 0 && (...)}` to fix the "163 of 0 days" display when compliance is enabled but requiredDays is 0.
-
-**FIX 3 — App.jsx** — Replaced the bare `studentsLoading || schoolSettingsLoading` gate with an `initialLoadComplete` latch state that resolves to `true` only after both Firestore hooks have fired their first snapshot. Prevents the onboarding screen from flashing on page refresh.
+**App.jsx** — Removed `initialLoadComplete` useState and two useEffects (uid-reset effect + loading-watch effect). Replaced with two refs (`hasLoadedRef`, `prevUidRef`) that update synchronously during render. The uid comparison and the latch both execute in the same render pass, eliminating the one-render window where uid had changed but `initialLoadComplete` hadn't been reset yet — which was the root cause of the onboarding flash.
 
 ## What is broken right now
 Nothing known.
@@ -19,6 +14,4 @@ Nothing known.
 2. Confirm task with Rob
 
 ## Key files changed this session
-- `packages/dashboard/src/tools/planner/components/Header.css` (206 lines)
-- `packages/dashboard/src/tabs/HomeTab.jsx` (121 lines)
-- `packages/dashboard/src/App.jsx` (94 lines)
+- `packages/dashboard/src/App.jsx` (97 lines)

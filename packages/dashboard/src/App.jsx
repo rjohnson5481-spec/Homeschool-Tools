@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import SignIn              from './components/SignIn';
@@ -30,15 +30,18 @@ export default function App() {
   // stays in sync automatically.
   const { mode: colorMode, toggle: toggleDarkMode } = useDarkMode();
 
-  // Tracks whether both Firestore hooks have fired their first snapshot.
-  // Stays false until both loading flags clear — prevents the onboarding
-  // flash that occurs when one hook resolves before its snapshot arrives.
-  // Reset to false on uid change so a fresh sign-in re-waits.
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  useEffect(() => { setInitialLoadComplete(false); }, [user?.uid]);
-  useEffect(() => {
-    if (!studentsLoading && !schoolSettingsLoading && user) setInitialLoadComplete(true);
-  }, [studentsLoading, schoolSettingsLoading, user]);
+  // Ref-based load gate — synchronous, no extra render cycle.
+  // Resets when uid changes; latches true once both snapshots arrive.
+  const hasLoadedRef = useRef(false);
+  const prevUidRef   = useRef(null);
+  if (user?.uid !== prevUidRef.current) {
+    hasLoadedRef.current = false;
+    prevUidRef.current   = user?.uid ?? null;
+  }
+  if (user && !studentsLoading && !schoolSettingsLoading) {
+    hasLoadedRef.current = true;
+  }
+  const initialLoadComplete = hasLoadedRef.current;
 
   if (loading) return null;
   if (!user)   return <SignIn />;
