@@ -42,8 +42,9 @@ export default function RecordsMainView({
   onComplianceOpen,
 }) {
   const { activeSchoolYear, studentEnrollments, courseCount, attendanceDays } = summary;
-  const today      = todayStr();
-  const courseById = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
+  const today           = todayStr();
+  const courseById      = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
+  const selectedName    = (students ?? []).find(s => s.studentId === selectedStudent)?.name ?? selectedStudent;
   const yearStart  = activeSchoolYear?.label?.split(/[–-]/)[0]?.trim() ?? '—';
   const yearLabel  = activeSchoolYear?.label ?? 'not set';
 
@@ -68,10 +69,10 @@ export default function RecordsMainView({
       <div className="ar-student-row">
         {(students ?? []).map(s => (
           <button
-            key={s}
-            className={`ar-student-pill${s === selectedStudent ? ' active' : ''}`}
-            onClick={() => setSelectedStudent(s)}
-          >{s}</button>
+            key={s.studentId}
+            className={`ar-student-pill${s.studentId === selectedStudent ? ' active' : ''}`}
+            onClick={() => setSelectedStudent(s.studentId)}
+          >{s.emoji ? `${s.emoji} ` : ''}{s.name}</button>
         ))}
       </div>
 
@@ -111,7 +112,7 @@ export default function RecordsMainView({
         </div>
       </div>
 
-      <p className="ar-section-label">Grades — {selectedStudent}</p>
+      <p className="ar-section-label">Grades — {selectedName}</p>
 
       {studentEnrollments.length === 0 ? (
         <div className="ar-grade-card">

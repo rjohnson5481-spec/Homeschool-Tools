@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@homeschool/shared';
-import { db } from '@homeschool/shared';
-import { doc, onSnapshot } from 'firebase/firestore';
 import { useCourses }         from '../tools/academic-records/hooks/useCourses.js';
 import { useEnrollments }     from '../tools/academic-records/hooks/useEnrollments.js';
 import { useSchoolYears }     from '../tools/academic-records/hooks/useSchoolYears.js';
@@ -10,6 +8,7 @@ import { useGrades }          from '../tools/academic-records/hooks/useGrades.js
 import { useReportNotes }     from '../tools/academic-records/hooks/useReportNotes.js';
 import { useSavedReports }    from '../tools/academic-records/hooks/useSavedReports.js';
 import { useActivities }      from '../tools/academic-records/hooks/useActivities.js';
+import { useStudents }          from '../hooks/useStudents.js';
 import { useComplianceSummary } from '../hooks/useComplianceSummary.js';
 import RecordsMainView        from '../tools/academic-records/components/RecordsMainView.jsx';
 import AcademicRecordsSheets  from '../tools/academic-records/components/AcademicRecordsSheets.jsx';
@@ -19,19 +18,13 @@ export default function AcademicRecordsTab() {
   const { user } = useAuth();
   const uid = user?.uid;
 
-  const [students, setStudents] = useState([]);
-  useEffect(() => {
-    if (!uid) return;
-    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
-      setStudents(snap.data()?.names ?? []);
-    });
-  }, [uid]);
+  const { students } = useStudents(uid);
 
   const { courses, loading, error, addCourse, updateCourse, removeCourse } = useCourses(uid);
   const { enrollments, loading: enrollmentsLoading, error: enrollmentsError, addEnrollment, updateEnrollment, removeEnrollment } = useEnrollments(uid, courses);
   const { schoolYears, loading: schoolYearsLoading, error: schoolYearsError, addSchoolYear, updateSchoolYear, removeSchoolYear, addQuarter, updateQuarter, removeQuarter, addBreak, updateBreak, removeBreak } = useSchoolYears(uid);
   const [selectedStudent, setSelectedStudent]     = useState(null);
-  useEffect(() => { if (students.length && !selectedStudent) setSelectedStudent(students[0]); }, [students, selectedStudent]);
+  useEffect(() => { if (students.length && !selectedStudent) setSelectedStudent(students[0].studentId); }, [students, selectedStudent]);
   const [selectedQuarterId, setSelectedQuarterId] = useState(null);
   const summary = useAcademicSummary(uid, selectedStudent, schoolYears, enrollments, courses);
   const complianceSummary = useComplianceSummary(uid);
