@@ -84,7 +84,7 @@ export default function PlannerLayout({
     showFridayComingSoon,
     handleFridayComingSoonConfirm, handleFridayComingSoonDismiss,
   } = useSickDay({
-    uid: user?.uid, weekId, student, day,
+    uid: user?.uid, weekId, studentId: student, day,
     performSickDay, performUndoSickDay,
     setDay, setShowSickDay, setShowUndoSickDay,
   });
