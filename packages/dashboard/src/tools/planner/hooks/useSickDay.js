@@ -28,7 +28,7 @@ const FRIDAY_INDEX = 4;
 // discards everything without writing to Firestore. Proper Friday handling
 // (move-to-next-Monday, etc.) ships with the month view.
 export function useSickDay({
-  uid, weekId, student, day,
+  uid, weekId, studentId, day,
   performSickDay, performUndoSickDay,
   setDay, setShowSickDay, setShowUndoSickDay,
 }) {
@@ -44,14 +44,14 @@ export function useSickDay({
 
   const sickDayIndices = new Set(
     getWeekDates(weekId).reduce((acc, date, i) => {
-      if (sickDays[toWeekId(date)]?.student === student) acc.push(i);
+      if (sickDays[toWeekId(date)]?.studentId === studentId) acc.push(i);
       return acc;
     }, [])
   );
   const hasSickDayThisWeek = sickDayIndices.size > 0;
   const isSickDay = sickDayIndices.has(day);
 
-  // Defensive reset on week/student switch — Full Restore can swap the
+  // Defensive reset on week/studentId switch — Full Restore can swap the
   // underlying Firestore state out from under an open sheet.
   useEffect(() => {
     setShowSickDay(false);
@@ -59,10 +59,10 @@ export function useSickDay({
     setShowFridayComingSoon(false);
     setPendingSickDay(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekId, student]);
+  }, [weekId, studentId]);
 
   async function fridayLessonSubjects() {
-    const friday = await readDaySubjectsOnce(uid, weekId, student, FRIDAY_INDEX);
+    const friday = await readDaySubjectsOnce(uid, weekId, studentId, FRIDAY_INDEX);
     return Object.keys(friday).filter(k => k !== ALL_DAY_KEY);
   }
 
@@ -72,9 +72,9 @@ export function useSickDay({
     // Drop a "Sick Day" All Day Event on the sick column so the day is
     // labeled in the planner + home summary. Only written if the user
     // hasn't already placed an all-day event there.
-    const existingAllDay = await readCell(uid, weekId, student, sickDayIndex, ALL_DAY_KEY);
+    const existingAllDay = await readCell(uid, weekId, studentId, sickDayIndex, ALL_DAY_KEY);
     if (!existingAllDay) {
-      await fbWriteCell(uid, weekId, student, ALL_DAY_KEY, sickDayIndex, {
+      await fbWriteCell(uid, weekId, studentId, ALL_DAY_KEY, sickDayIndex, {
         lesson: 'Sick Day', note: '', done: false, flag: false,
       });
     }
@@ -100,7 +100,7 @@ export function useSickDay({
   async function handleFridayComingSoonConfirm() {
     if (!pendingSickDay) return;
     const subjects = await fridayLessonSubjects();
-    await Promise.all(subjects.map(s => deleteCell(uid, weekId, student, FRIDAY_INDEX, s)));
+    await Promise.all(subjects.map(s => deleteCell(uid, weekId, studentId, FRIDAY_INDEX, s)));
     const pending = pendingSickDay;
     setShowFridayComingSoon(false);
     setPendingSickDay(null);
@@ -120,9 +120,9 @@ export function useSickDay({
     if (sickIdx !== undefined) {
       // Only clear the allday cell if it's the auto-written "Sick Day" label —
       // a pre-existing custom allday the user placed themselves stays put.
-      const existing = await readCell(uid, weekId, student, sickIdx, ALL_DAY_KEY);
+      const existing = await readCell(uid, weekId, studentId, sickIdx, ALL_DAY_KEY);
       if (existing?.lesson === 'Sick Day') {
-        await deleteCell(uid, weekId, student, sickIdx, ALL_DAY_KEY);
+        await deleteCell(uid, weekId, studentId, sickIdx, ALL_DAY_KEY);
       }
     }
     setShowUndoSickDay(false);

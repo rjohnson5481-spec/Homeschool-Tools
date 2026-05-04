@@ -6,7 +6,7 @@ import { mondayWeekId, DAY_SHORT } from '../constants/days.js';
 // layout component stays under the 250-line target. No behavior changes —
 // the closures match the inline versions one-for-one.
 export function usePlannerHelpers({
-  user, weekId, student,
+  user, weekId, studentId,
   pdfImport, importCell,
   jumpToWeek, setStudent,
 }) {
@@ -45,10 +45,10 @@ export function usePlannerHelpers({
   async function handleMoveCell(fromDay, subject, toDay) {
     const uid = user?.uid;
     if (!uid) return;
-    const data = await readCell(uid, weekId, student, fromDay, subject);
+    const data = await readCell(uid, weekId, studentId, fromDay, subject);
     if (!data) return;
-    await fbWriteCell(uid, weekId, student, subject, toDay, data);
-    await deleteCell(uid, weekId, student, fromDay, subject);
+    await fbWriteCell(uid, weekId, studentId, subject, toDay, data);
+    await deleteCell(uid, weekId, studentId, fromDay, subject);
   }
 
   return { handleApplySchedule, handleConfirmImport, handleMoveCell };

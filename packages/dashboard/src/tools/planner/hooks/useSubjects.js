@@ -16,31 +16,31 @@ import { getWeekDates, toWeekId } from '../constants/days.js';
 // Subjects are implicit: a subject exists on a day only when its cell doc exists.
 // dayData shape: { [subject]: { lesson, note, done, flag } }
 // Sick-day indicators live in useSickDay — this hook does not subscribe to them.
-export function useSubjects(uid, weekId, student, day) {
+export function useSubjects(uid, weekId, studentId, day) {
   const [dayData, setDayData] = useState({});
   const [loading, setLoading] = useState(true);
 
   // Subscribe to all subject cells for the current day.
-  // Rebuilds whenever uid, weekId, student, or day changes.
+  // Rebuilds whenever uid, weekId, studentId, or day changes.
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
-    const unsub = subscribeDaySubjects(uid, weekId, student, day, data => {
+    const unsub = subscribeDaySubjects(uid, weekId, studentId, day, data => {
       setDayData(data);
       setLoading(false);
     });
     return () => { unsub(); setLoading(true); };
-  }, [uid, weekId, student, day]);
+  }, [uid, weekId, studentId, day]);
 
   // Creating a cell IS adding that subject to the current day.
   function addSubject(subject) {
-    return dbUpdateCell(uid, weekId, student, subject, day,
+    return dbUpdateCell(uid, weekId, studentId, subject, day,
       { lesson: '', note: '', done: false, flag: false });
   }
 
   // Deleting a cell removes the subject from the current day only.
   function removeSubject(subject) {
-    return dbDeleteCell(uid, weekId, student, day, subject);
+    return dbDeleteCell(uid, weekId, studentId, day, subject);
   }
 
   // dayIndex param kept so PDF import can write to any day, not just current.
@@ -51,12 +51,12 @@ export function useSubjects(uid, weekId, student, day) {
       lesson: (data.lesson ?? '').trim(),
       note:   (data.note   ?? '').trim(),
     };
-    return dbUpdateCell(uid, weekId, student, subject, dayIndex, cleaned);
+    return dbUpdateCell(uid, weekId, studentId, subject, dayIndex, cleaned);
   }
 
   // Deletes all cells for the current week/student — clears the whole week.
   function deleteWeek() {
-    return dbDeleteWeek(uid, weekId, student);
+    return dbDeleteWeek(uid, weekId, studentId);
   }
 
   // Writes to an explicit weekId+student — used by PDF import.
@@ -87,7 +87,7 @@ export function useSubjects(uid, weekId, student, day) {
     // regardless of subject count). Sick day is the source, not a destination,
     // so it is never treated as blocked.
     const allDayReads = await Promise.all(
-      [0, 1, 2, 3, 4].map(d => dbReadCell(uid, weekId, student, d, 'allday'))
+      [0, 1, 2, 3, 4].map(d => dbReadCell(uid, weekId, studentId, d, 'allday'))
     );
     const blockedDays = {};
     allDayReads.forEach((cell, d) => { blockedDays[d] = !!cell; });
@@ -105,7 +105,7 @@ export function useSubjects(uid, weekId, student, day) {
     await Promise.all(selectedSubjects.map(async subject => {
       const startData = sickDayIndex === day
         ? dayData[subject]
-        : await dbReadCell(uid, weekId, student, sickDayIndex, subject);
+        : await dbReadCell(uid, weekId, studentId, sickDayIndex, subject);
       if (!startData) return;
 
       // Build chain from sick day through scheduled days, skipping blocked
@@ -113,7 +113,7 @@ export function useSubjects(uid, weekId, student, day) {
       const chain = [{ dayIndex: sickDayIndex, data: startData }];
       for (let d = sickDayIndex + 1; d <= 4; d++) {
         if (blockedDays[d]) continue;
-        const data = await dbReadCell(uid, weekId, student, d, subject);
+        const data = await dbReadCell(uid, weekId, studentId, d, subject);
         if (!data) break;
         chain.push({ dayIndex: d, data });
       }
@@ -123,17 +123,17 @@ export function useSubjects(uid, weekId, student, day) {
       for (let i = chain.length - 1; i >= 0; i--) {
         const target = findNextOpenDay(chain[i].dayIndex);
         if (target !== null) {
-          await dbUpdateCell(uid, weekId, student, subject, target, chain[i].data);
+          await dbUpdateCell(uid, weekId, studentId, subject, target, chain[i].data);
         }
       }
 
       // Delete the original sick-day cell.
-      await dbDeleteCell(uid, weekId, student, sickDayIndex, subject);
+      await dbDeleteCell(uid, weekId, studentId, sickDayIndex, subject);
     }));
 
     // Write sick day marker for the picked day's date.
     const dateString = toWeekId(getWeekDates(weekId)[sickDayIndex]);
-    await dbWriteSickDay(uid, dateString, student, selectedSubjects);
+    await dbWriteSickDay(uid, dateString, studentId, selectedSubjects);
   }
 
   // Reverses a sick day cascade for the current week.
@@ -152,7 +152,7 @@ export function useSubjects(uid, weekId, student, day) {
     for (let d = 0; d < 5; d++) {
       const ds = toWeekId(dates[d]);
       const data = await dbReadSickDay(uid, ds);
-      if (data?.student === student) {
+      if (data?.studentId === studentId) {
         sickDayIndex = d;
         sickDayData = data;
         dateString = ds;
@@ -164,15 +164,15 @@ export function useSubjects(uid, weekId, student, day) {
     await Promise.all((sickDayData.subjectsShifted ?? []).map(async subject => {
       const chain = [];
       for (let d = sickDayIndex + 1; d <= 4; d++) {
-        const data = await dbReadCell(uid, weekId, student, d, subject);
+        const data = await dbReadCell(uid, weekId, studentId, d, subject);
         if (!data) break;
         chain.push({ dayIndex: d, data });
       }
       if (chain.length === 0) return;
       for (const { dayIndex, data } of chain) {
-        await dbUpdateCell(uid, weekId, student, subject, dayIndex - 1, data);
+        await dbUpdateCell(uid, weekId, studentId, subject, dayIndex - 1, data);
       }
-      await dbDeleteCell(uid, weekId, student, chain[chain.length - 1].dayIndex, subject);
+      await dbDeleteCell(uid, weekId, studentId, chain[chain.length - 1].dayIndex, subject);
     }));
 
     await dbDeleteSickDay(uid, dateString);
@@ -182,7 +182,7 @@ export function useSubjects(uid, weekId, student, day) {
   // Returns: { [dayIndex]: { [subject]: { lesson, note, done, flag } } }
   async function loadWeekDataFrom(fromDay) {
     const days = Array.from({ length: 5 - fromDay }, (_, i) => fromDay + i);
-    const results = await Promise.all(days.map(d => dbReadDaySubjectsOnce(uid, weekId, student, d)));
+    const results = await Promise.all(days.map(d => dbReadDaySubjectsOnce(uid, weekId, studentId, d)));
     return Object.fromEntries(days.map((d, i) => [d, results[i]]));
   }
 
