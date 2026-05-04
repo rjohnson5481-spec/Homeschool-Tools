@@ -76,8 +76,9 @@ export default function OnboardingFlow({ uid, onComplete }) {
       <div className="onboarding-card">
 
         <div className="onboarding-steps">
-          <div className={`onboarding-dot${step === 1 ? ' onboarding-dot--active' : ''}`} />
-          <div className={`onboarding-dot${step === 2 ? ' onboarding-dot--active' : ''}`} />
+          {[1, 2].map(n => (
+            <div key={n} className={`onboarding-dot${n === step ? ' onboarding-dot--active' : ''}`} />
+          ))}
         </div>
         <p className="onboarding-step-label">
           {step === 1 ? 'School Setup' : 'Add Students'}
@@ -142,25 +143,36 @@ export default function OnboardingFlow({ uid, onComplete }) {
             )}
 
             <div className="onboarding-add-form">
-              <input
-                className="onboarding-input"
-                placeholder="Student name"
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                onKeyDown={handleNameKey}
-              />
-              <input
-                className="onboarding-input onboarding-input--emoji"
-                placeholder="😊"
-                value={newEmoji}
-                onChange={e => setNewEmoji(e.target.value)}
-              />
-              <input
-                className="onboarding-input onboarding-input--grade"
-                placeholder="e.g. 3rd"
-                value={newGrade}
-                onChange={e => setNewGrade(e.target.value)}
-              />
+              <div className="onboarding-field">
+                <label className="onboarding-add-label">Name <span className="onboarding-required">*</span></label>
+                <input
+                  className="onboarding-input"
+                  placeholder="Student name"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  onKeyDown={handleNameKey}
+                />
+              </div>
+              <div className="onboarding-field">
+                <label className="onboarding-add-label">Emoji</label>
+                <input
+                  className="onboarding-input"
+                  placeholder="😊"
+                  value={newEmoji}
+                  onChange={e => setNewEmoji(e.target.value)}
+                />
+                <span className="onboarding-sublabel">Leave blank for default 🎓</span>
+              </div>
+              <div className="onboarding-field">
+                <label className="onboarding-add-label">Grade Level</label>
+                <input
+                  className="onboarding-input"
+                  placeholder="e.g. 3rd"
+                  value={newGrade}
+                  onChange={e => setNewGrade(e.target.value)}
+                />
+                <span className="onboarding-sublabel">Optional — e.g. 3rd, 4th, K</span>
+              </div>
               <button
                 className="onboarding-add-btn"
                 onClick={handleAddStudent}
