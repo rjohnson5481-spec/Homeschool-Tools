@@ -14,12 +14,13 @@ import './EnrollmentSheet.css';
 // Props:
 //   open               — boolean, controls visibility (parent unmounts on false)
 //   onClose            — () => void
-//   enrollments        — Array<{ id, courseId, student, yearId, notes, syncPlanner }>
+//   enrollments        — Array<{ id, courseId, studentId, yearId, notes, syncPlanner }>
 //   courses            — Array<{ id, name, curriculum, gradingType }>
 //   loading            — boolean
 //   error              — string | null
 //   onEditEnrollment   — (enrollment) => void
-//   onAddEnrollment    — (studentName) => void
+//   onAddEnrollment    — (studentId) => void
+//   students           — Array<{ studentId, name, emoji }>
 
 const DOT_COLORS = [
   '#1565c0', '#c0392b', '#2e7d32', '#7b1fa2',
@@ -31,11 +32,12 @@ export default function EnrollmentSheet({
   onEditEnrollment, onAddEnrollment, students,
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const effectiveStudent = selectedStudent ?? (students ?? [])[0] ?? '';
+  const effectiveStudent = selectedStudent ?? (students ?? [])[0]?.studentId ?? '';
+  const effectiveName = (students ?? []).find(s => s.studentId === effectiveStudent)?.name ?? '';
 
   if (!open) return null;
 
-  const studentEnrollments = (enrollments ?? []).filter(e => e.student === effectiveStudent);
+  const studentEnrollments = (enrollments ?? []).filter(e => e.studentId === effectiveStudent);
   const courseById = new Map((courses ?? []).map(c => [c.id, c]));
 
   return (
@@ -54,16 +56,16 @@ export default function EnrollmentSheet({
           <div className="en-student-pills">
             {(students ?? []).map(s => (
               <button
-                key={s}
-                className={`en-student-pill${s === effectiveStudent ? ' en-student-pill--active' : ''}`}
-                onClick={() => setSelectedStudent(s)}
+                key={s.studentId}
+                className={`en-student-pill${s.studentId === effectiveStudent ? ' en-student-pill--active' : ''}`}
+                onClick={() => setSelectedStudent(s.studentId)}
               >
-                {s}
+                {s.emoji ? `${s.emoji} ` : ''}{s.name}
               </button>
             ))}
           </div>
 
-          <p className="en-section-label"><span>{effectiveStudent}</span></p>
+          <p className="en-section-label"><span>{effectiveName}</span></p>
 
           {error && (
             <p className="en-loading" role="alert">⚠ {error}</p>
@@ -75,7 +77,7 @@ export default function EnrollmentSheet({
 
           {!loading && studentEnrollments.length === 0 && (
             <p className="en-empty">
-              No enrollments yet. Enroll {effectiveStudent} in a course to get started.
+              No enrollments yet. Enroll {effectiveName} in a course to get started.
             </p>
           )}
 
@@ -123,7 +125,7 @@ export default function EnrollmentSheet({
           )}
 
           <button className="en-add-btn" onClick={() => onAddEnrollment(effectiveStudent)}>
-            + Enroll {effectiveStudent} in a course
+            + Enroll {effectiveName} in a course
           </button>
 
         </div>

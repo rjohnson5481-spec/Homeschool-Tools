@@ -5,10 +5,11 @@ export default function ManageActivitiesSheet({
   open, onClose, activities, loading, error, onEditActivity, onAddActivity, students,
 }) {
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const effectiveStudent = selectedStudent ?? (students ?? [])[0] ?? '';
+  const effectiveStudent = selectedStudent ?? (students ?? [])[0]?.studentId ?? '';
+  const effectiveName = (students ?? []).find(s => s.studentId === effectiveStudent)?.name ?? '';
   if (!open) return null;
 
-  const studentActs = (activities ?? []).filter(a => a.student === effectiveStudent);
+  const studentActs = (activities ?? []).filter(a => a.studentId === effectiveStudent);
 
   return (
     <div className="ma-sheet-overlay" onClick={onClose}>
@@ -21,15 +22,15 @@ export default function ManageActivitiesSheet({
         <div className="ma-sheet-body">
           <div className="ma-student-pills">
             {(students ?? []).map(s => (
-              <button key={s} className={`ma-student-pill${s === selectedStudent ? ' ma-student-pill--active' : ''}`}
-                onClick={() => setSelectedStudent(s)}>{s}</button>
+              <button key={s.studentId} className={`ma-student-pill${s.studentId === selectedStudent ? ' ma-student-pill--active' : ''}`}
+                onClick={() => setSelectedStudent(s.studentId)}>{s.emoji ? `${s.emoji} ` : ''}{s.name}</button>
             ))}
           </div>
-          <p className="ma-section-label"><span>{effectiveStudent}'s Activities</span></p>
+          <p className="ma-section-label"><span>{effectiveName}'s Activities</span></p>
           {error && <p className="ma-empty" role="alert">⚠ {error}</p>}
           {loading && <p className="ma-empty">Loading activities…</p>}
           {!loading && studentActs.length === 0 && (
-            <p className="ma-empty">No activities yet. Add {effectiveStudent}'s first activity.</p>
+            <p className="ma-empty">No activities yet. Add {effectiveName}'s first activity.</p>
           )}
           {!loading && studentActs.length > 0 && (
             <div className="ma-activity-list">
@@ -47,7 +48,7 @@ export default function ManageActivitiesSheet({
               ))}
             </div>
           )}
-          <button className="ma-add-btn" onClick={() => onAddActivity(selectedStudent)}>
+          <button className="ma-add-btn" onClick={() => onAddActivity(effectiveStudent)}>
             + Add Activity
           </button>
         </div>
