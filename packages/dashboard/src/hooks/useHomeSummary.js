@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '@homeschool/shared';
-import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { getMondayOf, toWeekId, getTodayDayIndex } from '../tools/planner/constants/days.js';
 import { daySubjectsPath } from '../tools/planner/constants/firestore.js';
 
@@ -26,7 +26,7 @@ function countWeekdays(startStr, endStr) {
 }
 
 export function useHomeSummary(uid) {
-  const [students, setStudents]             = useState([]);
+  const [students, setStudents]             = useState([]); // [{ studentId, name, emoji }]
   const [lessonsByStudent, setLessonsByStudent] = useState({});
   const [attendance, setAttendance]         = useState({});
 
@@ -35,19 +35,20 @@ export function useHomeSummary(uid) {
   const today    = new Date();
   const todayLabel = `${DAY_NAMES[today.getDay()]}, ${MONTH_NAMES[today.getMonth()]} ${today.getDate()}`;
 
-  // Subscribe to student names list
+  // Subscribe to /students collection, ordered by order field
   useEffect(() => {
     if (!uid) return;
-    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
-      setStudents(snap.data()?.names ?? []);
+    const q = query(collection(db, `users/${uid}/students`), orderBy('order', 'asc'));
+    return onSnapshot(q, snap => {
+      setStudents(snap.docs.map(d => ({ studentId: d.id, ...d.data() })));
     });
   }, [uid]);
 
-  // Subscribe to today's subjects for ALL students
+  // Subscribe to today's subjects for ALL students — keyed by studentId
   useEffect(() => {
     if (!uid || !students.length) return;
-    const unsubs = students.map(name => {
-      const path = daySubjectsPath(uid, weekId, name, dayIndex);
+    const unsubs = students.map(s => {
+      const path = daySubjectsPath(uid, weekId, s.studentId, dayIndex);
       return onSnapshot(collection(db, path), snap => {
         const lessons = [];
         snap.docs.forEach(d => {
@@ -55,13 +56,13 @@ export function useHomeSummary(uid) {
           const data = d.data();
           lessons.push({ subject: d.id, lesson: data.lesson ?? '', note: data.note ?? '', done: !!data.done, flag: !!data.flag, dayIndex });
         });
-        setLessonsByStudent(prev => ({ ...prev, [name]: lessons }));
+        setLessonsByStudent(prev => ({ ...prev, [s.studentId]: lessons }));
       });
     });
     return () => unsubs.forEach(u => u());
   }, [uid, students, weekId, dayIndex]);
 
-  // One-shot: fetch attendance for all students
+  // One-shot: fetch attendance for all students — keyed by studentId
   useEffect(() => {
     if (!uid || !students.length) return;
     (async () => {
@@ -86,10 +87,10 @@ export function useHomeSummary(uid) {
         const sickSnap = await getDocs(collection(db, `users/${uid}/sickDays`));
         const sickDates = sickSnap.docs.map(d => d.id);
         const result = {};
-        for (const name of students) {
+        for (const s of students) {
           const sick = sickDates.filter(d => d >= active.startDate && d <= end).length;
           const attended = Math.max(0, schoolDays - breakDays - sick);
-          result[name] = { attended, sick, breakDays, schoolDays, required: REQUIRED_DAYS };
+          result[s.studentId] = { attended, sick, breakDays, schoolDays, required: REQUIRED_DAYS };
         }
         setAttendance(result);
       } catch (err) { console.warn('useHomeSummary: attendance fetch failed', err); }

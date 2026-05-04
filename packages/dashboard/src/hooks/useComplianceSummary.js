@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, collectionGroup, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, collectionGroup, getDocs, onSnapshot, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 import { subscribeCompliance, subscribeSchoolDays } from '../firebase/compliance.js';
 import { COMPLIANCE_DEFAULTS } from '../constants/compliance.js';
@@ -26,9 +26,9 @@ function todayIso() {
   return isoFromYMD(t.getFullYear(), t.getMonth() + 1, t.getDate());
 }
 
-// Cell path → { studentName, dateString }. Returns null for allday cells
+// Cell path → { studentId, dateString }. Returns null for allday cells
 // or any path that doesn't match the planner cell shape.
-// Path: users/{uid}/weeks/{weekId}/students/{name}/days/{0-4}/subjects/{subject}
+// Path: users/{uid}/weeks/{weekId}/students/{studentId}/days/{0-4}/subjects/{subject}
 function parseCellPath(path) {
   const parts = path.split('/');
   if (parts.length !== 10
@@ -36,7 +36,7 @@ function parseCellPath(path) {
     || parts[4] !== 'students' || parts[6] !== 'days'
     || parts[8] !== 'subjects') return null;
   const weekId = parts[3];
-  const studentName = parts[5];
+  const studentId = parts[5];
   const dayIndex = Number(parts[7]);
   const subject = parts[9];
   if (!Number.isFinite(dayIndex) || subject === 'allday') return null;
@@ -44,7 +44,7 @@ function parseCellPath(path) {
   if (!y || !m || !d) return null;
   const date = new Date(y, m - 1, d + dayIndex);
   return {
-    studentName,
+    studentId,
     dateString: isoFromYMD(date.getFullYear(), date.getMonth() + 1, date.getDate()),
   };
 }
@@ -65,8 +65,9 @@ export function useComplianceSummary(uid) {
 
   useEffect(() => {
     if (!uid) return;
-    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
-      setStudents(snap.exists() ? (snap.data().names ?? []) : []);
+    const q = query(collection(db, `users/${uid}/students`), orderBy('order', 'asc'));
+    return onSnapshot(q, snap => {
+      setStudents(snap.docs.map(d => d.id));
     });
   }, [uid]);
 
@@ -112,8 +113,8 @@ export function useComplianceSummary(uid) {
         const parsed = parseCellPath(d.ref.path);
         if (!parsed) return;
         if (parsed.dateString < start || parsed.dateString > end) return;
-        if (!sets[parsed.studentName]) sets[parsed.studentName] = new Set();
-        sets[parsed.studentName].add(parsed.dateString);
+        if (!sets[parsed.studentId]) sets[parsed.studentId] = new Set();
+        sets[parsed.studentId].add(parsed.dateString);
       });
       setStudentDateSets(sets);
     });
@@ -134,8 +135,8 @@ export function useComplianceSummary(uid) {
   const requiredByStudent = useMemo(() => {
     const raw = settings.requiredByStudent ?? {};
     const out = {};
-    for (const name of students) {
-      out[name] = raw[name] ?? { requiredDays: 0, requiredHours: 0 };
+    for (const studentId of students) {
+      out[studentId] = raw[studentId] ?? { requiredDays: 0, requiredHours: 0 };
     }
     return out;
   }, [students, settings.requiredByStudent]);
@@ -145,8 +146,8 @@ export function useComplianceSummary(uid) {
   const daysCompletedByStudent = useMemo(() => {
     if (!settings.daysEnabled) return {};
     const out = {};
-    for (const name of students) {
-      out[name] = (settings.startingDays ?? 0) + (studentDateSets[name]?.size ?? 0);
+    for (const studentId of students) {
+      out[studentId] = (settings.startingDays ?? 0) + (studentDateSets[studentId]?.size ?? 0);
     }
     return out;
   }, [settings.daysEnabled, students, settings.startingDays, studentDateSets]);
@@ -154,10 +155,10 @@ export function useComplianceSummary(uid) {
   const hoursCompletedByStudent = useMemo(() => {
     if (!settings.hoursEnabled) return {};
     const out = {};
-    for (const name of students) {
+    for (const studentId of students) {
       let sum = 0;
-      for (const d of hoursDocs) sum += d.hoursByStudent?.[name] ?? 0;
-      out[name] = (settings.startingHours ?? 0) + sum;
+      for (const d of hoursDocs) sum += d.hoursByStudent?.[studentId] ?? 0;
+      out[studentId] = (settings.startingHours ?? 0) + sum;
     }
     return out;
   }, [settings.hoursEnabled, students, settings.startingHours, hoursDocs]);
