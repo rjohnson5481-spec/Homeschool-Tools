@@ -3,7 +3,7 @@ import './AddEditActivitySheet.css';
 
 // Stacked above ManageActivitiesSheet (z-index 310/311).
 export default function AddEditActivitySheet({
-  open, onClose, onSave, onDelete, student, activity,
+  open, onClose, onSave, onDelete, student, studentName, activity,
 }) {
   const isEdit = activity != null;
   const [name, setName]               = useState('');
@@ -29,7 +29,7 @@ export default function AddEditActivitySheet({
 
   function handleSave() {
     if (!canSave) return;
-    onSave({ student, name: name.trim(), startDate, endDate: ongoing ? null : endDate, ongoing, notes: notes.trim() });
+    onSave({ studentId: student, name: name.trim(), startDate, endDate: ongoing ? null : endDate, ongoing, notes: notes.trim() });
   }
 
   return (
@@ -43,7 +43,7 @@ export default function AddEditActivitySheet({
         <div className="aea-sheet-body">
           <div className="aea-field">
             <span className="aea-label">Student</span>
-            <div className="aea-readonly">{student}</div>
+            <div className="aea-readonly">{studentName}</div>
           </div>
           <label className="aea-field">
             <span className="aea-label">Activity</span>

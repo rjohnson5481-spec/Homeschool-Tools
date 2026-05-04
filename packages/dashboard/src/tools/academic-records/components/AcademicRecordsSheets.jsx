@@ -31,7 +31,9 @@ export default function AcademicRecordsSheets(p) {
         students={p.students} />
       <AddEditEnrollmentSheet open={p.addEditEnrollmentSheetOpen} onClose={p.closeAddEditEnrollment}
         onSave={p.handleSaveEnrollment} onDelete={p.handleDeleteEnrollment}
-        student={p.enrollingStudent} courses={p.courses} enrollment={p.editingEnrollment} />
+        student={p.enrollingStudent}
+        studentName={(p.students ?? []).find(s => s.studentId === p.enrollingStudent)?.name ?? ''}
+        courses={p.courses} enrollment={p.editingEnrollment} />
       <SchoolYearSheet open={p.schoolYearSheetOpen} onClose={p.closeSchoolYearSheets}
         schoolYears={p.schoolYears} loading={p.schoolYearsLoading} error={p.schoolYearsError}
         onEditSchoolYear={p.handleEditSchoolYear} onAddSchoolYear={p.handleAddSchoolYear}
@@ -64,7 +66,9 @@ export default function AcademicRecordsSheets(p) {
         students={p.students} />
       <AddEditActivitySheet open={p.addEditActivitySheetOpen} onClose={p.closeAddEditActivity}
         onSave={p.handleSaveActivity} onDelete={p.handleDeleteActivity}
-        student={p.activityStudent} activity={p.editingActivity} />
+        student={p.activityStudent}
+        studentName={(p.students ?? []).find(s => s.studentId === p.activityStudent)?.name ?? ''}
+        activity={p.editingActivity} />
       <CurriculumImportSheet open={p.curriculumImportOpen} onClose={p.closeCurriculumImport}
         onImport={p.handleCurriculumImport} courses={p.courses} />
       <ComplianceSheet open={p.complianceSheetOpen} onClose={p.closeCompliance}

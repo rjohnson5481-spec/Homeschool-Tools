@@ -26,7 +26,7 @@ const DOT_COLORS = [
 ];
 
 export default function AddEditEnrollmentSheet({
-  open, onClose, onSave, onDelete, student, courses, enrollment,
+  open, onClose, onSave, onDelete, student, studentName, courses, enrollment,
 }) {
   const isEdit = enrollment != null;
 
@@ -54,7 +54,7 @@ export default function AddEditEnrollmentSheet({
     if (!canSave) return;
     onSave({
       courseId: isEdit ? enrollment.courseId : courseId,
-      student,
+      studentId: student,
       notes: notes.trim(),
       gradeLevel,
       syncPlanner,
@@ -64,11 +64,11 @@ export default function AddEditEnrollmentSheet({
   // Helper text under the Sync to Planner toggle — three cases.
   let syncHelper;
   if (!isEdit) {
-    syncHelper = `Adds this course to ${student}'s default subjects in the Planner.`;
+    syncHelper = `Adds this course to ${studentName}'s default subjects in the Planner.`;
   } else if (syncPlanner) {
     syncHelper = 'Already synced to Planner.';
   } else {
-    syncHelper = `Turn on to add this course to ${student}'s default subjects in the Planner.`;
+    syncHelper = `Turn on to add this course to ${studentName}'s default subjects in the Planner.`;
   }
 
   return (
@@ -79,7 +79,7 @@ export default function AddEditEnrollmentSheet({
 
         <header className="aee-sheet-header">
           <h2 className="aee-sheet-title">
-            {isEdit ? 'Edit Enrollment' : `Enroll ${student}`}
+            {isEdit ? 'Edit Enrollment' : `Enroll ${studentName}`}
           </h2>
           <button className="aee-sheet-close" onClick={onClose} aria-label="Close">✕</button>
         </header>
@@ -89,7 +89,7 @@ export default function AddEditEnrollmentSheet({
           {/* Student (read-only in both modes) */}
           <div className="aee-field">
             <span className="aee-label">Student</span>
-            <div className="aee-readonly">{student}</div>
+            <div className="aee-readonly">{studentName}</div>
           </div>
 
           {/* Course — picker in Add mode, read-only in Edit mode */}
