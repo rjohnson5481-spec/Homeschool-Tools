@@ -78,6 +78,7 @@ export default function SettingsTab({ user, students, colorMode, onToggleDarkMod
       onComplete={() => setShowOnboarding(false)}
       initialSchoolName={schoolName ?? ''}
       initialTagline={tagline ?? ''}
+      existingStudents={students ?? []}
     />
   );
 

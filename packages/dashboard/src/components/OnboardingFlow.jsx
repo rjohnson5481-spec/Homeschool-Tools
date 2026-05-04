@@ -4,7 +4,7 @@ import { db } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import './OnboardingFlow.css';
 
-export default function OnboardingFlow({ uid, onComplete, initialSchoolName = '', initialTagline = '' }) {
+export default function OnboardingFlow({ uid, onComplete, initialSchoolName = '', initialTagline = '', existingStudents = [] }) {
   const [step, setStep] = useState(1);
 
   // Step 1
@@ -13,7 +13,7 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
   const [saving, setSaving]         = useState(false);
 
   // Step 2
-  const [students, setStudents]   = useState([]);
+  const [newStudents, setNewStudents] = useState([]);
   const [newName, setNewName]     = useState('');
   const [newEmoji, setNewEmoji]   = useState('');
   const [newGrade, setNewGrade]   = useState('');
@@ -36,7 +36,7 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
 
   function handleAddStudent() {
     if (!newName.trim()) return;
-    setStudents(prev => [...prev, {
+    setNewStudents(prev => [...prev, {
       name:       newName.trim(),
       emoji:      newEmoji.trim() || '🎓',
       gradeLevel: newGrade.trim(),
@@ -45,24 +45,27 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
   }
 
   function handleRemove(index) {
-    setStudents(prev => prev.filter((_, i) => i !== index));
+    setNewStudents(prev => prev.filter((_, i) => i !== index));
   }
 
   async function handleFinish() {
-    if (!students.length) return;
+    if (existingStudents.length === 0 && newStudents.length === 0) return;
     setFinishing(true);
     try {
-      await Promise.all(students.map(async (s, order) => {
-        const ref = doc(collection(db, `users/${uid}/students`));
-        await setDoc(ref, {
-          studentId:  ref.id,
-          name:       s.name,
-          emoji:      s.emoji,
-          gradeLevel: s.gradeLevel,
-          order,
-          createdAt: serverTimestamp(),
-        });
-      }));
+      if (newStudents.length > 0) {
+        const startOrder = existingStudents.length;
+        await Promise.all(newStudents.map(async (s, i) => {
+          const ref = doc(collection(db, `users/${uid}/students`));
+          await setDoc(ref, {
+            studentId:  ref.id,
+            name:       s.name,
+            emoji:      s.emoji,
+            gradeLevel: s.gradeLevel,
+            order:      startOrder + i,
+            createdAt: serverTimestamp(),
+          });
+        }));
+      }
       onComplete();
     } finally {
       setFinishing(false);
@@ -127,9 +130,26 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
             <h2 className="onboarding-heading">Add Your Students</h2>
             <p className="onboarding-sub">You can add more students later in Settings.</p>
 
-            {students.length > 0 && (
+            {existingStudents.length > 0 && (
+              <>
+                <p className="onboarding-section-label">Already enrolled</p>
+                <div className="onboarding-student-list">
+                  {existingStudents.map(s => (
+                    <div key={s.studentId} className="onboarding-student-row">
+                      <span className="onboarding-student-emoji">{s.emoji || '🎓'}</span>
+                      <span className="onboarding-student-name">{s.name}</span>
+                      {s.gradeLevel && (
+                        <span className="onboarding-student-grade">{s.gradeLevel}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {newStudents.length > 0 && (
               <div className="onboarding-student-list">
-                {students.map((s, i) => (
+                {newStudents.map((s, i) => (
                   <div key={i} className="onboarding-student-row">
                     <span className="onboarding-student-emoji">{s.emoji}</span>
                     <span className="onboarding-student-name">{s.name}</span>
@@ -142,6 +162,9 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
               </div>
             )}
 
+            {existingStudents.length > 0 && (
+              <p className="onboarding-section-label">Add another student</p>
+            )}
             <div className="onboarding-add-form">
               <div className="onboarding-field">
                 <label className="onboarding-add-label">Name <span className="onboarding-required">*</span></label>
@@ -185,7 +208,7 @@ export default function OnboardingFlow({ uid, onComplete, initialSchoolName = ''
             <button
               className="onboarding-btn"
               onClick={handleFinish}
-              disabled={!students.length || finishing}
+              disabled={(existingStudents.length === 0 && newStudents.length === 0) || finishing}
             >
               {finishing ? 'Saving…' : 'Finish'}
             </button>
