@@ -1,7 +1,7 @@
-# HANDOFF — v0.38.0 Block 2 Session 5 complete
+# HANDOFF — v0.39.0 Block 2 Session 6 complete
 
 ## Current version
-v0.38.0
+v0.39.0
 
 ## What is complete
 
@@ -18,36 +18,60 @@ v0.38.0
 
 ### Block 2 Session 5 — v0.38.0
 - useStudents.js hook created — subscribes to /users/{uid}/students/
-  returns students array, studentMap, getStudentName()
 - All planner hooks migrated: useSubjects, useSickDay, usePlannerHelpers
 - All planner firebase migrated: planner.js, settings.js
-- writeSickDay now writes studentId field instead of student
 - Compliance layer migrated: compliance.js, useCompliance,
   useComplianceSummary, useHomeSummary
 - Components migrated: HomeTab, RecordsMainView, ComplianceSheet,
   AcademicRecordsTab, AcademicRecordsSheets, BottomNav, App.jsx
-- Internal settings/students listeners removed — useStudents is
-  the single source of truth for student list
+
+### Block 2 Session 6 — v0.39.0
+- academicRecords.js: getEnrollments sort uses studentId;
+  saveEnrollment/addEnrollment data shape updated
+- academicRecordsReports.js: getReportNote where() query uses
+  studentId; saveReportNote/addReportNote field updated
+- academicRecordsActivities.js: comment updated
+- useEnrollments.js: syncCourseToPlanner and data.studentId migrated
+- useAcademicSummary.js: filter e.studentId === studentId
+- useReportNotes.js: saveNote param and find/write use studentId
+- EnrollmentSheet.jsx: students prop [{studentId,name,emoji}];
+  filter uses studentId; display uses effectiveName lookup
+- ManageActivitiesSheet.jsx: same pattern as EnrollmentSheet
+- ReportCardGeneratorSheet.jsx: localStudentId + localStudentName;
+  all filters, saveNote, onSaveReport, PDF filename updated
+- RestoreDiffCalendar.jsx: itemKey + all filters use studentId
+- RestoreDiffSheet.jsx: itemKey + display use studentId
+- backup.js: exportAllData reads /students collection (profile objects);
+  importMerge/importFullRestore write student profiles to /students/{studentId};
+  old names[] format skipped with warning; diff objects use studentId
+- AcademicRecordsTab.jsx: e.studentId, a.studentId in edit handlers
+- SavedReportCardsSheet.jsx: grouped by studentId; students prop as objects
 - Build verified clean: 383 modules
 
-## What is NOT done yet — Session 6 is next
+## What is NOT done yet — Session 7 is next
 
-- academicRecords.js: enrollment writes still use student name field
-- academicRecordsReports.js: reportNote and savedReport writes
-  still use student name field
-- academicRecordsActivities.js: activity writes still use student
-  name field
-- useEnrollments, useAcademicSummary, useReportNotes, useSavedReports:
-  .student field references not yet migrated
-- EnrollmentSheet, ManageActivitiesSheet, ReportCardGeneratorSheet,
-  RestoreDiffCalendar: .student filter references not yet migrated
-- backup.js: export and import still uses old student shape
+### Deferred from this session (PDF import flow)
+- usePlannerHelpers.js: safeData.student / result.student — the AI parser
+  (parse-schedule.js) returns { student, weekId, days } with a name string.
+  Migration requires updating the Netlify function and import flow together.
+- usePdfImport.js: data.student — same
+- UploadSheet.jsx: result?.student — same
+- PlannerSheets.jsx: currentStudent={p.student} — prop naming (value is
+  already a studentId; rename requires PlannerLayout + AddSubjectSheet audit)
+
+### Remaining work — Session 7+ (Onboarding)
+- /users/{uid}/students/ collection does not exist yet — no students in Firestore
+- Onboarding flow (Sessions 7-8) creates student documents
+- Do not deploy until onboarding is complete
 
 ## What is broken right now
 - App shows no students — /users/{uid}/students/ collection does not
   exist in Firestore yet. Onboarding (Sessions 7-8) creates student
   documents. Do not deploy until onboarding is complete.
 - Database is wiped clean — no planner or records data exists
+
+## File size watch
+- backup.js: 256 lines — above 250 target, below 300 hard limit
 
 ## Deferred items
 - Emoji maps hardcoded for Orion/Malachi — Phase 4 per-student settings
@@ -59,5 +83,5 @@ v0.38.0
 ## Next session start steps
 1. Read CLAUDE.md and HANDOFF.md in full
 2. git checkout main && git pull origin main
-3. Confirm version is 0.38.0
-4. Proceed with Session 6 — academic records + backup studentId migration
+3. Confirm version is 0.39.0
+4. Proceed with Session 7 — Onboarding flow (create /users/{uid}/students/ docs)
