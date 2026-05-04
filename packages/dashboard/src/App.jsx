@@ -60,6 +60,7 @@ export default function App() {
         {activeTab === 'settings' && (
           <SettingsTab
             user={user}
+            students={students}
             colorMode={colorMode}
             onToggleDarkMode={toggleDarkMode}
           />

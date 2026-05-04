@@ -1,67 +1,66 @@
 import { useState } from 'react';
 import { signOut } from '@homeschool/shared';
-import { useSettings } from '../tools/planner/hooks/useSettings.js';
-import { version } from '../../package.json';
+import { useSettings }  from '../tools/planner/hooks/useSettings.js';
+import { addStudent, updateStudent, deleteStudent } from '../firebase/students.js';
+import OnboardingFlow   from '../components/OnboardingFlow.jsx';
+import { version }      from '../../package.json';
 import './SettingsTab.css';
 import './SettingsRow.css';
 import './SettingsSubjects.css';
 import DataBackupSection from './DataBackupSection.jsx';
 
-const STUDENT_EMOJI = { Orion: '😎', Malachi: '🐼' };
-
-// Props: user (auth user), colorMode ('light'|'dark'), onToggleDarkMode (fn)
-export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
+// Props: user, students ([{ studentId, name, emoji, gradeLevel, order }]),
+//        colorMode, onToggleDarkMode
+export default function SettingsTab({ user, students, colorMode, onToggleDarkMode }) {
   const uid = user?.uid;
-  const {
-    students, activeStudent, setActiveStudent,
-    activeSubjects, saveStudents, saveSubjects,
-  } = useSettings(uid);
+  const { activeStudent, setActiveStudent, activeSubjects, saveSubjects } = useSettings(uid);
+  const isDark = colorMode === 'dark';
 
-  const [editingIdx, setEditingIdx]             = useState(null);
-  const [editingValue, setEditingValue]         = useState('');
-  const [confirmRemoveIdx, setConfirmRemoveIdx] = useState(null);
-  const [showSubjects, setShowSubjects]         = useState(false);
-  const [addingSubject, setAddingSubject]       = useState(false);
-  const [newSubject, setNewSubject]             = useState('');
-  const [clearing, setClearing]                 = useState(false);
+  // Subjects state
+  const [showSubjects, setShowSubjects]   = useState(false);
+  const [addingSubject, setAddingSubject] = useState(false);
+  const [newSubject, setNewSubject]       = useState('');
+  const [clearing, setClearing]           = useState(false);
 
-  const namedStudents = students.filter(Boolean);
-  const canRemove     = namedStudents.length > 1; // guard: never drop below 1
-  const isDark        = colorMode === 'dark';
+  // Student form state — shared between add and edit
+  const [addOpen, setAddOpen]         = useState(false);
+  const [editStudent, setEditStudent] = useState(null);
+  const [confirmId, setConfirmId]     = useState(null);
+  const [sName, setSName]             = useState('');
+  const [sEmoji, setSEmoji]           = useState('');
+  const [sGrade, setSGrade]           = useState('');
 
-  function startEdit(i, name) { setEditingIdx(i); setEditingValue(name); }
+  // School setup overlay
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  function commitEdit(i) {
-    const trimmed = editingValue.trim();
-    const next = trimmed
-      ? students.map((n, j) => j === i ? trimmed : n)
-      : students.filter((_, j) => j !== i);
-    // Never drop below a single named student.
-    if (next.filter(Boolean).length === 0) { setEditingIdx(null); return; }
-    saveStudents(next);
-    setEditingIdx(null);
+  function openAdd()   { setSName(''); setSEmoji(''); setSGrade(''); setAddOpen(true); setEditStudent(null); }
+  function openEdit(s) { setSName(s.name); setSEmoji(s.emoji ?? ''); setSGrade(s.gradeLevel ?? ''); setEditStudent(s); setAddOpen(false); }
+  function closeForm() { setAddOpen(false); setEditStudent(null); setConfirmId(null); }
+
+  async function handleAdd() {
+    if (!sName.trim() || !uid) return;
+    await addStudent(uid, { name: sName.trim(), emoji: sEmoji.trim(), gradeLevel: sGrade.trim() }, students.length);
+    closeForm();
   }
 
-  function addStudent() {
-    saveStudents([...students, '']);
-    setEditingIdx(students.length);
-    setEditingValue('');
+  async function handleSave() {
+    if (!sName.trim() || !editStudent || !uid) return;
+    await updateStudent(uid, editStudent.studentId, { name: sName.trim(), emoji: sEmoji.trim(), gradeLevel: sGrade.trim() });
+    closeForm();
   }
 
-  function handleRemoveConfirm(i) {
-    if (!canRemove) { setConfirmRemoveIdx(null); return; }
-    saveStudents(students.filter((_, j) => j !== i));
-    setConfirmRemoveIdx(null);
+  async function handleRemove() {
+    if (!confirmId || !uid) return;
+    await deleteStudent(uid, confirmId);
+    closeForm();
   }
 
-  function removeSubject(s)  { saveSubjects(activeSubjects.filter(x => x !== s)); }
-  function commitNewSubject() {
+  function removeSubject(s) { saveSubjects(activeSubjects.filter(x => x !== s)); }
+  function commitSubject() {
     if (newSubject.trim()) saveSubjects([...activeSubjects, newSubject.trim()]);
     setNewSubject(''); setAddingSubject(false);
   }
 
-  // Same behavior as the retired planner SettingsSheet: clear all caches
-  // (SW + HTTP) and hard-reload.
   function clearCache() {
     setClearing(true);
     if ('caches' in window) {
@@ -73,12 +72,15 @@ export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
     }
   }
 
+  if (showOnboarding) return (
+    <OnboardingFlow uid={uid} onComplete={() => setShowOnboarding(false)} />
+  );
+
   return (
     <div className="st-tab">
       <div className="st-grid">
 
         <div className="st-col">
-          {/* ── Appearance ── */}
           <section>
             <p className="st-section-label"><span>Appearance</span></p>
             <div className="st-card">
@@ -98,7 +100,6 @@ export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
             </div>
           </section>
 
-          {/* ── Planner ── */}
           <section>
             <p className="st-section-label"><span>Planner</span></p>
             <div className="st-card">
@@ -113,12 +114,12 @@ export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
               {showSubjects && (
                 <div className="st-subjects">
                   <div className="st-subjects-tabs">
-                    {namedStudents.map(name => (
+                    {students.map(s => (
                       <button
-                        key={name}
-                        className={`st-subjects-tab${activeStudent === name ? ' st-subjects-tab--active' : ''}`}
-                        onClick={() => setActiveStudent(name)}
-                      >{name}</button>
+                        key={s.studentId}
+                        className={`st-subjects-tab${activeStudent === s.name ? ' st-subjects-tab--active' : ''}`}
+                        onClick={() => setActiveStudent(s.name)}
+                      >{s.name}</button>
                     ))}
                   </div>
                   {activeSubjects.map(subj => (
@@ -128,15 +129,10 @@ export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
                     </div>
                   ))}
                   {addingSubject ? (
-                    <input
-                      className="st-input"
-                      value={newSubject}
-                      autoFocus
-                      placeholder="Subject name…"
+                    <input className="st-input" value={newSubject} autoFocus placeholder="Subject name…"
                       onChange={e => setNewSubject(e.target.value)}
-                      onBlur={commitNewSubject}
-                      onKeyDown={e => e.key === 'Enter' && commitNewSubject()}
-                    />
+                      onBlur={commitSubject}
+                      onKeyDown={e => e.key === 'Enter' && commitSubject()} />
                   ) : (
                     <button className="st-subjects-add" onClick={() => setAddingSubject(true)}>+ Add Subject</button>
                   )}
@@ -147,51 +143,75 @@ export default function SettingsTab({ user, colorMode, onToggleDarkMode }) {
         </div>
 
         <div className="st-col">
-          {/* ── Students ── */}
           <section>
             <p className="st-section-label"><span>Students</span></p>
             <div className="st-card">
-              {students.map((name, i) => (
-                <div key={i} className="st-row">
-                  <span className="st-row-icon st-row-icon--emoji">{STUDENT_EMOJI[name] ?? '🧒'}</span>
-                  {editingIdx === i ? (
-                    <input
-                      className="st-input st-input--inline"
-                      value={editingValue}
-                      autoFocus
-                      onChange={e => setEditingValue(e.target.value)}
-                      onBlur={() => commitEdit(i)}
-                      onKeyDown={e => e.key === 'Enter' && commitEdit(i)}
-                    />
-                  ) : confirmRemoveIdx === i ? (
-                    <>
-                      <span className="st-confirm-msg">Remove {name}?</span>
-                      <div className="st-confirm-actions">
-                        <button className="st-confirm-yes" onClick={() => handleRemoveConfirm(i)}>Remove</button>
-                        <button className="st-confirm-cancel" onClick={() => setConfirmRemoveIdx(null)}>Cancel</button>
+              {students.map(s => (
+                editStudent?.studentId === s.studentId ? (
+                  <div key={s.studentId} className="st-student-form">
+                    <input className="st-input" value={sName} onChange={e => setSName(e.target.value)} placeholder="Name" autoFocus />
+                    <input className="st-input" value={sEmoji} onChange={e => setSEmoji(e.target.value)} placeholder="😊" />
+                    <input className="st-input" value={sGrade} onChange={e => setSGrade(e.target.value)} placeholder="Grade (e.g. 3rd)" />
+                    {confirmId === s.studentId ? (
+                      <div className="st-confirm-row">
+                        <span className="st-confirm-msg">Remove {s.name}?</span>
+                        <div className="st-confirm-actions">
+                          <button className="st-confirm-yes" onClick={handleRemove}>Remove</button>
+                          <button className="st-confirm-cancel" onClick={() => setConfirmId(null)}>Cancel</button>
+                        </div>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <span className="st-row-title st-row-name">{name || <em>(unnamed)</em>}</span>
-                      <div className="st-row-actions">
-                        <button className="st-row-edit" onClick={() => startEdit(i, name)}>Edit</button>
-                        {canRemove && (
-                          <button className="st-row-remove" onClick={() => setConfirmRemoveIdx(i)} aria-label="Remove student">✕</button>
-                        )}
+                    ) : (
+                      <div className="st-form-actions">
+                        <button className="st-save-btn" onClick={handleSave} disabled={!sName.trim()}>Save</button>
+                        <button className="st-cancel-btn" onClick={closeForm}>Cancel</button>
+                        <button className="st-remove-btn" onClick={() => setConfirmId(s.studentId)}>Remove</button>
                       </div>
-                    </>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ) : (
+                  <div key={s.studentId} className="st-row">
+                    <span className="st-row-icon st-row-icon--emoji">{s.emoji || '🎓'}</span>
+                    <div className="st-row-body">
+                      <span className="st-row-title">{s.name}</span>
+                      {s.gradeLevel && <span className="st-row-sub">{s.gradeLevel}</span>}
+                    </div>
+                    <button className="st-row-edit" onClick={() => openEdit(s)}>Edit</button>
+                  </div>
+                )
               ))}
-              <button className="st-row st-row--add" onClick={addStudent}>
-                <span className="st-row-icon st-row-icon--add">+</span>
-                <span className="st-row-title st-row-title--add">Add Student</span>
+              {addOpen ? (
+                <div className="st-student-form">
+                  <input className="st-input" value={sName} onChange={e => setSName(e.target.value)} placeholder="Name" autoFocus />
+                  <input className="st-input" value={sEmoji} onChange={e => setSEmoji(e.target.value)} placeholder="😊" />
+                  <input className="st-input" value={sGrade} onChange={e => setSGrade(e.target.value)} placeholder="Grade (e.g. 3rd)" />
+                  <div className="st-form-actions">
+                    <button className="st-save-btn" onClick={handleAdd} disabled={!sName.trim()}>Add</button>
+                    <button className="st-cancel-btn" onClick={closeForm}>Cancel</button>
+                  </div>
+                </div>
+              ) : !editStudent && (
+                <button className="st-row st-row--add" onClick={openAdd}>
+                  <span className="st-row-icon st-row-icon--add">+</span>
+                  <span className="st-row-title st-row-title--add">Add Student</span>
+                </button>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <p className="st-section-label"><span>School Setup</span></p>
+            <div className="st-card">
+              <button className="st-row st-row--clickable" onClick={() => setShowOnboarding(true)}>
+                <span className="st-row-icon">🏫</span>
+                <div className="st-row-body">
+                  <span className="st-row-title">Edit School Info</span>
+                  <span className="st-row-sub">Change your school name and tagline</span>
+                </div>
+                <span className="st-chevron">›</span>
               </button>
             </div>
           </section>
 
-          {/* ── App ── */}
           <section>
             <p className="st-section-label"><span>App</span></p>
             <div className="st-card">
