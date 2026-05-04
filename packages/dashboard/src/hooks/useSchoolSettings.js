@@ -15,7 +15,7 @@ export function useSchoolSettings(uid) {
     const ref = doc(db, `users/${uid}/settings/school`);
     const unsub = onSnapshot(ref, snap => {
       const data = snap.data();
-      setSchoolName(data?.schoolName ?? 'My Homeschool');
+      setSchoolName(data?.name ?? 'My Homeschool');
       setTagline(data?.tagline ?? '');
       setLoading(false);
     });
