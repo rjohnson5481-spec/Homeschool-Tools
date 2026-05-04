@@ -5,7 +5,7 @@ import { db } from '@homeschool/shared';
 import { activitiesCol, activityDoc } from '../constants/academics.js';
 
 // Reads all activities for this user.
-// Returns: [{ id, student, name, startDate, endDate, ongoing, notes }, ...]
+// Returns: [{ id, studentId, name, startDate, endDate, ongoing, notes }, ...]
 // sorted by startDate descending.
 export async function getActivities(uid) {
   const snap = await getDocs(collection(db, activitiesCol(uid)));

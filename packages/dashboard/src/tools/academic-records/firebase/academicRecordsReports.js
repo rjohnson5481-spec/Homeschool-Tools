@@ -16,15 +16,15 @@ import {
 // ─── Report Notes ────────────────────────────────────────────────────────────
 
 // Reads all report notes for this user.
-// Returns: [{ id, student, quarterId, notes, updatedAt }, ...]
+// Returns: [{ id, studentId, quarterId, notes, updatedAt }, ...]
 export async function getReportNotes(uid) {
   const snap = await getDocs(collection(db, reportNotesCol(uid)));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 // Finds a report note for a specific student + quarter. Returns object or null.
-export async function getReportNote(uid, student, quarterId) {
-  const q = query(collection(db, reportNotesCol(uid)), where('student', '==', student), where('quarterId', '==', quarterId));
+export async function getReportNote(uid, studentId, quarterId) {
+  const q = query(collection(db, reportNotesCol(uid)), where('studentId', '==', studentId), where('quarterId', '==', quarterId));
   const snap = await getDocs(q);
   if (snap.empty) return null;
   const d = snap.docs[0];
@@ -32,14 +32,14 @@ export async function getReportNote(uid, student, quarterId) {
 }
 
 // Updates an existing report note.
-// data shape: { student, quarterId, notes }
+// data shape: { studentId, quarterId, notes }
 export function saveReportNote(uid, noteId, data) {
   const ref = doc(db, reportNoteDoc(uid, noteId));
   return setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 // Adds a new report note. Returns the new document id.
-// data shape: { student, quarterId, notes }
+// data shape: { studentId, quarterId, notes }
 export async function addReportNote(uid, data) {
   const ref = await addDoc(collection(db, reportNotesCol(uid)), {
     ...data,

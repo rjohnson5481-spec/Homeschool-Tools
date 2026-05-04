@@ -125,27 +125,27 @@ export function deleteCourse(uid, courseId) {
 // ─── Enrollments ──────────────────────────────────────────────────────────
 
 // Reads all enrollments for this user.
-// Returns: [{ id, courseId, student, yearId, notes, syncPlanner }, ...]
-// sorted by student ascending then courseId ascending.
+// Returns: [{ id, courseId, studentId, yearId, notes, syncPlanner }, ...]
+// sorted by studentId ascending then courseId ascending.
 export async function getEnrollments(uid) {
   const snap = await getDocs(collection(db, enrollmentsCol(uid)));
   const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   return rows.sort((a, b) => {
-    const s = (a.student ?? '').localeCompare(b.student ?? '');
+    const s = (a.studentId ?? '').localeCompare(b.studentId ?? '');
     if (s !== 0) return s;
     return (a.courseId ?? '').localeCompare(b.courseId ?? '');
   });
 }
 
 // Updates an existing enrollment.
-// data shape: { courseId, student, yearId, notes, syncPlanner, gradeLevel }
+// data shape: { courseId, studentId, yearId, notes, syncPlanner, gradeLevel }
 export function saveEnrollment(uid, enrollmentId, data) {
   const ref = doc(db, enrollmentDoc(uid, enrollmentId));
   return setDoc(ref, { ...data, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 // Adds a new enrollment. Returns the new document id.
-// data shape: { courseId, student, yearId, notes, syncPlanner, gradeLevel }
+// data shape: { courseId, studentId, yearId, notes, syncPlanner, gradeLevel }
 export async function addEnrollment(uid, data) {
   const ref = await addDoc(collection(db, enrollmentsCol(uid)), {
     ...data,
