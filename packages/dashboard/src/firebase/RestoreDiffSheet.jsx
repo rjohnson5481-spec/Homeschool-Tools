@@ -22,7 +22,7 @@ function formatDate(d) {
 }
 
 function itemKey(weekId, dayIndex, it) {
-  return `${weekId}|${dayIndex}|${it.student}|${it.subject}`;
+  return `${weekId}|${dayIndex}|${it.studentId}|${it.subject}`;
 }
 
 // Renders the per-subject row body (lesson text + tag). MATCH + DELETE read
@@ -195,7 +195,7 @@ function RestoreDiffSheetMobile({ uid, filename, diff, onClose }) {
                           <div className="rds-row-body">
                             <div className="rds-row-head">
                               <span className="rds-subject">{it.subject}</span>
-                              <span className="rds-student">{it.student}</span>
+                              <span className="rds-student">{it.studentId}</span>
                             </div>
                             <RowLines status={it.status} backup={it.backup} current={it.current} />
                           </div>

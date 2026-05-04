@@ -4,7 +4,7 @@ import { DAY_SHORT, getWeekDates, formatWeekLabel } from '../tools/planner/const
 import './RestoreDiffCalendar.css';
 
 function itemKey(weekId, dayIndex, it) {
-  return `${weekId}|${dayIndex}|${it.student}|${it.subject}`;
+  return `${weekId}|${dayIndex}|${it.studentId}|${it.subject}`;
 }
 
 function statusBadge(status) {
@@ -36,7 +36,7 @@ export default function RestoreDiffCalendar({ uid, filename, diff, onClose }) {
     const s = new Set();
     for (const weekId of Object.keys(diff)) {
       for (const diStr of Object.keys(diff[weekId])) {
-        for (const it of diff[weekId][diStr]) s.add(it.student);
+        for (const it of diff[weekId][diStr]) s.add(it.studentId);
       }
     }
     return [...s].sort();
@@ -79,7 +79,7 @@ export default function RestoreDiffCalendar({ uid, filename, diff, onClose }) {
         const dayIndex = Number(diStr);
         for (const it of days[diStr]) {
           if (it.status === 'MATCH') continue;
-          if (weekId === currentWeekId && it.student === activeStudent) curConflicts++;
+          if (weekId === currentWeekId && it.studentId === activeStudent) curConflicts++;
           const k = itemKey(weekId, dayIndex, it);
           if (checked[k]) sel++;
         }
@@ -154,7 +154,7 @@ export default function RestoreDiffCalendar({ uid, filename, diff, onClose }) {
 
       <div className="rdc-grid">
         {[0, 1, 2, 3, 4].map(di => {
-          const items = (daysForWeek[di] ?? []).filter(it => it.student === activeStudent);
+          const items = (daysForWeek[di] ?? []).filter(it => it.studentId === activeStudent);
           const date = weekDates[di];
           return (
             <div key={di} className="rdc-col">
@@ -182,7 +182,7 @@ export default function RestoreDiffCalendar({ uid, filename, diff, onClose }) {
                         <span className="rdc-subject">{it.subject}</span>
                         <span className={`rdc-badge ${badge.cls}`}>{badge.label}</span>
                       </div>
-                      <div className="rdc-student">{it.student}</div>
+                      <div className="rdc-student">{it.studentId}</div>
                       <div className="rdc-lesson">{displayLesson(it.status, it.backup, it.current) || <em>(blank)</em>}</div>
                       {it.status === 'CHANGED' && it.current?.lesson && (
                         <div className="rdc-lesson rdc-lesson--current">was: {it.current.lesson}</div>

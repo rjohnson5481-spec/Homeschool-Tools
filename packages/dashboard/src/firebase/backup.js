@@ -1,4 +1,4 @@
-import { collection, collectionGroup, doc, getDocs, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, collectionGroup, doc, getDocs, getDoc, setDoc, deleteDoc, orderBy, query } from 'firebase/firestore';
 import { db, auth } from '@homeschool/shared';
 
 async function readCol(path) {
@@ -12,7 +12,8 @@ async function readDoc(path) {
 
 export async function exportAllData(uid) {
   const base = `users/${uid}`;
-  const students = await readDoc(`${base}/settings/students`);
+  const studentsSnap = await getDocs(query(collection(db, `${base}/students`), orderBy('order', 'asc')));
+  const students = studentsSnap.docs.map(d => ({ studentId: d.id, ...d.data() }));
   const subjectPresets = await readCol(`${base}/subjectPresets`);
   const sickDays = await readCol(`${base}/sickDays`);
   const courses = await readCol(`${base}/courses`);
@@ -36,10 +37,10 @@ export async function exportAllData(uid) {
     if (!path.startsWith(`users/${uid}/weeks/`)) continue;
     const parts = path.split('/');
     const weekId = parts[3];
-    const student = parts[5];
+    const studentId = parts[5];
     const dayIndex = Number(parts[7]);
     const subject = parts[9];
-    weeks.push({ weekId, student, dayIndex, subject, ...subDoc.data() });
+    weeks.push({ weekId, studentId, dayIndex, subject, ...subDoc.data() });
   }
 
   return {
@@ -81,7 +82,15 @@ export async function importMerge(uid, backup) {
   const d = backup.data; const base = `users/${uid}`;
   let imported = 0, skipped = 0;
 
-  if (d.students) { (await writeIfMissing(`${base}/settings/students`, d.students)) ? imported++ : skipped++; }
+  if (d.students && !Array.isArray(d.students)) {
+    console.warn('importMerge: old names[] backup format detected — skipping settings/students');
+  } else {
+    for (const s of (d.students ?? [])) {
+      const { studentId, ...profile } = s;
+      if (!studentId) continue;
+      (await writeIfMissing(`${base}/students/${studentId}`, profile)) ? imported++ : skipped++;
+    }
+  }
   for (const sp of (d.subjectPresets ?? [])) { (await writeIfMissing(`${base}/subjectPresets/${sp._id}`, stripId(sp))) ? imported++ : skipped++; }
   for (const sd of (d.sickDays ?? [])) { (await writeIfMissing(`${base}/sickDays/${sd._id}`, stripId(sd))) ? imported++ : skipped++; }
   for (const c of (d.courses ?? [])) { (await writeIfMissing(`${base}/courses/${c._id}`, stripId(c))) ? imported++ : skipped++; }
@@ -96,9 +105,10 @@ export async function importMerge(uid, backup) {
     for (const b of (y.breaks ?? [])) { (await writeIfMissing(`${base}/schoolYears/${y._id}/breaks/${b._id}`, stripId(b))) ? imported++ : skipped++; }
   }
   for (const w of (d.weeks ?? [])) {
-    const { weekId, student, dayIndex, subject, ...cell } = w;
+    const { weekId, studentId, dayIndex, subject, ...cell } = w;
+    if (!studentId) continue;
     cell.uid = uid;
-    const path = `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`;
+    const path = `${base}/weeks/${weekId}/students/${studentId}/days/${dayIndex}/subjects/${subject}`;
     (await writeIfMissing(path, cell)) ? imported++ : skipped++;
   }
   return { imported, skipped };
@@ -135,7 +145,15 @@ export async function importFullRestore(uid, backup) {
   );
 
   const d = backup.data; let restored = 0;
-  if (d.students) { await setDoc(doc(db, `${base}/settings/students`), d.students); restored++; }
+  if (d.students && !Array.isArray(d.students)) {
+    console.warn('importFullRestore: old names[] backup format detected — skipping settings/students');
+  } else {
+    for (const s of (d.students ?? [])) {
+      const { studentId, ...profile } = s;
+      if (!studentId) continue;
+      await setDoc(doc(db, `${base}/students/${studentId}`), profile); restored++;
+    }
+  }
   for (const sp of (d.subjectPresets ?? [])) { await setDoc(doc(db, `${base}/subjectPresets/${sp._id}`), stripId(sp)); restored++; }
   for (const sd of (d.sickDays ?? [])) { await setDoc(doc(db, `${base}/sickDays/${sd._id}`), stripId(sd)); restored++; }
   for (const c of (d.courses ?? [])) { await setDoc(doc(db, `${base}/courses/${c._id}`), stripId(c)); restored++; }
@@ -151,9 +169,10 @@ export async function importFullRestore(uid, backup) {
     for (const b of (breaks ?? [])) { await setDoc(doc(db, `${base}/schoolYears/${y._id}/breaks/${b._id}`), stripId(b)); restored++; }
   }
   for (const w of (d.weeks ?? [])) {
-    const { weekId, student, dayIndex, subject, ...cell } = w;
+    const { weekId, studentId, dayIndex, subject, ...cell } = w;
+    if (!studentId) continue;
     cell.uid = uid;
-    await setDoc(doc(db, `${base}/weeks/${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`), cell); restored++;
+    await setDoc(doc(db, `${base}/weeks/${weekId}/students/${studentId}/days/${dayIndex}/subjects/${subject}`), cell); restored++;
   }
   return { restored };
 }
@@ -181,8 +200,9 @@ export async function generateRestoreDiff(uid, backup) {
   const diff = {};
   const backupPaths = new Set();
   for (const w of (backup?.data?.weeks ?? [])) {
-    const { weekId, student, dayIndex, subject, ...cell } = w;
-    const path = `${weeksPrefix}${weekId}/students/${student}/days/${dayIndex}/subjects/${subject}`;
+    const { weekId, studentId, dayIndex, subject, ...cell } = w;
+    if (!studentId) continue;
+    const path = `${weeksPrefix}${weekId}/students/${studentId}/days/${dayIndex}/subjects/${subject}`;
     backupPaths.add(path);
     const current = live[path] ?? null;
     let status;
@@ -191,7 +211,7 @@ export async function generateRestoreDiff(uid, backup) {
     else status = 'CHANGED';
     (diff[weekId] ??= {})[dayIndex] ??= [];
     diff[weekId][dayIndex].push({
-      subject, student, status,
+      subject, studentId, status,
       backup: cell, current,
       checked: status !== 'MATCH',
     });
@@ -201,12 +221,12 @@ export async function generateRestoreDiff(uid, backup) {
     if (backupPaths.has(path)) continue;
     const parts = path.split('/');
     const weekId = parts[3];
-    const student = parts[5];
+    const studentId = parts[5];
     const dayIndex = Number(parts[7]);
     const subject = parts[9];
     (diff[weekId] ??= {})[dayIndex] ??= [];
     diff[weekId][dayIndex].push({
-      subject, student, status: 'DELETE',
+      subject, studentId, status: 'DELETE',
       backup: null, current: live[path],
       checked: true,
     });
@@ -225,7 +245,7 @@ export async function applyRestoreDiff(uid, diff) {
     for (const [dayIndex, items] of Object.entries(days)) {
       for (const item of items) {
         if (!item.checked || item.status === 'MATCH') continue;
-        const path = `${weeksPrefix}${weekId}/students/${item.student}/days/${dayIndex}/subjects/${item.subject}`;
+        const path = `${weeksPrefix}${weekId}/students/${item.studentId}/days/${dayIndex}/subjects/${item.subject}`;
         if (item.status === 'DELETE') ops.push(deleteDoc(doc(db, path)));
         else { item.backup.uid = uid; ops.push(setDoc(doc(db, path), item.backup)); }
       }
