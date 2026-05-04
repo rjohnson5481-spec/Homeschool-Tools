@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { doc, onSnapshot, deleteField } from 'firebase/firestore';
-import { db } from '@homeschool/shared';
+import { deleteField } from 'firebase/firestore';
 import { subscribeCompliance, saveCompliance } from '../../../firebase/compliance.js';
 import { COMPLIANCE_DEFAULTS } from '../../../constants/compliance.js';
 import './ComplianceSheet.css';
@@ -13,22 +12,15 @@ const SAVE_DEBOUNCE_MS = 500;
 // Every save also includes deleteField() for the deprecated top-level
 // requiredDays / requiredHours — the lazy contract half of the Session 4.1
 // expand-then-contract migration. Idempotent once the fields are gone.
-export default function ComplianceSheet({ open, onClose, uid }) {
+// students prop: [{ studentId, name, emoji }] — passed from AcademicRecordsTab via useStudents
+export default function ComplianceSheet({ open, onClose, uid, students = [] }) {
   const [settings, setSettings]       = useState(COMPLIANCE_DEFAULTS);
-  const [students, setStudents]       = useState([]);
   const [pendingPatch, setPendingPatch] = useState(null);
   const saveTimer                     = useRef(null);
 
   useEffect(() => {
     if (!uid) return;
     return subscribeCompliance(uid, setSettings);
-  }, [uid]);
-
-  useEffect(() => {
-    if (!uid) return;
-    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
-      setStudents(snap.exists() ? (snap.data().names ?? []) : []);
-    });
   }, [uid]);
 
   // Debounced save. Each handler accumulates into pendingPatch; the timer
@@ -58,27 +50,27 @@ export default function ComplianceSheet({ open, onClose, uid }) {
     setSettings(prev => ({ ...prev, [key]: value }));
     queueSave({ [key]: value });
   }
-  function handleRequiredDays(name, value) {
+  function handleRequiredDays(studentId, value) {
     const num = parseInt(value, 10) || 0;
     setSettings(prev => ({
       ...prev,
       requiredByStudent: {
         ...(prev.requiredByStudent ?? {}),
-        [name]: { ...(prev.requiredByStudent?.[name] ?? {}), requiredDays: num },
+        [studentId]: { ...(prev.requiredByStudent?.[studentId] ?? {}), requiredDays: num },
       },
     }));
-    queueSave({ [`requiredByStudent.${name}.requiredDays`]: num });
+    queueSave({ [`requiredByStudent.${studentId}.requiredDays`]: num });
   }
-  function handleRequiredHours(name, value) {
+  function handleRequiredHours(studentId, value) {
     const num = parseFloat(value) || 0;
     setSettings(prev => ({
       ...prev,
       requiredByStudent: {
         ...(prev.requiredByStudent ?? {}),
-        [name]: { ...(prev.requiredByStudent?.[name] ?? {}), requiredHours: num },
+        [studentId]: { ...(prev.requiredByStudent?.[studentId] ?? {}), requiredHours: num },
       },
     }));
-    queueSave({ [`requiredByStudent.${name}.requiredHours`]: num });
+    queueSave({ [`requiredByStudent.${studentId}.requiredHours`]: num });
   }
 
   if (!open) return null;
@@ -122,12 +114,12 @@ export default function ComplianceSheet({ open, onClose, uid }) {
             {settings.daysEnabled && !noStudents && (
               <div className="sc-fields">
                 <div className="sc-group-label">Required days per school year</div>
-                {students.map(name => (
-                  <div key={name} className="sc-student-row">
-                    <span className="sc-student-name">{name}</span>
+                {students.map(s => (
+                  <div key={s.studentId} className="sc-student-row">
+                    <span className="sc-student-name">{s.name}</span>
                     <input type="number" min="0" step="1" className="sc-input"
-                      value={settings.requiredByStudent?.[name]?.requiredDays ?? 0}
-                      onChange={e => handleRequiredDays(name, e.target.value)} />
+                      value={settings.requiredByStudent?.[s.studentId]?.requiredDays ?? 0}
+                      onChange={e => handleRequiredDays(s.studentId, e.target.value)} />
                   </div>
                 ))}
                 <label className="sc-field">
@@ -160,12 +152,12 @@ export default function ComplianceSheet({ open, onClose, uid }) {
             {settings.hoursEnabled && !noStudents && (
               <div className="sc-fields">
                 <div className="sc-group-label">Required hours per school year</div>
-                {students.map(name => (
-                  <div key={name} className="sc-student-row">
-                    <span className="sc-student-name">{name}</span>
+                {students.map(s => (
+                  <div key={s.studentId} className="sc-student-row">
+                    <span className="sc-student-name">{s.name}</span>
                     <input type="number" min="0" step="0.5" className="sc-input"
-                      value={settings.requiredByStudent?.[name]?.requiredHours ?? 0}
-                      onChange={e => handleRequiredHours(name, e.target.value)} />
+                      value={settings.requiredByStudent?.[s.studentId]?.requiredHours ?? 0}
+                      onChange={e => handleRequiredHours(s.studentId, e.target.value)} />
                   </div>
                 ))}
                 <label className="sc-field">

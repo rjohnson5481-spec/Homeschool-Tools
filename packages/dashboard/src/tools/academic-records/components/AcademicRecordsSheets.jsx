@@ -68,7 +68,7 @@ export default function AcademicRecordsSheets(p) {
       <CurriculumImportSheet open={p.curriculumImportOpen} onClose={p.closeCurriculumImport}
         onImport={p.handleCurriculumImport} courses={p.courses} />
       <ComplianceSheet open={p.complianceSheetOpen} onClose={p.closeCompliance}
-        uid={p.uid} />
+        uid={p.uid} students={p.students} />
     </>
   );
 }
