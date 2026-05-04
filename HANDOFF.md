@@ -1,26 +1,32 @@
-# HANDOFF — v0.36.1 bugfix: compliance save on fresh account
+# HANDOFF — v0.37.0 Block 2 pre-migration cleanup
 
 ## What was completed this session
-- Fixed FirebaseError "No document to update" thrown when toggling compliance
-  on for the first time on a fresh account.
-- Root cause: saveCompliance used updateDoc, which requires the document to
-  already exist. Fresh accounts have no settings/compliance doc yet.
-- Fix: changed to setDoc + { merge: true } — creates on first save, merges
-  on subsequent saves. Identical behavior for existing accounts.
-- Removed updateDoc from the firebase/firestore import (now unused).
-- Verified all current call sites pass flat key-value pairs + deleteField()
-  sentinels only — both are fully supported by setDoc+merge.
-- Version bumped to v0.36.1.
 
-## Phase 4 Block 1 prerequisite cluster — ALL COMPLETE (from v0.36.0)
-1. ✅ uid field on all subject cell writes (v0.35.0)
-2. ✅ R2 rule uid-scoped (v0.36.0)
-3. ✅ useComplianceSummary query uid-filtered (v0.36.0)
+### Change 1 — Split academicRecords.js
+- Extracted 9 functions into new `academicRecordsReports.js`:
+  getReportNotes, getReportNote, saveReportNote, addReportNote,
+  getSavedReports, saveSavedReport, deleteSavedReport,
+  uploadReportPDF, deleteReportPDF.
+- Removed firebase/storage imports and reportNotes/savedReports
+  constants from academicRecords.js. Removed unused getDoc import.
+- Updated useReportNotes.js and useSavedReports.js to import from
+  academicRecordsReports.js. All other hooks unchanged.
+- academicRecords.js: 287 → 211 lines (89 lines below hard limit).
+- academicRecordsReports.js: new, 88 lines.
+- Build passes clean (382 modules).
 
-## Action still required: Firestore composite index
-Composite index on subjects (uid ASC, done ASC) must be created in Firebase
-console before compliance day counting works. Firestore logs the creation link
-on first run with daysEnabled on. Index build takes ~1 minute.
+### Change 2 — Fix inline path in useHomeSummary.js
+- Line 49 previously built the subjects path as an inline string literal.
+  Now uses daySubjectsPath(uid, weekId, name, dayIndex) from
+  tools/planner/constants/firestore.js.
+- Added import for daySubjectsPath. No other logic changed.
+
+## Note on academicRecords.js line count
+Target was "under 200." Actual result: 211. After extracting all report/
+notes/PDF functions, the remaining school-years/quarters/breaks/courses/
+enrollments/grades content is inherently 211 lines. No further reduction
+is possible without removing substantive comments or logic. 89 lines of
+headroom below the 300-line hard limit is the safety goal — that is met.
 
 ## What is broken or incomplete
 - Composite index on subjects (uid ASC, done ASC) not yet created
@@ -28,14 +34,22 @@ on first run with daysEnabled on. Index build takes ~1 minute.
 - CalendarWeekView.jsx at 252 lines (watch item, not urgent)
 - Desktop hours footer first-load timing issue (minor — deferred)
 
+## Phase 4 Block 1 prerequisite cluster — ALL COMPLETE (from v0.36.0)
+1. ✅ uid field on all subject cell writes (v0.35.0)
+2. ✅ R2 rule uid-scoped (v0.36.0)
+3. ✅ useComplianceSummary query uid-filtered (v0.36.0)
+
 ## Key files changed this session
-- packages/dashboard/src/firebase/compliance.js (lines 6, 23–30)
-- packages/dashboard/package.json → v0.36.1
-- packages/shared/package.json → v0.36.1
+- packages/dashboard/src/tools/academic-records/firebase/academicRecords.js
+- packages/dashboard/src/tools/academic-records/firebase/academicRecordsReports.js (new)
+- packages/dashboard/src/tools/academic-records/hooks/useReportNotes.js
+- packages/dashboard/src/tools/academic-records/hooks/useSavedReports.js
+- packages/dashboard/src/hooks/useHomeSummary.js
+- packages/dashboard/package.json → v0.37.0
+- packages/shared/package.json → v0.37.0
 - CLAUDE.md → version line
 
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
 2. Verify on main, pull latest
-3. Confirm Rob has created the composite index in Firebase console
-4. Phase 4 broader scope work or Phase 5 — confirm with Rob
+3. Confirm with Rob what Block 2 migration session addresses next

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '@homeschool/shared';
 import { collection, doc, getDocs, onSnapshot } from 'firebase/firestore';
 import { getMondayOf, toWeekId, getTodayDayIndex } from '../tools/planner/constants/days.js';
+import { daySubjectsPath } from '../tools/planner/constants/firestore.js';
 
 const REQUIRED_DAYS = 175;
 const DAY_NAMES = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
@@ -46,7 +47,7 @@ export function useHomeSummary(uid) {
   useEffect(() => {
     if (!uid || !students.length) return;
     const unsubs = students.map(name => {
-      const path = `users/${uid}/weeks/${weekId}/students/${name}/days/${dayIndex}/subjects`;
+      const path = daySubjectsPath(uid, weekId, name, dayIndex);
       return onSnapshot(collection(db, path), snap => {
         const lessons = [];
         snap.docs.forEach(d => {

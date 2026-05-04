@@ -3,7 +3,7 @@ import {
   getReportNotes as fbGetReportNotes,
   saveReportNote as fbSaveReportNote,
   addReportNote as fbAddReportNote,
-} from '../firebase/academicRecords.js';
+} from '../firebase/academicRecordsReports.js';
 
 // Manages report notes for one user.
 // Loads all notes on mount; reloads after every save.

@@ -7,7 +7,7 @@ import {
   deleteSavedReport as fbDeleteSavedReport,
   uploadReportPDF as fbUploadPDF,
   deleteReportPDF as fbDeletePDF,
-} from '../firebase/academicRecords.js';
+} from '../firebase/academicRecordsReports.js';
 import { savedReportDoc } from '../constants/academics.js';
 
 export function useSavedReports(uid) {
