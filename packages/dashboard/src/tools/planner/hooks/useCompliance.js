@@ -14,7 +14,7 @@ const SAVE_DEBOUNCE_MS = 500;
 // day are not exposed). saveHours writes 500ms after the last call for a
 // given date; flushPendingSave drains pending writes immediately (used
 // on day-change and unmount).
-export function useCompliance({ uid, weekDates, student }) {
+export function useCompliance({ uid, weekDates, studentId }) {
   const [settings, setSettings]       = useState(COMPLIANCE_DEFAULTS);
   const [hoursByDate, setHoursByDate] = useState({});
   const pendingSaves = useRef({}); // { [dateString]: { value, timeoutId } }
@@ -27,31 +27,31 @@ export function useCompliance({ uid, weekDates, student }) {
   const startDate = weekDates?.[0] ? toWeekId(weekDates[0]) : null;
   const endDate   = weekDates?.[4] ? toWeekId(weekDates[4]) : null;
   useEffect(() => {
-    if (!uid || !startDate || !endDate || !student) return;
+    if (!uid || !startDate || !endDate || !studentId) return;
     return subscribeSchoolDays(uid, startDate, endDate, docs => {
-      setHoursByDate(Object.fromEntries(docs.map(d => [d._id, d.hoursByStudent?.[student] ?? 0])));
+      setHoursByDate(Object.fromEntries(docs.map(d => [d._id, d.hoursByStudent?.[studentId] ?? 0])));
     });
-  }, [uid, startDate, endDate, student]);
+  }, [uid, startDate, endDate, studentId]);
 
   const flushPendingSave = useCallback(() => {
     for (const [d, e] of Object.entries(pendingSaves.current)) {
       clearTimeout(e.timeoutId);
-      saveSchoolDayHours(uid, d, student, e.value);
+      saveSchoolDayHours(uid, d, studentId, e.value);
     }
     pendingSaves.current = {};
-  }, [uid, student]);
+  }, [uid, studentId]);
 
   const saveHours = useCallback((dateString, hours) => {
     if (hours === '' || hours === null || hours === undefined) return;
-    if (!student) return;
+    if (!studentId) return;
     const existing = pendingSaves.current[dateString];
     if (existing) clearTimeout(existing.timeoutId);
     const timeoutId = setTimeout(() => {
-      saveSchoolDayHours(uid, dateString, student, hours);
+      saveSchoolDayHours(uid, dateString, studentId, hours);
       delete pendingSaves.current[dateString];
     }, SAVE_DEBOUNCE_MS);
     pendingSaves.current[dateString] = { value: hours, timeoutId };
-  }, [uid, student]);
+  }, [uid, studentId]);
 
   useEffect(() => () => flushPendingSave(), [flushPendingSave]);
 

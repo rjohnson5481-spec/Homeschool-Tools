@@ -32,10 +32,10 @@ export function saveCompliance(uid, partial) {
 // Writes hours for a single student on a single date. setDoc + merge:true
 // creates the doc if missing and merges the nested hoursByStudent map so
 // other students' hours on the same day are preserved.
-export function saveSchoolDayHours(uid, dateString, student, hours) {
+export function saveSchoolDayHours(uid, dateString, studentId, hours) {
   return setDoc(
     doc(db, schoolDayDocPath(uid, dateString)),
-    { hoursByStudent: { [student]: hours } },
+    { hoursByStudent: { [studentId]: hours } },
     { merge: true },
   );
 }
