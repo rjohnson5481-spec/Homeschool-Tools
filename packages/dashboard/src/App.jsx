@@ -25,6 +25,15 @@ export default function App() {
   const { schoolName, tagline, loading: schoolSettingsLoading } = useSchoolSettings(user?.uid);
   const { subjectsByStudent } = useSettings(user?.uid, plannerStudent);
   const cachedHasStudents = localStorage.getItem(HAS_STUDENTS_KEY) === 'true';
+  console.log('[Gate]', {
+    cachedHasStudents,
+    HAS_STUDENTS_KEY,
+    raw: localStorage.getItem(HAS_STUDENTS_KEY),
+    studentsLength: students.length,
+    initialLoadComplete,
+    loading,
+    hasUser: !!user
+  });
   useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0].studentId); }, [students, plannerStudent]);
   // Sync localStorage flag when Firestore confirms student list.
   useEffect(() => {
