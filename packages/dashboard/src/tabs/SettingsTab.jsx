@@ -11,7 +11,7 @@ import DataBackupSection from './DataBackupSection.jsx';
 
 // Props: user, students ([{ studentId, name, emoji, gradeLevel, order }]),
 //        colorMode, onToggleDarkMode
-export default function SettingsTab({ user, students, colorMode, onToggleDarkMode }) {
+export default function SettingsTab({ user, students, colorMode, onToggleDarkMode, schoolName }) {
   const uid = user?.uid;
   const { activeStudent, setActiveStudent, activeSubjects, saveSubjects } = useSettings(uid);
   const isDark = colorMode === 'dark';
@@ -238,7 +238,7 @@ export default function SettingsTab({ user, students, colorMode, onToggleDarkMod
       </div>
 
       <div className="st-version">
-        <div className="st-version-name">Iron &amp; Light Johnson Academy</div>
+        <div className="st-version-name">{schoolName ?? 'My Homeschool'}</div>
         <div className="st-version-line">v{version} · homeschool.grasphislove.com</div>
       </div>
     </div>

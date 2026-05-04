@@ -56,7 +56,8 @@ export default function AcademicRecordsSheets(p) {
         activeSchoolYear={p.activeSchoolYear} selectedQuarterId={p.selectedQuarterId}
         enrollments={p.enrollments} courses={p.courses} grades={p.grades}
         attendanceDays={p.attendanceDays} reportNotes={p.reportNotes}
-        saveNote={p.saveNote} activities={p.activities} />
+        saveNote={p.saveNote} activities={p.activities}
+        schoolName={p.schoolName} tagline={p.tagline} />
       <SavedReportCardsSheet open={p.savedReportsOpen} onClose={p.closeSavedReports}
         savedReports={p.savedReports} loading={p.reportsLoading} onDelete={p.removeReport}
         students={p.students} />

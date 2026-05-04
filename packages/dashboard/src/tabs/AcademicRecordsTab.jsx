@@ -9,6 +9,7 @@ import { useReportNotes }     from '../tools/academic-records/hooks/useReportNot
 import { useSavedReports }    from '../tools/academic-records/hooks/useSavedReports.js';
 import { useActivities }      from '../tools/academic-records/hooks/useActivities.js';
 import { useStudents }          from '../hooks/useStudents.js';
+import { useSchoolSettings }    from '../hooks/useSchoolSettings.js';
 import { useComplianceSummary } from '../hooks/useComplianceSummary.js';
 import RecordsMainView        from '../tools/academic-records/components/RecordsMainView.jsx';
 import AcademicRecordsSheets  from '../tools/academic-records/components/AcademicRecordsSheets.jsx';
@@ -19,6 +20,7 @@ export default function AcademicRecordsTab() {
   const uid = user?.uid;
 
   const { students } = useStudents(uid);
+  const { schoolName, tagline } = useSchoolSettings(uid);
 
   const { courses, loading, error, addCourse, updateCourse, removeCourse } = useCourses(uid);
   const { enrollments, loading: enrollmentsLoading, error: enrollmentsError, addEnrollment, updateEnrollment, removeEnrollment } = useEnrollments(uid, courses);
@@ -186,6 +188,7 @@ export default function AcademicRecordsTab() {
         complianceSummary={complianceSummary}
         reportCardOpen={reportCardOpen} closeReportCard={() => setReportCardOpen(false)}
         saveReport={saveReport} reportNotes={reportNotes} saveNote={saveNote} activities={activities}
+        schoolName={schoolName} tagline={tagline}
         savedReportsOpen={savedReportsOpen} closeSavedReports={() => setSavedReportsOpen(false)}
         savedReports={savedReports} reportsLoading={reportsLoading} removeReport={removeReport}
         activitiesSheetOpen={activitiesSheetOpen} closeActivitiesSheets={closeActivitiesSheets}

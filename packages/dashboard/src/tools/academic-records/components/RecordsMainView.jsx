@@ -57,7 +57,7 @@ export default function RecordsMainView({
     : attendanceDays.attended;
   const attendanceRequired = useCompliance
     ? (complianceSummary.requiredByStudent?.[selectedStudent]?.requiredDays ?? 0)
-    : 175;
+    : 0;
 
   return (
     <>

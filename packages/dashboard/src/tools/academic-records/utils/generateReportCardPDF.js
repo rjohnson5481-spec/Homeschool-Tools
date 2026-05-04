@@ -23,6 +23,7 @@ export async function generateReportCardPDF(config) {
     student, gradeLevel, periodLabel, yearLabel, isAnnual,
     studentEnrollments, courseById, grades, quarters,
     attendanceDays, includeGrades, includeAttendance, includeNotes, includeSignature, notes,
+    schoolName, tagline,
   } = config;
 
   const doc = await PDFDocument.create();
@@ -35,11 +36,12 @@ export async function generateReportCardPDF(config) {
   // Header block
   page.drawRectangle({ x: 0, y: H - 80, width: W, height: 80, color: INK });
   y = H - 28;
-  const title = 'IRON & LIGHT JOHNSON ACADEMY';
+  const title = schoolName ?? 'My Homeschool';
   page.drawText(title, { x: (W - fontB.widthOfTextAtSize(title, 14)) / 2, y, font: fontB, size: 14, color: WHITE });
   y -= 14;
-  const tag = 'Faith · Knowledge · Strength';
-  page.drawText(tag, { x: (W - fontR.widthOfTextAtSize(tag, 9)) / 2, y, font: fontR, size: 9, color: rgb(1, 1, 1) });
+  if (tagline) {
+    page.drawText(tagline, { x: (W - fontR.widthOfTextAtSize(tagline, 9)) / 2, y, font: fontR, size: 9, color: rgb(1, 1, 1) });
+  }
   const rc = 'Report / Transcript';
   page.drawText(rc, { x: W - M - fontB.widthOfTextAtSize(rc, 11), y: H - 28, font: fontB, size: 11, color: GOLD });
   page.drawText(periodLabel, { x: W - M - fontR.widthOfTextAtSize(periodLabel, 9), y: H - 42, font: fontR, size: 9, color: GOLD });
@@ -159,7 +161,7 @@ export async function generateReportCardPDF(config) {
   }
 
   // Footer
-  const footer = 'Iron & Light Johnson Academy · homeschool.grasphislove.com';
+  const footer = schoolName ?? 'My Homeschool';
   page.drawText(footer, { x: (W - fontR.widthOfTextAtSize(footer, 8)) / 2, y: 24, font: fontR, size: 8, color: GRAY });
 
   return doc.save();

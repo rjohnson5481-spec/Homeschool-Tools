@@ -17,6 +17,7 @@ const TABS = [
 export default function BottomNav({
   activeTab, onTabChange,
   students, activeStudent, onStudentChange,
+  schoolName, tagline,
 }) {
   const showStudents = activeTab === 'planner' && (students?.length ?? 0) > 0;
 
@@ -27,11 +28,8 @@ export default function BottomNav({
       <div className="bn-brand">
         <img src={logo} alt="ILA" className="bn-brand-logo" />
         <div className="bn-brand-text">
-          <div className="bn-brand-name">
-            IRON & <span className="bn-brand-accent">LIGHT</span>
-          </div>
-          <div className="bn-brand-academy">JOHNSON ACADEMY</div>
-          <div className="bn-brand-tagline">Faith · Knowledge · Strength</div>
+          <div className="bn-brand-name">{schoolName ?? 'My Homeschool'}</div>
+          {tagline && <div className="bn-brand-tagline">{tagline}</div>}
         </div>
       </div>
 

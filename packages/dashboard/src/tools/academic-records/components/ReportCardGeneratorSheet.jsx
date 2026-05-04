@@ -11,6 +11,7 @@ function todayFormatted() {
 export default function ReportCardGeneratorSheet({
   open, onClose, onSaveReport, student, students, activeSchoolYear, selectedQuarterId,
   enrollments, courses, grades, attendanceDays, reportNotes, saveNote, activities,
+  schoolName, tagline,
 }) {
   const [localStudentId, setLocalStudentId] = useState(student ?? (students ?? [])[0]?.studentId ?? '');
   const [localQuarter, setLocalQuarter]     = useState(selectedQuarterId);
@@ -81,6 +82,7 @@ export default function ReportCardGeneratorSheet({
         courseById, grades, quarters, attendanceDays,
         includeGrades, includeAttendance: includeAttend, includeNotes, includeSignature: includeSig,
         includeActivities: includeActs, activitiesForStudent: studentActs, notes,
+        schoolName: schoolName ?? 'My Homeschool', tagline: tagline ?? '',
       });
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
@@ -142,8 +144,8 @@ export default function ReportCardGeneratorSheet({
           <p className="rcg-section-label">Preview</p>
           <div className="rcg-preview-card">
             <div className="rcg-preview-header">
-              <div className="rcg-preview-school">IRON & LIGHT<br />JOHNSON ACADEMY</div>
-              <div className="rcg-preview-tagline">Faith · Knowledge · Strength</div>
+              <div className="rcg-preview-school">{schoolName ?? 'My Homeschool'}</div>
+              {(tagline ?? '') && <div className="rcg-preview-tagline">{tagline}</div>}
               <div className="rcg-preview-type">Report / Transcript — {periodLabel}</div>
             </div>
             <div className="rcg-preview-student">
@@ -196,7 +198,7 @@ export default function ReportCardGeneratorSheet({
               </div>
             )}
             <div className="rcg-preview-footer">
-              <span>Iron & Light Johnson Academy</span>
+              <span>{schoolName ?? 'My Homeschool'}</span>
               {includeSig && <span className="rcg-sig-line">Signature _______________</span>}
             </div>
           </div>

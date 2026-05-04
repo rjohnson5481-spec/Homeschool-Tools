@@ -8,9 +8,10 @@ import HomeTab             from './tabs/HomeTab';
 import PlannerTab          from './tabs/PlannerTab';
 import AcademicRecordsTab  from './tabs/AcademicRecordsTab';
 import SettingsTab         from './tabs/SettingsTab';
-import { useSettings }     from './tools/planner/hooks/useSettings.js';
-import { useStudents }     from './hooks/useStudents.js';
-import { useDarkMode }     from './hooks/useDarkMode.js';
+import { useSettings }       from './tools/planner/hooks/useSettings.js';
+import { useStudents }       from './hooks/useStudents.js';
+import { useSchoolSettings } from './hooks/useSchoolSettings.js';
+import { useDarkMode }       from './hooks/useDarkMode.js';
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -19,6 +20,7 @@ export default function App() {
   // can show a student selector when the planner tab is active.
   const [plannerStudent, setPlannerStudent] = useState('');
   const { students, loading: studentsLoading } = useStudents(user?.uid);
+  const { schoolName, tagline, loading: schoolSettingsLoading } = useSchoolSettings(user?.uid);
   const { subjectsByStudent } = useSettings(user?.uid, plannerStudent);
   useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0].studentId); }, [students, plannerStudent]);
   // Dark-mode state lives at the shell so the Settings tab (and the
@@ -31,7 +33,7 @@ export default function App() {
   if (loading) return null;
   if (!user)   return <SignIn />;
 
-  if (studentsLoading) return (
+  if (studentsLoading || schoolSettingsLoading) return (
     <div className="app-loading">
       <img src={logo} alt="ILA" />
       <div className="app-loading-dots">
@@ -47,7 +49,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="shell-content">
-        {activeTab === 'home'     && <HomeTab />}
+        {activeTab === 'home'     && <HomeTab schoolName={schoolName} />}
         {activeTab === 'planner'  && (
           <PlannerTab
             student={plannerStudent}
@@ -63,6 +65,7 @@ export default function App() {
             students={students}
             colorMode={colorMode}
             onToggleDarkMode={toggleDarkMode}
+            schoolName={schoolName}
           />
         )}
       </div>
@@ -72,6 +75,8 @@ export default function App() {
         students={students}
         activeStudent={plannerStudent}
         onStudentChange={setPlannerStudent}
+        schoolName={schoolName}
+        tagline={tagline}
       />
     </div>
   );

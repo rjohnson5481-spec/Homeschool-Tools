@@ -4,7 +4,7 @@ import { collection, getDocs, onSnapshot, orderBy, query } from 'firebase/firest
 import { getMondayOf, toWeekId, getTodayDayIndex } from '../tools/planner/constants/days.js';
 import { daySubjectsPath } from '../tools/planner/constants/firestore.js';
 
-const REQUIRED_DAYS = 175;
+const REQUIRED_DAYS = 0;
 const DAY_NAMES = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
 const MONTH_NAMES = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 

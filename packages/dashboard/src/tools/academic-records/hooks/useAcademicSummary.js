@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 
-const REQUIRED_DAYS = 175;
+const REQUIRED_DAYS = 0;
 
 function parseLocalDate(s) {
   if (!s) return null;

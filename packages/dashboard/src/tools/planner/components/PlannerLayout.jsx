@@ -14,6 +14,7 @@ import { useMultiSelect } from '../hooks/useMultiSelect.js';
 import { usePlannerHelpers } from '../hooks/usePlannerHelpers.js';
 import { useCellToggles } from '../hooks/useCellToggles.js';
 import { useCompliance } from '../hooks/useCompliance.js';
+import { useSchoolSettings } from '../../../hooks/useSchoolSettings.js';
 import { getMondayOf, toWeekId, formatWeekLabel, DAY_NAMES } from '../constants/days.js';
 import './PlannerLayout.css';
 
@@ -101,6 +102,7 @@ export default function PlannerLayout({
     useCellToggles({ user, weekId, student, day, dayData, updateCell });
 
   const compliance = useCompliance({ uid: user?.uid, weekDates, student });
+  const { schoolName, tagline } = useSchoolSettings(user?.uid);
 
   return (
     <div className={`planner${isDesktop ? ' cwv-active' : ''}`}>
@@ -114,6 +116,8 @@ export default function PlannerLayout({
         students={students}
         onUpload={() => setShowUpload(true)}
         onCalendar={() => setShowMonthPicker(true)}
+        schoolName={schoolName}
+        tagline={tagline}
       />
 
       <div className="planner-body">

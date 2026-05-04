@@ -8,7 +8,7 @@ export default function StudentDetailSheet({
 
   const totalLessons = (lessons ?? []).length;
   const doneLessons  = (lessons ?? []).filter(l => l.done).length;
-  const att = attendance ?? { attended: 0, required: 175, sick: 0, breakDays: 0 };
+  const att = attendance ?? { attended: 0, required: 0, sick: 0, breakDays: 0 };
   const attPct = att.required > 0 ? Math.min(100, Math.round((att.attended / att.required) * 100)) : 0;
 
   return (

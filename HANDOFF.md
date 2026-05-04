@@ -1,60 +1,45 @@
-# HANDOFF — v0.42.4 Activities + Enrollment display and save fixes complete
+# HANDOFF — v0.43.0
 
-## Current version
-v0.42.4
+## Completed this session
+Session 9: Brand agnostic shell + compliance fixes.
 
-## What is complete
-
-### Block 1 — Security prerequisites
-- v0.35.0–v0.36.1 — uid fields, Firestore rules, compliance fixed
-
-### Block 2 — studentId migration (Sessions 4–7)
-- v0.37.0–v0.39.1 — full academic records + backup + PDF import studentId migration
-
-### Block 4 — Onboarding + Settings (Sessions 7–8b + hotfixes)
-- v0.40.0 — OnboardingFlow.jsx created
-- v0.41.0 — Onboarding gate wired into App.jsx
-- v0.42.0 — Settings student management rewritten to /students/ subcollection
-- v0.42.1 — Onboarding add form labels + step indicator cleanup
-- v0.42.2 — Fix React error #31: DayStrip + AddSubjectSheet student object crash
-- v0.42.3 — Fix React error #31: Header.jsx + PlannerTab.jsx student object crash
-- v0.42.4 — Fix Activities and Enrollment field name + display bugs
-  - AddEditActivitySheet.jsx: payload field student → studentId (activities were
-    saved with wrong field name so ManageActivitiesSheet filter a.studentId never
-    matched). Added studentName prop; read-only Student field now shows name not ID.
-  - AddEditEnrollmentSheet.jsx: same save payload fix (student → studentId).
-    Added studentName prop; title, syncHelper text, and read-only field now all
-    show the student name instead of raw studentId. 218 lines.
-  - AcademicRecordsSheets.jsx: resolves studentName from p.students array and
-    passes it to both sheets. 78 lines.
+### What was done
+- **useSchoolSettings** hook created (`src/hooks/useSchoolSettings.js`) — subscribes to `/users/{uid}/settings/school`, returns `{ schoolName, tagline, loading }`, defaults `'My Homeschool'`/`''`.
+- **App.jsx** wired: calls `useSchoolSettings(user?.uid)`, loading gate waits for both `studentsLoading || schoolSettingsLoading`, passes `schoolName` to `HomeTab` + `SettingsTab`, `schoolName`/`tagline` to `BottomNav`.
+- **Header.jsx** — accepts `schoolName`/`tagline` props; splits schoolName on first space for two-line render; omits tagline span if empty.
+- **PlannerLayout.jsx** — calls `useSchoolSettings(user?.uid)` internally and passes to Header (avoids 3-level prop drilling through PlannerTab).
+- **HomeTab.jsx** — accepts `schoolName` prop; renders as single string; `required: 175` fallback changed to `0`.
+- **BottomNav.jsx** — accepts `schoolName`/`tagline` props; renders as single string; omits tagline div if empty.
+- **SignIn.jsx** — calls `useSchoolSettings(null)` internally (no uid at sign-in); splits schoolName; omits tagline if empty.
+- **SettingsTab.jsx** — accepts `schoolName` prop; version footer renders `{schoolName}`.
+- **ReportCardGeneratorSheet.jsx** — accepts `schoolName`/`tagline` props; preview card uses them; passes to PDF generator.
+- **generateReportCardPDF.js** — accepts `schoolName`/`tagline`; removes hardcoded URL from footer; conditionally draws tagline.
+- **AcademicRecordsTab.jsx** — calls `useSchoolSettings(uid)`, passes to `AcademicRecordsSheets`.
+- **AcademicRecordsSheets.jsx** — passes `schoolName`/`tagline` through to `ReportCardGeneratorSheet`.
+- **All 175 hardcodes removed**: `useHomeSummary.js`, `useAcademicSummary.js`, `RecordsMainView.jsx`, `StudentDetailSheet.jsx`, `HomeTab.jsx`.
+- Verified: brand scan → 0 hits; 175 scan → 0 hits; build clean at v0.43.0.
 
 ## What is broken right now
-- Nothing known. All student-object render sites are fixed.
-  Activities now save with correct studentId field and display correctly.
-  App is self-bootstrapping for new families.
-- One document in /users/{uid}/students/ has empty name (from a test run).
-  Rob to delete manually in Firebase console — no code change needed.
-- Existing activity documents saved before v0.42.4 have field student (not
-  studentId) and will not appear in ManageActivitiesSheet. Rob to delete
-  those docs manually in Firebase console — no migration script needed.
-
-## File size watch
-- SettingsTab.jsx: 246 lines — approaching 250 target
-- SettingsTab.css: 250 lines — at target limit, below 300 hard limit
-- backup.js: 256 lines — above 250 target, below 300 hard limit
-
-## Deferred items
-- CalendarWeekView.jsx at 252 lines — watch item
-- Desktop hours footer first-load timing — minor, deferred
-- Home tab shows zero/zero when compliance off — fix in Session 9
-- Hardcoded 175 days on home card — fix in Session 9
-- PlannerSheets.jsx: currentStudent={p.student} prop rename — deferred
-- Subject presets keyed by student name (not studentId) — pre-existing,
-  deferred to Phase 4 profile migration
+Nothing known.
 
 ## Next session start steps
-1. Read CLAUDE.md and HANDOFF.md in full
-2. git checkout main && git pull origin main
-3. Confirm version is 0.42.4
-4. Confirm with Rob what to build next (Session 9 candidates:
-   home tab zero/zero fix, 175-day hardcode, or Phase 5 month view)
+1. Read CLAUDE.md + HANDOFF.md
+2. Confirm task with Rob
+
+## Key files changed this session
+- `src/hooks/useSchoolSettings.js` (NEW)
+- `src/App.jsx`
+- `src/tools/planner/components/Header.jsx`
+- `src/tools/planner/components/PlannerLayout.jsx`
+- `src/tabs/HomeTab.jsx`
+- `src/components/BottomNav.jsx`
+- `src/components/SignIn.jsx`
+- `src/tabs/SettingsTab.jsx`
+- `src/tabs/AcademicRecordsTab.jsx`
+- `src/tools/academic-records/components/AcademicRecordsSheets.jsx`
+- `src/tools/academic-records/components/ReportCardGeneratorSheet.jsx`
+- `src/tools/academic-records/utils/generateReportCardPDF.js`
+- `src/hooks/useHomeSummary.js`
+- `src/tools/academic-records/hooks/useAcademicSummary.js`
+- `src/tools/academic-records/components/RecordsMainView.jsx`
+- `src/tabs/StudentDetailSheet.jsx`

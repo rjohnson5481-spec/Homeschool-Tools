@@ -11,7 +11,12 @@ export default function Header({
   student, onStudentChange,
   weekDates, prevWeek, nextWeek,
   onUpload, onCalendar,
+  schoolName, tagline,
 }) {
+  const parts = (schoolName ?? 'My Homeschool').split(' ');
+  const line1 = parts[0];
+  const line2 = parts.slice(1).join(' ');
+
   return (
     <header className="header">
 
@@ -20,11 +25,9 @@ export default function Header({
         <div className="header-brand">
           <img src={logo} alt="ILA" className="header-logo" />
           <div className="header-school">
-            <span className="header-school-line1">
-              IRON &amp; <span className="header-school-accent">LIGHT</span>
-            </span>
-            <span className="header-school-line2">JOHNSON ACADEMY</span>
-            <span className="header-school-tagline">Faith · Knowledge · Strength</span>
+            <span className="header-school-line1">{line1}</span>
+            {line2 && <span className="header-school-line2">{line2}</span>}
+            {tagline && <span className="header-school-tagline">{tagline}</span>}
             <span className="header-school-version">v{version}</span>
           </div>
         </div>

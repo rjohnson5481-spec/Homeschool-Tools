@@ -15,7 +15,7 @@ function greetingForHour(hour) {
   return 'Good Night';
 }
 
-export default function HomeTab() {
+export default function HomeTab({ schoolName }) {
   const { user } = useAuth();
   const uid = user?.uid;
   const { students, lessonsByStudent, attendance, weekId, dayIndex, todayLabel } = useHomeSummary(uid);
@@ -33,10 +33,7 @@ export default function HomeTab() {
       <header className="home-header">
         <div className="home-header-brand">
           <img src={logo} alt="ILA" className="home-header-logo" />
-          <div className="home-header-name">
-            IRON & <span className="home-header-accent">LIGHT</span>
-            <br />JOHNSON ACADEMY
-          </div>
+          <div className="home-header-name">{schoolName ?? 'My Homeschool'}</div>
         </div>
       </header>
       <div className="home-content">
@@ -48,7 +45,7 @@ export default function HomeTab() {
         <div className="home-students">
           {students.map(s => {
             const lessons = lessonsByStudent[s.studentId] ?? [];
-            const att = attendance[s.studentId] ?? { attended: 0, required: 175, sick: 0, breakDays: 0, schoolDays: 0 };
+            const att = attendance[s.studentId] ?? { attended: 0, required: 0, sick: 0, breakDays: 0, schoolDays: 0 };
             const total = lessons.length, done = lessons.filter(l => l.done).length;
             const allDone = total > 0 && done === total;
             const lessonPct = total > 0 ? Math.round((done / total) * 100) : 0;
