@@ -12,46 +12,49 @@ export default function ReportCardGeneratorSheet({
   open, onClose, onSaveReport, student, students, activeSchoolYear, selectedQuarterId,
   enrollments, courses, grades, attendanceDays, reportNotes, saveNote, activities,
 }) {
-  const [localStudent, setLocalStudent]   = useState(student ?? (students ?? [])[0] ?? '');
-  const [localQuarter, setLocalQuarter]   = useState(selectedQuarterId);
-  const [includeGrades, setIncludeGrades] = useState(true);
-  const [includeAttend, setIncludeAttend] = useState(true);
-  const [includeNotes, setIncludeNotes]   = useState(true);
-  const [includeSig, setIncludeSig]       = useState(true);
-  const [includeActs, setIncludeActs]     = useState(false);
-  const [notes, setNotes]                 = useState('');
-  const [saved, setSaved]                 = useState(false);
-  const [generating, setGenerating]       = useState(false);
+  const [localStudentId, setLocalStudentId] = useState(student ?? (students ?? [])[0]?.studentId ?? '');
+  const [localQuarter, setLocalQuarter]     = useState(selectedQuarterId);
+  const [includeGrades, setIncludeGrades]   = useState(true);
+  const [includeAttend, setIncludeAttend]   = useState(true);
+  const [includeNotes, setIncludeNotes]     = useState(true);
+  const [includeSig, setIncludeSig]         = useState(true);
+  const [includeActs, setIncludeActs]       = useState(false);
+  const [notes, setNotes]                   = useState('');
+  const [saved, setSaved]                   = useState(false);
+  const [generating, setGenerating]         = useState(false);
   const savedTimer = useRef(null);
+
+  const localStudentName = (students ?? []).find(s => s.studentId === localStudentId)?.name ?? localStudentId;
 
   useEffect(() => {
     if (!open) return;
-    setLocalStudent(student ?? (students ?? [])[0] ?? '');
+    const initId = student ?? (students ?? [])[0]?.studentId ?? '';
+    setLocalStudentId(initId);
     setLocalQuarter(selectedQuarterId);
-    const existing = (reportNotes ?? []).find(n => n.student === (student ?? (students ?? [])[0] ?? '') && n.quarterId === selectedQuarterId);
+    const existing = (reportNotes ?? []).find(n => n.studentId === initId && n.quarterId === selectedQuarterId);
     setNotes(existing?.notes ?? '');
     setSaved(false); setGenerating(false);
   }, [open, student, selectedQuarterId, reportNotes]);
 
   useEffect(() => {
     if (localQuarter === 'annual') return;
-    const existing = (reportNotes ?? []).find(n => n.student === localStudent && n.quarterId === localQuarter);
+    const existing = (reportNotes ?? []).find(n => n.studentId === localStudentId && n.quarterId === localQuarter);
     setNotes(existing?.notes ?? '');
-  }, [localStudent, localQuarter, reportNotes]);
+  }, [localStudentId, localQuarter, reportNotes]);
 
   // Re-fill notes when reportNotes loads after the sheet is already open
   useEffect(() => {
     if (!open || localQuarter === 'annual') return;
     if (notes.trim() !== '') return;
-    const existing = (reportNotes ?? []).find(n => n.student === localStudent && n.quarterId === localQuarter);
+    const existing = (reportNotes ?? []).find(n => n.studentId === localStudentId && n.quarterId === localQuarter);
     if (existing?.notes) setNotes(existing.notes);
   }, [reportNotes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => () => clearTimeout(savedTimer.current), []);
 
   const courseById = useMemo(() => new Map((courses ?? []).map(c => [c.id, c])), [courses]);
-  const studentEnr = useMemo(() => (enrollments ?? []).filter(e => e.student === localStudent), [enrollments, localStudent]);
-  const studentActs = useMemo(() => (activities ?? []).filter(a => a.student === localStudent), [activities, localStudent]);
+  const studentEnr = useMemo(() => (enrollments ?? []).filter(e => e.studentId === localStudentId), [enrollments, localStudentId]);
+  const studentActs = useMemo(() => (activities ?? []).filter(a => a.studentId === localStudentId), [activities, localStudentId]);
   const quarters = activeSchoolYear?.quarters ?? [];
   const isAnnual = localQuarter === 'annual';
   const quarterLabel = isAnnual ? 'Annual' : (quarters.find(q => q.id === localQuarter)?.label ?? 'Quarter');
@@ -62,7 +65,7 @@ export default function ReportCardGeneratorSheet({
   async function handleNotesBlur() {
     if (!saveNote || isAnnual) return;
     try {
-      await saveNote(localStudent, localQuarter, notes);
+      await saveNote(localStudentId, localQuarter, notes);
       setSaved(true); clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 2000);
     } catch { /* error surfaces via hook */ }
@@ -72,7 +75,7 @@ export default function ReportCardGeneratorSheet({
     setGenerating(true);
     try {
       const pdfBytes = await generateReportCardPDF({
-        student: localStudent, gradeLevel: studentGradeLevel, periodLabel,
+        student: localStudentName, gradeLevel: studentGradeLevel, periodLabel,
         yearLabel: activeSchoolYear?.label ?? '—', isAnnual,
         selectedQuarterId: localQuarter, studentEnrollments: studentEnr,
         courseById, grades, quarters, attendanceDays,
@@ -83,11 +86,11 @@ export default function ReportCardGeneratorSheet({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ReportTranscript_${localStudent}_${periodLabel.replace(/\s+/g, '_')}.pdf`;
+      a.download = `ReportTranscript_${localStudentName}_${periodLabel.replace(/\s+/g, '_')}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       if (onSaveReport) {
-        await onSaveReport({ student: localStudent, periodLabel, yearLabel: activeSchoolYear?.label ?? '—', notes,
+        await onSaveReport({ studentId: localStudentId, periodLabel, yearLabel: activeSchoolYear?.label ?? '—', notes,
           includeToggles: { includeGrades, includeAttendance: includeAttend, includeNotes, includeSignature: includeSig, includeActivities: includeActs } }, pdfBytes);
       }
     } catch (err) { console.warn('PDF generation failed', err); }
@@ -108,7 +111,7 @@ export default function ReportCardGeneratorSheet({
           <div className="rcg-field">
             <span className="rcg-label">Student</span>
             <div className="rcg-pills">{(students ?? []).map(s => (
-              <button key={s} className={`rcg-pill${s === localStudent ? ' active' : ''}`} onClick={() => setLocalStudent(s)}>{s}</button>
+              <button key={s.studentId} className={`rcg-pill${s.studentId === localStudentId ? ' active' : ''}`} onClick={() => setLocalStudentId(s.studentId)}>{s.name}</button>
             ))}</div>
           </div>
           <div className="rcg-field">
@@ -144,7 +147,7 @@ export default function ReportCardGeneratorSheet({
               <div className="rcg-preview-type">Report / Transcript — {periodLabel}</div>
             </div>
             <div className="rcg-preview-student">
-              <span><strong>{localStudent}</strong>{studentGradeLevel ? ` · Grade ${studentGradeLevel}` : ''}</span>
+              <span><strong>{localStudentName}</strong>{studentGradeLevel ? ` · Grade ${studentGradeLevel}` : ''}</span>
               <span>{activeSchoolYear?.label ?? '—'} · {todayFormatted()}</span>
             </div>
             {includeGrades && !isAnnual && (
