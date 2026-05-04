@@ -14,10 +14,10 @@ export default function SavedReportCardsSheet({
   if (!open) return null;
 
   const grouped = {};
-  (students ?? []).forEach(s => { grouped[s] = []; });
+  (students ?? []).forEach(s => { grouped[s.studentId] = []; });
   (savedReports ?? []).forEach(r => {
-    if (grouped[r.student]) grouped[r.student].push(r);
-    else grouped[r.student] = [r];
+    if (grouped[r.studentId]) grouped[r.studentId].push(r);
+    else grouped[r.studentId] = [r];
   });
 
   return (
@@ -33,12 +33,12 @@ export default function SavedReportCardsSheet({
           {!loading && (savedReports ?? []).length === 0 && (
             <p className="src-empty">No reports generated yet.</p>
           )}
-          {!loading && (students ?? []).map(student => {
-            const reports = grouped[student] ?? [];
+          {!loading && (students ?? []).map(s => {
+            const reports = grouped[s.studentId] ?? [];
             if (reports.length === 0) return null;
             return (
-              <div key={student} className="src-group">
-                <p className="src-section-label"><span>{student}</span></p>
+              <div key={s.studentId} className="src-group">
+                <p className="src-section-label"><span>{s.emoji ? `${s.emoji} ` : ''}{s.name}</span></p>
                 {reports.map(r => (
                   <div key={r.id} className="src-report-row">
                     <div className="src-report-info">

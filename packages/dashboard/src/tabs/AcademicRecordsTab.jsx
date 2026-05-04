@@ -78,7 +78,7 @@ export default function AcademicRecordsTab() {
 
   // ─── Enrollment handlers ───
   function closeEnrollments()           { setEnrollmentSheetOpen(false); setAddEditEnrollmentSheetOpen(false); setEditingEnrollment(null); setEnrollingStudent(null); }
-  function handleEditEnrollment(e)      { setEditingEnrollment(e); setEnrollingStudent(e.student); setAddEditEnrollmentSheetOpen(true); }
+  function handleEditEnrollment(e)      { setEditingEnrollment(e); setEnrollingStudent(e.studentId); setAddEditEnrollmentSheetOpen(true); }
   function handleAddEnrollment(student) { setEnrollingStudent(student); setEditingEnrollment(null); setAddEditEnrollmentSheetOpen(true); }
   function closeAddEditEnrollment()     { setAddEditEnrollmentSheetOpen(false); setEditingEnrollment(null); setEnrollingStudent(null); }
   async function handleSaveEnrollment(data) {
@@ -132,7 +132,7 @@ export default function AcademicRecordsTab() {
   function closeActivitiesSheets() { setActivitiesSheetOpen(false); setAddEditActivitySheetOpen(false); setEditingActivity(null); setActivityStudent(null); }
   function closeAddEditActivity() { setAddEditActivitySheetOpen(false); setEditingActivity(null); setActivityStudent(null); }
   function onAddActivity(student) { setActivityStudent(student); setEditingActivity(null); setAddEditActivitySheetOpen(true); }
-  function onEditActivity(a) { setEditingActivity(a); setActivityStudent(a.student); setAddEditActivitySheetOpen(true); }
+  function onEditActivity(a) { setEditingActivity(a); setActivityStudent(a.studentId); setAddEditActivitySheetOpen(true); }
   async function handleSaveActivity(data) { if (!uid) return; if (editingActivity) await fbUpdateActivity(editingActivity.id, data); else await fbAddActivity(data); closeAddEditActivity(); }
   async function handleDeleteActivity() { if (editingActivity) { await fbRemoveActivity(editingActivity.id); closeActivitiesSheets(); } }
 
