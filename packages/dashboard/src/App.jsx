@@ -60,19 +60,21 @@ export default function App() {
   if (loading) return null;
   if (!user)   return <SignIn />;
 
-  if (!initialLoadComplete) return (
-    <div className="app-loading">
-      <img src={logo} alt="ILA" />
-      <div className="app-loading-dots">
-        <span /><span /><span />
+  // Fast path: localStorage confirms students exist.
+  // Skip loading splash and onboarding — Firestore updates in background.
+  if (!cachedHasStudents) {
+    if (!initialLoadComplete) return (
+      <div className="app-loading">
+        <img src={logo} alt="ILA" />
+        <div className="app-loading-dots">
+          <span /><span /><span />
+        </div>
       </div>
-    </div>
-  );
-
-  const hasStudents = students.length > 0 || cachedHasStudents;
-  if (!hasStudents) return (
-    <OnboardingFlow uid={user.uid} onComplete={() => {}} />
-  );
+    );
+    if (students.length === 0) return (
+      <OnboardingFlow uid={user.uid} onComplete={() => {}} />
+    );
+  }
 
   return (
     <div className="app-shell">
