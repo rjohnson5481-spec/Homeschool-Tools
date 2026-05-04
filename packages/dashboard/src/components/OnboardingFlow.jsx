@@ -79,6 +79,9 @@ export default function OnboardingFlow({ uid, onComplete }) {
           <div className={`onboarding-dot${step === 1 ? ' onboarding-dot--active' : ''}`} />
           <div className={`onboarding-dot${step === 2 ? ' onboarding-dot--active' : ''}`} />
         </div>
+        <p className="onboarding-step-label">
+          {step === 1 ? 'School Setup' : 'Add Students'}
+        </p>
 
         <img src={logo} alt="ILA" className="onboarding-logo" />
 
