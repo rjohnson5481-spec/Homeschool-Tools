@@ -11,7 +11,7 @@ import DataBackupSection from './DataBackupSection.jsx';
 
 // Props: user, students ([{ studentId, name, emoji, gradeLevel, order }]),
 //        colorMode, onToggleDarkMode
-export default function SettingsTab({ user, students, colorMode, onToggleDarkMode, schoolName }) {
+export default function SettingsTab({ user, students, colorMode, onToggleDarkMode, schoolName, tagline }) {
   const uid = user?.uid;
   const { activeStudent, setActiveStudent, activeSubjects, saveSubjects } = useSettings(uid);
   const isDark = colorMode === 'dark';
@@ -73,7 +73,12 @@ export default function SettingsTab({ user, students, colorMode, onToggleDarkMod
   }
 
   if (showOnboarding) return (
-    <OnboardingFlow uid={uid} onComplete={() => setShowOnboarding(false)} />
+    <OnboardingFlow
+      uid={uid}
+      onComplete={() => setShowOnboarding(false)}
+      initialSchoolName={schoolName ?? ''}
+      initialTagline={tagline ?? ''}
+    />
   );
 
   return (

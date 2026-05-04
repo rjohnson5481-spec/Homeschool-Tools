@@ -66,6 +66,7 @@ export default function App() {
             colorMode={colorMode}
             onToggleDarkMode={toggleDarkMode}
             schoolName={schoolName}
+            tagline={tagline}
           />
         )}
       </div>

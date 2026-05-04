@@ -4,12 +4,12 @@ import { db } from '@homeschool/shared';
 import logo from '@homeschool/shared/assets/logo.png';
 import './OnboardingFlow.css';
 
-export default function OnboardingFlow({ uid, onComplete }) {
+export default function OnboardingFlow({ uid, onComplete, initialSchoolName = '', initialTagline = '' }) {
   const [step, setStep] = useState(1);
 
   // Step 1
-  const [schoolName, setSchoolName] = useState('');
-  const [tagline, setTagline]       = useState('');
+  const [schoolName, setSchoolName] = useState(initialSchoolName);
+  const [tagline, setTagline]       = useState(initialTagline);
   const [saving, setSaving]         = useState(false);
 
   // Step 2
