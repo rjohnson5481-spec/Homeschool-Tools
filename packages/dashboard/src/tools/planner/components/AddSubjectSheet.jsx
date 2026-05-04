@@ -6,13 +6,12 @@ import './AddSubjectSheetChrome.css';
 import './AddSubjectDayPicker.css';
 
 // Props: existingSubjects (string[]), presets (string[]|undefined),
-//        weekDates (Date[5]), currentDayIndex (0-4), currentStudent (string),
-//        students (string[]),
-//        onAdd(subject, cells, lessonDetails) — cells: [{ dayIndex, student }]
+//        weekDates (Date[5]), currentDayIndex (0-4), currentStudent (studentId string),
+//        students ({ studentId, name, emoji }[]),
+//        onAdd(subject, cells, lessonDetails) — cells: [{ dayIndex, student: studentId }]
 //        lessonDetails: { [dayIndex]: lessonText } — optional per-day lesson
 //        onAddAllDay(name, note), onEditAllDay, onClose
 // presets: per-student Firestore subjects; falls back to SUBJECT_PRESETS if absent.
-const STUDENT_EMOJI = { Orion: '😎', Malachi: '🐼' };
 
 export default function AddSubjectSheet({
   existingSubjects, presets,
@@ -82,7 +81,9 @@ export default function AddSubjectSheet({
   const canSubmit = trimmed.length > 0 && cellCount > 0;
   const studentsSummary =
     selectedStudents.size === students.length ? 'all students'
-    : Array.from(selectedStudents).join(' & ');
+    : Array.from(selectedStudents)
+        .map(id => students.find(s => s.studentId === id)?.name ?? id)
+        .join(' & ');
 
   return (
     <div className="add-sheet-overlay" onClick={onClose}>
@@ -198,12 +199,12 @@ export default function AddSubjectSheet({
           <div className="add-sheet-student-pills">
             {students.map(s => (
               <button
-                key={s}
-                className={`add-sheet-student-pill${selectedStudents.has(s) ? ' add-sheet-student-pill--active' : ''}`}
-                onClick={() => toggleStudent(s)}
+                key={s.studentId}
+                className={`add-sheet-student-pill${selectedStudents.has(s.studentId) ? ' add-sheet-student-pill--active' : ''}`}
+                onClick={() => toggleStudent(s.studentId)}
               >
-                <span className="add-sheet-student-emoji">{STUDENT_EMOJI[s] ?? '🧒'}</span>
-                <span>{s}</span>
+                <span className="add-sheet-student-emoji">{s.emoji || '🧒'}</span>
+                <span>{s.name}</span>
               </button>
             ))}
           </div>

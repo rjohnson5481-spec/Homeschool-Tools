@@ -10,8 +10,8 @@ function isToday(date) {
 }
 
 // Props: dates (array of 5 Date objects Mon-Fri), selected (0-4), onSelect,
-//        sickDayIndices (Set of day indices), students (string[], desktop only),
-//        student (string, desktop only), onStudentChange (fn, desktop only)
+//        sickDayIndices (Set of day indices), students ({ studentId, name, emoji }[], desktop only),
+//        student (string studentId, desktop only), onStudentChange (fn, desktop only)
 export default function DayStrip({
   dates, selected, onSelect, sickDayIndices = new Set(),
   students = [], student, onStudentChange,
@@ -21,13 +21,13 @@ export default function DayStrip({
       {/* Student pills — rendered in DOM always, shown only at desktop via CSS */}
       {students.length > 0 && (
         <div className="day-strip-students">
-          {students.map(name => (
+          {students.map(s => (
             <button
-              key={name}
-              className={`day-strip-student-btn${student === name ? ' day-strip-student-btn--active' : ''}`}
-              onClick={() => onStudentChange?.(name)}
+              key={s.studentId}
+              className={`day-strip-student-btn${student === s.studentId ? ' day-strip-student-btn--active' : ''}`}
+              onClick={() => onStudentChange?.(s.studentId)}
             >
-              {name}
+              {s.name}
             </button>
           ))}
         </div>
