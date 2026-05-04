@@ -11,7 +11,13 @@ export function useStudents(uid) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!uid) { setLoading(false); return; }
+    if (!uid) {
+      setStudents([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setStudents([]);
     const q = query(collection(db, `users/${uid}/students`), orderBy('order', 'asc'));
     const unsub = onSnapshot(q, snap => {
       setStudents(snap.docs.map(d => ({ studentId: d.id, ...d.data() })));

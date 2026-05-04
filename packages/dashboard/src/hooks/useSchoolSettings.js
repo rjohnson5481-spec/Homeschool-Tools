@@ -9,9 +9,12 @@ export function useSchoolSettings(uid) {
 
   useEffect(() => {
     if (!uid) {
+      setSchoolName('My Homeschool');
+      setTagline('');
       setLoading(false);
       return;
     }
+    setLoading(true);
     const ref = doc(db, `users/${uid}/settings/school`);
     const unsub = onSnapshot(ref, snap => {
       const data = snap.data();
