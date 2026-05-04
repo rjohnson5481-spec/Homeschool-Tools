@@ -1,5 +1,5 @@
 # CLAUDE.md — Iron & Light Johnson Academy Homeschool Tools
-Current version: v0.37.0 — Block 2 pre-migration cleanup: split academicRecords.js + fix inline path in useHomeSummary.
+Current version: v0.38.0 — Block 2 Session 5: studentId migration — hooks, firebase layer, and components updated.
 
 ## What this repo is
 A monorepo housing all digital tools for Iron & Light Johnson Academy. Growing toolset; new tools added over time. Every tool shares branding, design system, and Firebase project.

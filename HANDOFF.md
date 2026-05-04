@@ -1,55 +1,105 @@
-# HANDOFF — v0.37.0 Block 2 pre-migration cleanup
+# HANDOFF — v0.38.0 Block 2 Session 5 — studentId migration
 
 ## What was completed this session
 
-### Change 1 — Split academicRecords.js
-- Extracted 9 functions into new `academicRecordsReports.js`:
-  getReportNotes, getReportNote, saveReportNote, addReportNote,
-  getSavedReports, saveSavedReport, deleteSavedReport,
-  uploadReportPDF, deleteReportPDF.
-- Removed firebase/storage imports and reportNotes/savedReports
-  constants from academicRecords.js. Removed unused getDoc import.
-- Updated useReportNotes.js and useSavedReports.js to import from
-  academicRecordsReports.js. All other hooks unchanged.
-- academicRecords.js: 287 → 211 lines (89 lines below hard limit).
-- academicRecordsReports.js: new, 88 lines.
-- Build passes clean (382 modules).
+### Context
+All work landed on branch `claude/audit-subject-cell-write-xf8aV` (rebased onto main/v0.37.0).
+Branch has 11 commits above the v0.37.0 base.
 
-### Change 2 — Fix inline path in useHomeSummary.js
-- Line 49 previously built the subjects path as an inline string literal.
-  Now uses daySubjectsPath(uid, weekId, name, dayIndex) from
-  tools/planner/constants/firestore.js.
-- Added import for daySubjectsPath. No other logic changed.
+### Change 1 — useStudents hook (new)
+- Created `packages/dashboard/src/hooks/useStudents.js`
+- Subscribes to `/users/{uid}/students` collection ordered by `order` field
+- Returns: `{ students: [{studentId, name, emoji, order}], studentMap, getStudentName, loading }`
 
-## Note on academicRecords.js line count
-Target was "under 200." Actual result: 211. After extracting all report/
-notes/PDF functions, the remaining school-years/quarters/breaks/courses/
-enrollments/grades content is inherently 211 lines. No further reduction
-is possible without removing substantive comments or logic. 89 lines of
-headroom below the 300-line hard limit is the safety goal — that is met.
+### Change 2 — Path constants rename
+- `tools/planner/constants/firestore.js`: renamed `student` param to `studentId` in all
+  function signatures (cosmetic — no functional change to path strings)
+
+### Change 3 — App.jsx + BottomNav.jsx
+- `App.jsx`: imports `useStudents(uid)`, `plannerStudent` stores a studentId (not a name),
+  initializes with `students[0].studentId`
+- `BottomNav.jsx`: renders `{emoji} {name}` from student objects, compares by `s.studentId`
+
+### Change 4 — Planner firebase layer
+- `firebase/planner.js`: renamed `student` → `studentId` throughout; `writeSickDay` now writes
+  `{ studentId, date, subjectsShifted }` (field renamed from `student`); `updateCell` retains
+  `{ ...data, uid }` spread from v0.35.0
+- `firebase/settings.js`: renamed `student` → `studentId` in `readSettingsSubjects` /
+  `writeSettingsSubjects`
+
+### Change 5 — Planner hooks
+- `useSubjects.js`: renamed `student` → `studentId` throughout; `performUndoSickDay` now checks
+  `data?.studentId === studentId`
+- `useSickDay.js`: renamed `student` → `studentId` throughout; checks
+  `sickDays[date]?.studentId === studentId`
+- `usePlannerHelpers.js`: renamed `student` → `studentId`
+
+### Change 6 — Compliance layer
+- `firebase/compliance.js`: renamed `student` → `studentId` in `saveSchoolDayHours`
+- `useCompliance.js`: renamed `student` → `studentId` throughout
+- `useComplianceSummary.js`: `parseCellPath` returns `studentId` instead of `studentName`;
+  `/students` collection subscription replaces `settings/students` doc;
+  all maps (`requiredByStudent`, `daysCompletedByStudent`, `hoursCompletedByStudent`) keyed
+  by studentId
+- `useHomeSummary.js`: `/students` collection subscription replaces `settings/students` doc;
+  `students` is now `[{studentId, name, emoji}]`; maps keyed by studentId
+
+### Change 7 — Components
+- `HomeTab.jsx`: iterates student objects; all map lookups use `s.studentId`; passes
+  `studentName={s.name}` to StudentDetailSheet
+- `StudentDetailSheet.jsx`: accepts new `studentName` prop for display header (falls back
+  to `student` prop if not provided)
+- `AcademicRecordsTab.jsx`: removed internal `settings/students` listener; uses
+  `useStudents(uid)`; selectedStudent initialized with `students[0].studentId`
+- `RecordsMainView.jsx`: renders student buttons from objects (`s.studentId` / `s.name`);
+  derives display name via `students.find(s => s.studentId === selectedStudent)?.name`
+- `ComplianceSheet.jsx`: removed internal `settings/students` listener; receives `students`
+  prop from parent; handlers keyed by studentId
+- `AcademicRecordsSheets.jsx`: passes `students={p.students}` to `ComplianceSheet`
+
+### Build
+- 383 modules, clean
 
 ## What is broken or incomplete
-- Composite index on subjects (uid ASC, done ASC) not yet created
+- `/users/{uid}/students` collection does not exist in Firestore yet — all hooks that
+  subscribe to it will return empty arrays until the data migration script runs.
+  Existing functionality (planner, attendance, compliance) will appear blank for students
+  until migration populates the collection.
+- Composite index on subjects (uid ASC, done ASC) still needed in Firebase console
 - Emoji maps hardcoded for Orion/Malachi (deferred Phase 4)
-- CalendarWeekView.jsx at 252 lines (watch item, not urgent)
-- Desktop hours footer first-load timing issue (minor — deferred)
-
-## Phase 4 Block 1 prerequisite cluster — ALL COMPLETE (from v0.36.0)
-1. ✅ uid field on all subject cell writes (v0.35.0)
-2. ✅ R2 rule uid-scoped (v0.36.0)
-3. ✅ useComplianceSummary query uid-filtered (v0.36.0)
-
-## Key files changed this session
-- packages/dashboard/src/tools/academic-records/firebase/academicRecords.js
-- packages/dashboard/src/tools/academic-records/firebase/academicRecordsReports.js (new)
-- packages/dashboard/src/tools/academic-records/hooks/useReportNotes.js
-- packages/dashboard/src/tools/academic-records/hooks/useSavedReports.js
-- packages/dashboard/src/hooks/useHomeSummary.js
-- packages/dashboard/package.json → v0.37.0
-- packages/shared/package.json → v0.37.0
-- CLAUDE.md → version line
+- Academic records firebase layer (`academicRecords.js`, `academicRecordsActivities.js`,
+  `academicRecordsReports.js`) not yet migrated — `student` field still a name string
+  in enrollments, activities, reports (deferred to Session 6)
+- `backup.js`, `RestoreDiffCalendar.jsx`, enrollment/activity/report sheets deferred (Session 6)
 
 ## Next session must start with
 1. Read CLAUDE.md and HANDOFF.md
-2. Verify on main, pull latest
-3. Confirm with Rob what Block 2 migration session addresses next
+2. Confirm branch: `claude/audit-subject-cell-write-xf8aV`
+3. Write the data migration script: create `/users/{uid}/students` docs from
+   `settings/students.names[]` (fields: name, emoji, order, createdAt)
+4. Run migration on Rob's machine (DRY_RUN=true first)
+5. Verify planner and home tab work with real student data
+
+## Key files changed this session
+- packages/dashboard/src/hooks/useStudents.js (new)
+- packages/dashboard/src/tools/planner/constants/firestore.js
+- packages/dashboard/src/App.jsx
+- packages/dashboard/src/components/BottomNav.jsx
+- packages/dashboard/src/tools/planner/firebase/planner.js
+- packages/dashboard/src/tools/planner/firebase/settings.js
+- packages/dashboard/src/tools/planner/hooks/useSubjects.js
+- packages/dashboard/src/tools/planner/hooks/useSickDay.js
+- packages/dashboard/src/tools/planner/hooks/usePlannerHelpers.js
+- packages/dashboard/src/firebase/compliance.js
+- packages/dashboard/src/tools/planner/hooks/useCompliance.js
+- packages/dashboard/src/hooks/useComplianceSummary.js
+- packages/dashboard/src/hooks/useHomeSummary.js
+- packages/dashboard/src/tabs/HomeTab.jsx
+- packages/dashboard/src/tabs/StudentDetailSheet.jsx
+- packages/dashboard/src/tabs/AcademicRecordsTab.jsx
+- packages/dashboard/src/tools/academic-records/components/RecordsMainView.jsx
+- packages/dashboard/src/tools/academic-records/components/ComplianceSheet.jsx
+- packages/dashboard/src/tools/academic-records/components/AcademicRecordsSheets.jsx
+- packages/dashboard/package.json → v0.38.0
+- packages/shared/package.json → v0.38.0
+- CLAUDE.md → version line
