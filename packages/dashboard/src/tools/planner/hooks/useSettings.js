@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@homeschool/shared';
-import {
-  writeSettingsStudents,
-  readSettingsSubjects, writeSettingsSubjects,
-} from '../firebase/settings.js';
+import { readSettingsSubjects, writeSettingsSubjects } from '../firebase/settings.js';
 
-// Manages settings state: student list and per-student default subjects.
-// Loads students on mount; loads subjects for activeStudent on demand.
+// Manages settings state: per-student default subjects.
+// Student list is owned by useStudents (see hooks/useStudents.js).
 // plannerStudent: optional — pre-loads subjects for the current planner student.
 export function useSettings(uid, plannerStudent) {
-  const [students, setStudents]               = useState([]);
-  const [activeStudent, setActiveStudent]     = useState(null);
+  const [activeStudent, setActiveStudent]         = useState(null);
   const [subjectsByStudent, setSubjectsByStudent] = useState({});
-
-  // Real-time listener on settings/students document.
-  useEffect(() => {
-    if (!uid) return;
-    return onSnapshot(doc(db, `users/${uid}/settings/students`), snap => {
-      const names = snap.exists() ? (snap.data().names ?? []) : [];
-      setStudents(names);
-      setActiveStudent(prev => prev ?? (names[0] ?? null));
-    });
-  }, [uid]);
 
   // Load subjects for activeStudent when it changes (always fresh).
   useEffect(() => {
@@ -40,12 +24,6 @@ export function useSettings(uid, plannerStudent) {
     });
   }, [uid, plannerStudent]);
 
-  // Write student list and update local state.
-  async function saveStudents(names) {
-    setStudents(names);
-    await writeSettingsStudents(uid, names);
-  }
-
   // Write subject list for activeStudent and update local state.
   async function saveSubjects(subjects) {
     setSubjectsByStudent(prev => ({ ...prev, [activeStudent]: subjects }));
@@ -53,11 +31,9 @@ export function useSettings(uid, plannerStudent) {
   }
 
   return {
-    students,
     activeStudent, setActiveStudent,
     activeSubjects: subjectsByStudent[activeStudent] ?? [],
     subjectsByStudent,
-    saveStudents,
     saveSubjects,
   };
 }
