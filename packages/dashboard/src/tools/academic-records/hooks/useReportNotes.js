@@ -10,10 +10,10 @@ import {
 // Notes are per student × quarter — caller filters as needed.
 //
 // Returns:
-//   reportNotes — Array<{ id, student, quarterId, notes, updatedAt }>
+//   reportNotes — Array<{ id, studentId, quarterId, notes, updatedAt }>
 //   loading     — boolean
 //   error       — string | null
-//   saveNote    — async (student, quarterId, notes) => void
+//   saveNote    — async (studentId, quarterId, notes) => void
 export function useReportNotes(uid) {
   const [reportNotes, setReportNotes] = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -39,14 +39,14 @@ export function useReportNotes(uid) {
 
   useEffect(() => { reload(); }, [reload]);
 
-  const saveNote = useCallback(async (student, quarterId, notes) => {
+  const saveNote = useCallback(async (studentId, quarterId, notes) => {
     if (!uid) throw new Error('useReportNotes: uid is required');
     try {
-      const existing = reportNotes.find(n => n.student === student && n.quarterId === quarterId);
+      const existing = reportNotes.find(n => n.studentId === studentId && n.quarterId === quarterId);
       if (existing) {
-        await fbSaveReportNote(uid, existing.id, { student, quarterId, notes });
+        await fbSaveReportNote(uid, existing.id, { studentId, quarterId, notes });
       } else {
-        await fbAddReportNote(uid, { student, quarterId, notes });
+        await fbAddReportNote(uid, { studentId, quarterId, notes });
       }
       await reload();
     } catch (err) {
