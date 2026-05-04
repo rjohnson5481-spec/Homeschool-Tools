@@ -1,0 +1,170 @@
+.onboarding {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+  padding: 24px;
+}
+
+.onboarding-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(34, 37, 46, .08);
+}
+
+.onboarding-steps {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.onboarding-dot {
+  height: 8px;
+  width: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  transition: width 0.2s, background 0.2s;
+}
+.onboarding-dot--active { width: 24px; background: var(--gold); }
+
+.onboarding-logo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin: 0 auto 24px;
+}
+
+.onboarding-heading {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin: 0 0 6px;
+}
+
+.onboarding-sub {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+.onboarding-optional {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.onboarding-field { margin-bottom: 16px; }
+
+.onboarding-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.onboarding-input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-family: 'Lexend', system-ui, sans-serif;
+  font-size: 14px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.onboarding-input:focus { outline: none; border-color: var(--gold); }
+
+.onboarding-student-list { margin-bottom: 16px; }
+
+.onboarding-student-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-surface);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.onboarding-student-emoji { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.onboarding-student-name  { flex: 1; font-size: 14px; color: var(--text-primary); }
+.onboarding-student-grade { font-size: 12px; color: var(--text-secondary); flex-shrink: 0; }
+
+.onboarding-remove-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  padding: 0;
+  transition: color 0.15s;
+}
+.onboarding-remove-btn:hover { color: var(--red); }
+
+.onboarding-add-form {
+  display: grid;
+  grid-template-columns: 1fr 72px;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.onboarding-input--grade { grid-column: 1 / -1; }
+
+.onboarding-add-btn {
+  grid-column: 1 / -1;
+  height: 40px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Lexend', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.onboarding-add-btn:not(:disabled):hover { border-color: var(--gold); color: var(--gold); }
+.onboarding-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.onboarding-btn {
+  width: 100%;
+  height: 44px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Lexend', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+.onboarding-btn:not(:disabled):hover { background: var(--gold-light); }
+.onboarding-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (max-width: 480px) {
+  .onboarding-card { padding: 24px 20px; }
+  .onboarding-add-form { grid-template-columns: 1fr; }
+  .onboarding-input--emoji { grid-column: auto; }
+}
