@@ -1,7 +1,7 @@
 import './StudentDetailSheet.css';
 
 export default function StudentDetailSheet({
-  open, onClose, student, lessons, attendance,
+  open, onClose, student, studentName, lessons, attendance,
   onLessonToggle,
 }) {
   if (!open) return null;
@@ -17,7 +17,7 @@ export default function StudentDetailSheet({
         <div className="sds-sheet-handle" aria-hidden="true" />
         <header className="sds-sheet-header">
           <div className="sds-header-left">
-            <span className="sds-header-name">{student}</span>
+            <span className="sds-header-name">{studentName ?? student}</span>
           </div>
           <button className="sds-sheet-close" onClick={onClose} aria-label="Close">✕</button>
         </header>

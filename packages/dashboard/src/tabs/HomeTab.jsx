@@ -23,9 +23,9 @@ export default function HomeTab() {
   const [openSheet, setOpenSheet] = useState(null);
   const greeting = greetingForHour(new Date().getHours());
 
-  function handleLessonToggle(student, di, subject, currentDone) {
+  function handleLessonToggle(studentId, di, subject, currentDone) {
     if (!uid) return;
-    updateCell(uid, weekId, student, subject, di, { done: !currentDone });
+    updateCell(uid, weekId, studentId, subject, di, { done: !currentDone });
   }
 
   return (
@@ -46,9 +46,9 @@ export default function HomeTab() {
         </div>
 
         <div className="home-students">
-          {students.map(name => {
-            const lessons = lessonsByStudent[name] ?? [];
-            const att = attendance[name] ?? { attended: 0, required: 175, sick: 0, breakDays: 0, schoolDays: 0 };
+          {students.map(s => {
+            const lessons = lessonsByStudent[s.studentId] ?? [];
+            const att = attendance[s.studentId] ?? { attended: 0, required: 175, sick: 0, breakDays: 0, schoolDays: 0 };
             const total = lessons.length, done = lessons.filter(l => l.done).length;
             const allDone = total > 0 && done === total;
             const lessonPct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -56,16 +56,16 @@ export default function HomeTab() {
             // compliance counts; otherwise fall back to calendar-math attendance.
             const useCompliance = !!compliance?.daysEnabled;
             const daysAttended = useCompliance
-              ? (compliance.daysCompletedByStudent?.[name] ?? 0)
+              ? (compliance.daysCompletedByStudent?.[s.studentId] ?? 0)
               : att.attended;
             const daysRequired = useCompliance
-              ? (compliance.requiredByStudent?.[name]?.requiredDays ?? 0)
+              ? (compliance.requiredByStudent?.[s.studentId]?.requiredDays ?? 0)
               : att.required;
             const attPct = daysRequired > 0 ? Math.min(100, Math.round((daysAttended / daysRequired) * 100)) : 0;
             return (
-              <div key={name} className="home-student-card" onClick={() => setOpenSheet(name)}>
+              <div key={s.studentId} className="home-student-card" onClick={() => setOpenSheet(s.studentId)}>
                 <div className="home-student-card-header">
-                  <span className="home-student-name">{name}</span>
+                  <span className="home-student-name">{s.emoji ? `${s.emoji} ` : ''}{s.name}</span>
                   <span className={`home-student-tap-hint${allDone ? ' done' : ''}`}>{allDone ? 'All done ✓' : 'Tap for details'}</span>
                 </div>
                 <div className="home-student-stats">
@@ -104,7 +104,7 @@ export default function HomeTab() {
                   {lessons.map(l => (
                     <div key={l.subject} className="home-lesson-row" onClick={e => e.stopPropagation()}>
                       <button className={`home-lesson-checkbox${l.done ? ' checked' : ''}`}
-                        onClick={() => handleLessonToggle(name, l.dayIndex, l.subject, l.done)}>{l.done ? '✓' : ''}</button>
+                        onClick={() => handleLessonToggle(s.studentId, l.dayIndex, l.subject, l.done)}>{l.done ? '✓' : ''}</button>
                       <span className="home-lesson-subject">{l.subject}</span>
                       {l.lesson && <span className="home-lesson-text">{l.lesson}</span>}
                       {l.flag && <span className="home-lesson-flag" />}
@@ -117,10 +117,10 @@ export default function HomeTab() {
         </div>
       </div>
 
-      {students.map(name => (
-        <StudentDetailSheet key={name} open={openSheet === name} onClose={() => setOpenSheet(null)}
-          student={name} lessons={lessonsByStudent[name] ?? []}
-          attendance={attendance[name]}
+      {students.map(s => (
+        <StudentDetailSheet key={s.studentId} open={openSheet === s.studentId} onClose={() => setOpenSheet(null)}
+          student={s.studentId} studentName={s.name} lessons={lessonsByStudent[s.studentId] ?? []}
+          attendance={attendance[s.studentId]}
           uid={uid} weekId={weekId}
           onLessonToggle={handleLessonToggle} />
       ))}
