@@ -1,10 +1,15 @@
-# HANDOFF — v0.44.5
+# HANDOFF — v0.44.6
 
 ## Completed this session
-Bug fix: localStorage gate order — returning users now skip splash and onboarding entirely.
+Bug fix: Onboarding flash root cause — pre-auth empty state was wiping the localStorage flag.
 
 ### What was done
-**App.jsx** — Restructured the conditional return block. Previously, `cachedHasStudents` was defined at line 27 but not consulted until after `initialLoadComplete` resolved (line 72+), so the localStorage flag was never reached during the flash window. Now the entire `initialLoadComplete` and `students.length === 0` gate is wrapped in `if (!cachedHasStudents)`. Returning users (flag set) fall straight through to the main app shell on every load — zero splash, zero onboarding flash. New users (no flag) still wait for Firestore and see onboarding correctly. Also removed the now-unnecessary `hasStudents` derived value.
+
+**App.jsx** — Added `if (loading || !user) return` guard at the top of the cache sync useEffect. Previously, `useStudents(undefined)` would set `studentsLoading=false` with empty students before Firebase Auth resolved, causing the effect to call `localStorage.removeItem(HAS_STUDENTS_KEY)`. The flag was gone by the time auth resolved, so the fast path was never taken. Also added `loading` and `user` to the dependency array.
+
+**useStudents.js** — Replaced two separate `useState` declarations with a single uid-tagged `state` object. Derived `students` and `loading` from the state only when `state.uid === uid`, so stale pre-auth state can never satisfy the load gate on a uid transition. `loading` is `true` any time `uid` is truthy but the state hasn't caught up yet.
+
+**useSchoolSettings.js** — Same uid-tagged pattern applied. State object carries `{ uid, schoolName, tagline, loading }`. Derived values fall back to defaults when `state.uid !== uid`.
 
 ## What is broken right now
 Nothing known.
@@ -14,4 +19,6 @@ Nothing known.
 2. Confirm task with Rob
 
 ## Key files changed this session
-- `packages/dashboard/src/App.jsx` (114 lines)
+- `packages/dashboard/src/App.jsx` (116 lines)
+- `packages/dashboard/src/hooks/useStudents.js` (42 lines)
+- `packages/dashboard/src/hooks/useSchoolSettings.js` (39 lines)

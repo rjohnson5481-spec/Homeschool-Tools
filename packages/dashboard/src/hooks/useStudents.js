@@ -4,27 +4,33 @@ import { db } from '@homeschool/shared';
 
 // Subscribes to /users/{uid}/students.
 // Each document: { name, emoji, order }
-// Returns stable references — studentMap and getStudentName are recreated only
-// when the students array changes.
+// State is uid-tagged so stale pre-auth state cannot satisfy the load gate.
 export function useStudents(uid) {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState({ uid: null, students: [], loading: false });
 
   useEffect(() => {
     if (!uid) {
-      setStudents([]);
-      setLoading(false);
+      setState({ uid: null, students: [], loading: false });
       return;
     }
-    setLoading(true);
-    setStudents([]);
+    setState(prev => ({
+      uid,
+      students: prev.uid === uid ? prev.students : [],
+      loading: true,
+    }));
     const q = query(collection(db, `users/${uid}/students`), orderBy('order', 'asc'));
     const unsub = onSnapshot(q, snap => {
-      setStudents(snap.docs.map(d => ({ studentId: d.id, ...d.data() })));
-      setLoading(false);
+      setState({
+        uid,
+        students: snap.docs.map(d => ({ studentId: d.id, ...d.data() })),
+        loading: false,
+      });
     });
     return unsub;
   }, [uid]);
+
+  const students = state.uid === uid ? state.students : [];
+  const loading  = Boolean(uid) && (state.uid !== uid || state.loading);
 
   const studentMap = Object.fromEntries(students.map(s => [s.studentId, s]));
 

@@ -2,28 +2,38 @@ import { useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 
+// State is uid-tagged so stale pre-auth state cannot satisfy the load gate.
 export function useSchoolSettings(uid) {
-  const [schoolName, setSchoolName] = useState('My Homeschool');
-  const [tagline, setTagline]       = useState('');
-  const [loading, setLoading]       = useState(true);
+  const [state, setState] = useState({
+    uid: null, schoolName: 'My Homeschool', tagline: '', loading: false,
+  });
 
   useEffect(() => {
     if (!uid) {
-      setSchoolName('My Homeschool');
-      setTagline('');
-      setLoading(false);
+      setState({ uid: null, schoolName: 'My Homeschool', tagline: '', loading: false });
       return;
     }
-    setLoading(true);
-    const ref = doc(db, `users/${uid}/settings/school`);
-    const unsub = onSnapshot(ref, snap => {
+    setState(prev => ({
+      uid,
+      schoolName: prev.uid === uid ? prev.schoolName : 'My Homeschool',
+      tagline:    prev.uid === uid ? prev.tagline    : '',
+      loading:    true,
+    }));
+    const unsub = onSnapshot(doc(db, `users/${uid}/settings/school`), snap => {
       const data = snap.data();
-      setSchoolName(data?.name ?? 'My Homeschool');
-      setTagline(data?.tagline ?? '');
-      setLoading(false);
+      setState({
+        uid,
+        schoolName: data?.name    ?? 'My Homeschool',
+        tagline:    data?.tagline ?? '',
+        loading:    false,
+      });
     });
     return unsub;
   }, [uid]);
+
+  const schoolName = state.uid === uid ? state.schoolName : 'My Homeschool';
+  const tagline    = state.uid === uid ? state.tagline    : '';
+  const loading    = Boolean(uid) && (state.uid !== uid || state.loading);
 
   return { schoolName, tagline, loading };
 }

@@ -27,12 +27,14 @@ export default function App() {
   const cachedHasStudents = localStorage.getItem(HAS_STUDENTS_KEY) === 'true';
   useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0].studentId); }, [students, plannerStudent]);
   // Sync localStorage flag when Firestore confirms student list.
+  // Guard with auth state — pre-auth empty state must not wipe the flag.
   useEffect(() => {
+    if (loading || !user) return;
     if (!studentsLoading) {
       if (students.length > 0) localStorage.setItem(HAS_STUDENTS_KEY, 'true');
       else localStorage.removeItem(HAS_STUDENTS_KEY);
     }
-  }, [students, studentsLoading]);
+  }, [loading, user, students, studentsLoading]);
   // Clear flag on sign-out so a new family starting fresh sees onboarding.
   useEffect(() => {
     if (!loading && !user) localStorage.removeItem(HAS_STUDENTS_KEY);
