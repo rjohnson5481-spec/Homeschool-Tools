@@ -70,7 +70,7 @@ export default function PlannerLayout({
   }
 
   const { handleApplySchedule, handleConfirmImport, handleMoveCell } = usePlannerHelpers({
-    user, weekId, student,
+    user, weekId, studentId: student, students,
     pdfImport, importCell,
     jumpToWeek, setStudent,
   });
