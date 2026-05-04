@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '@homeschool/shared';
-import logo from '@homeschool/shared/assets/logo.png';
 import { useHomeSummary } from '../hooks/useHomeSummary.js';
 import { useComplianceSummary } from '../hooks/useComplianceSummary.js';
 import { updateCell } from '../tools/planner/firebase/planner.js';
@@ -15,7 +14,7 @@ function greetingForHour(hour) {
   return 'Good Night';
 }
 
-export default function HomeTab({ schoolName }) {
+export default function HomeTab() {
   const { user } = useAuth();
   const uid = user?.uid;
   const { students, lessonsByStudent, attendance, weekId, dayIndex, todayLabel } = useHomeSummary(uid);
@@ -30,12 +29,6 @@ export default function HomeTab({ schoolName }) {
 
   return (
     <div className="home-tab">
-      <header className="home-header">
-        <div className="home-header-brand">
-          <img src={logo} alt="ILA" className="home-header-logo" />
-          <div className="home-header-name">{schoolName ?? 'My Homeschool'}</div>
-        </div>
-      </header>
       <div className="home-content">
         <div className="home-header-bar">
           <span className="home-date">{todayLabel}</span>
@@ -88,14 +81,16 @@ export default function HomeTab({ schoolName }) {
                       <div className="home-progress-fill-lessons" style={{ width: `${lessonPct}%` }} />
                     </div>
                   </div>
-                  <div className="home-progress-row">
-                    <div className="home-progress-labels">
-                      <span>{daysAttended} of {daysRequired} days · {attPct}%</span>
+                  {daysRequired > 0 && (
+                    <div className="home-progress-row">
+                      <div className="home-progress-labels">
+                        <span>{daysAttended} of {daysRequired} days · {attPct}%</span>
+                      </div>
+                      <div className="home-progress-track">
+                        <div className="home-progress-fill-attendance" style={{ width: `${attPct}%` }} />
+                      </div>
                     </div>
-                    <div className="home-progress-track">
-                      <div className="home-progress-fill-attendance" style={{ width: `${attPct}%` }} />
-                    </div>
-                  </div>
+                  )}
                 </div>
                 <div className="home-lesson-list">
                   {lessons.map(l => (

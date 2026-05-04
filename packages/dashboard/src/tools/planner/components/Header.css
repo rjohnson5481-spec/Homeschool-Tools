@@ -202,4 +202,5 @@
    Shell sidebar provides branding + nav; week nav moves into content. */
 @media (min-width: 810px) {
   .header { display: none; }
+  .header-brand { display: none; }
 }

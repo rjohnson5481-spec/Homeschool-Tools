@@ -30,10 +30,20 @@ export default function App() {
   // stays in sync automatically.
   const { mode: colorMode, toggle: toggleDarkMode } = useDarkMode();
 
+  // Tracks whether both Firestore hooks have fired their first snapshot.
+  // Stays false until both loading flags clear — prevents the onboarding
+  // flash that occurs when one hook resolves before its snapshot arrives.
+  // Reset to false on uid change so a fresh sign-in re-waits.
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  useEffect(() => { setInitialLoadComplete(false); }, [user?.uid]);
+  useEffect(() => {
+    if (!studentsLoading && !schoolSettingsLoading && user) setInitialLoadComplete(true);
+  }, [studentsLoading, schoolSettingsLoading, user]);
+
   if (loading) return null;
   if (!user)   return <SignIn />;
 
-  if (studentsLoading || schoolSettingsLoading) return (
+  if (!initialLoadComplete) return (
     <div className="app-loading">
       <img src={logo} alt="ILA" />
       <div className="app-loading-dots">
@@ -49,7 +59,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="shell-content">
-        {activeTab === 'home'     && <HomeTab schoolName={schoolName} />}
+        {activeTab === 'home'     && <HomeTab />}
         {activeTab === 'planner'  && (
           <PlannerTab
             student={plannerStudent}

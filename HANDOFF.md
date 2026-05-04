@@ -1,10 +1,15 @@
-# HANDOFF — v0.43.3
+# HANDOFF — v0.44.0
 
 ## Completed this session
-Bug fix: useSchoolSettings field name mismatch.
+Bundle fix: Header duplication + onboarding flash + compliance display.
 
 ### What was done
-- **useSchoolSettings.js** — line 18: `data?.schoolName` → `data?.name` to match the field OnboardingFlow writes. OnboardingFlow saves `{ name: ..., tagline: ... }` but the hook was reading `schoolName`, always falling back to `'My Homeschool'`. All school name display and pre-population now works correctly.
+
+**FIX 1 — Header.css** — Added `.header-brand { display: none; }` inside the existing `@media (min-width: 810px)` block. The whole `.header` was already hidden at desktop; this adds an explicit brand rule for clarity.
+
+**FIX 2 — HomeTab.jsx + App.jsx** — Removed the `<header className="home-header">` brand block from HomeTab entirely (JSX + logo import + schoolName prop). App.jsx updated to call `<HomeTab />` with no props. Also wrapped the attendance progress row in `{daysRequired > 0 && (...)}` to fix the "163 of 0 days" display when compliance is enabled but requiredDays is 0.
+
+**FIX 3 — App.jsx** — Replaced the bare `studentsLoading || schoolSettingsLoading` gate with an `initialLoadComplete` latch state that resolves to `true` only after both Firestore hooks have fired their first snapshot. Prevents the onboarding screen from flashing on page refresh.
 
 ## What is broken right now
 Nothing known.
@@ -14,4 +19,6 @@ Nothing known.
 2. Confirm task with Rob
 
 ## Key files changed this session
-- `src/hooks/useSchoolSettings.js` (27 lines)
+- `packages/dashboard/src/tools/planner/components/Header.css` (206 lines)
+- `packages/dashboard/src/tabs/HomeTab.jsx` (121 lines)
+- `packages/dashboard/src/App.jsx` (94 lines)
