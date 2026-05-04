@@ -75,7 +75,7 @@ export default function UploadSheet({ pdfImport, onApply, onConfirmImport, onClo
             )}
 
             {diff && !applied && (
-              <ImportDiffPreview diff={diff} student={result?.student} weekId={result?.weekId} />
+              <ImportDiffPreview diff={diff} student={result?.studentName} weekId={result?.weekId} />
             )}
 
             {log.length > 0 && (

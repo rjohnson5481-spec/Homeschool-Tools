@@ -87,19 +87,20 @@ export function usePdfImport() {
       const data = JSON.parse(text);
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
 
-      const { dedupedDays, renames } = dedupeSubjects(data.days);
+      const { student: studentName, ...restData } = data;
+      const { dedupedDays, renames } = dedupeSubjects(restData.days);
       const totalLessons = dedupedDays.reduce((n, d) => n + (d.lessons?.length ?? 0), 0);
       const dayNames = dedupedDays.map(d => DAY_SHORT[d.dayIndex]).join(', ');
       const allSubjects = [...new Set(
         dedupedDays.flatMap(d => (d.lessons ?? []).map(l => l.subject))
       )];
-      addLog(`Parsed: ${data.student} · ${data.weekId} · ${dedupedDays.length} days (${dayNames})`);
+      addLog(`Parsed: ${studentName} · ${restData.weekId} · ${dedupedDays.length} days (${dayNames})`);
       addLog(`Subjects (${allSubjects.length}): ${allSubjects.join(', ')}`);
       if (renames.length > 0) {
         addLog(`Renamed ${renames.length} duplicate(s): ${renames.map(r => `${DAY_SHORT[r.dayIndex]} "${r.original}" → "${r.renamed}"`).join(', ')}`);
       }
       addLog(`Total: ${totalLessons} lessons`);
-      setResult({ ...data, days: dedupedDays });
+      setResult({ ...restData, days: dedupedDays, studentName });
     } catch (err) {
       const msg = err.stack ? `${err.message}\n${err.stack}` : err.message;
       addLog(`Error: ${msg}`);
