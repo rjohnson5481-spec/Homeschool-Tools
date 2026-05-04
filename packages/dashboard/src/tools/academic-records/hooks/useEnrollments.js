@@ -13,14 +13,14 @@ import {
 // Manages enrollments + optional planner sync.
 //
 // Returns:
-//   enrollments        — Array<{ id, courseId, student, yearId, notes, syncPlanner }>
+//   enrollments        — Array<{ id, courseId, studentId, yearId, notes, syncPlanner }>
 //   loading            — boolean
 //   error              — string | null
 //   addEnrollment      — async (data) => newId
 //   updateEnrollment   — async (enrollmentId, data) => void
 //   removeEnrollment   — async (enrollmentId) => void
 //
-// Planner sync (writes to /users/{uid}/subjectPresets/{student}):
+// Planner sync (writes to /users/{uid}/subjectPresets/{studentId}):
 //   - addEnrollment    — when data.syncPlanner is true, append the course
 //                        name to that student's subjectPresets if absent.
 //   - updateEnrollment — only when syncPlanner transitions false → true.
@@ -52,17 +52,17 @@ export function useEnrollments(uid, courses) {
 
   useEffect(() => { reload(); }, [reload]);
 
-  // Append the course's name to {student}'s planner subjectPresets if absent.
+  // Append the course's name to {studentId}'s planner subjectPresets if absent.
   // Reads + writes the existing planner settings doc — no-op if course missing
   // from the catalog or if the name is already in the preset list.
-  async function syncCourseToPlanner(courseId, student) {
-    if (!uid || !student) return;
+  async function syncCourseToPlanner(courseId, studentId) {
+    if (!uid || !studentId) return;
     const course = (courses ?? []).find(c => c.id === courseId);
     const name = course?.name?.trim();
     if (!name) return;
-    const current = await readSettingsSubjects(uid, student);
+    const current = await readSettingsSubjects(uid, studentId);
     if (current.includes(name)) return;
-    await writeSettingsSubjects(uid, student, [...current, name]);
+    await writeSettingsSubjects(uid, studentId, [...current, name]);
   }
 
   const addEnrollment = useCallback(async (data) => {
@@ -70,7 +70,7 @@ export function useEnrollments(uid, courses) {
     try {
       const id = await fbAddEnrollment(uid, data);
       if (data.syncPlanner) {
-        await syncCourseToPlanner(data.courseId, data.student);
+        await syncCourseToPlanner(data.courseId, data.studentId);
       }
       await reload();
       return id;
@@ -88,7 +88,7 @@ export function useEnrollments(uid, courses) {
       await fbSaveEnrollment(uid, enrollmentId, data);
       // Only sync on the false → true transition; once-synced stays synced.
       if (data.syncPlanner && !wasSync) {
-        await syncCourseToPlanner(data.courseId, data.student);
+        await syncCourseToPlanner(data.courseId, data.studentId);
       }
       await reload();
     } catch (err) {

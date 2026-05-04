@@ -30,7 +30,7 @@ function countSchoolDays(startStr, endStr) {
   return count;
 }
 
-export function useAcademicSummary(uid, student, schoolYears, enrollments, courses) {
+export function useAcademicSummary(uid, studentId, schoolYears, enrollments, courses) {
   const [sickDates, setSickDates] = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(null);
@@ -51,7 +51,7 @@ export function useAcademicSummary(uid, student, schoolYears, enrollments, cours
     return (cur ?? qs[0]).id;
   }, [activeSchoolYear]);
 
-  const studentEnrollments = useMemo(() => (enrollments ?? []).filter(e => e.student === student), [enrollments, student]);
+  const studentEnrollments = useMemo(() => (enrollments ?? []).filter(e => e.studentId === studentId), [enrollments, studentId]);
   const courseCount = studentEnrollments.length;
   void courses;
 
