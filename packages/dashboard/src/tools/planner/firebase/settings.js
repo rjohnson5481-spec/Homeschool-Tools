@@ -22,12 +22,12 @@ export function writeSettingsStudents(uid, names) {
 
 // Reads default subject presets for one student.
 // Falls back to SUBJECT_PRESETS constant if no doc exists.
-export async function readSettingsSubjects(uid, student) {
-  const snap = await getDoc(doc(db, settingsSubjectsPath(uid, student)));
+export async function readSettingsSubjects(uid, studentId) {
+  const snap = await getDoc(doc(db, settingsSubjectsPath(uid, studentId)));
   return snap.exists() ? snap.data().subjects : [...SUBJECT_PRESETS];
 }
 
 // Writes default subject presets for one student.
-export function writeSettingsSubjects(uid, student, subjects) {
-  return setDoc(doc(db, settingsSubjectsPath(uid, student)), { subjects });
+export function writeSettingsSubjects(uid, studentId, subjects) {
+  return setDoc(doc(db, settingsSubjectsPath(uid, studentId)), { subjects });
 }

@@ -10,8 +10,8 @@ import { daySubjectsPath, cellPath, sickDayPath } from '../constants/firestore.j
 // cb receives: { [subject]: { lesson, note, done, flag } }
 // A subject is present iff its document exists in the subjects subcollection.
 // Returns the Firestore unsubscribe function.
-export function subscribeDaySubjects(uid, weekId, student, dayIndex, cb) {
-  const colRef = collection(db, daySubjectsPath(uid, weekId, student, dayIndex));
+export function subscribeDaySubjects(uid, weekId, studentId, dayIndex, cb) {
+  const colRef = collection(db, daySubjectsPath(uid, weekId, studentId, dayIndex));
   return onSnapshot(colRef, snap => {
     const data = {};
     snap.forEach(d => { data[d.id] = d.data(); });
@@ -22,28 +22,28 @@ export function subscribeDaySubjects(uid, weekId, student, dayIndex, cb) {
 // Writes one day cell. merge:true so partial updates don't wipe other fields.
 // data shape: { lesson: string, note: string, done: boolean, flag: boolean }
 // Creating a cell document IS adding that subject to that day.
-export function updateCell(uid, weekId, student, subject, dayIndex, data) {
-  const ref = doc(db, cellPath(uid, weekId, student, dayIndex, subject));
+export function updateCell(uid, weekId, studentId, subject, dayIndex, data) {
+  const ref = doc(db, cellPath(uid, weekId, studentId, dayIndex, subject));
   return setDoc(ref, { ...data, uid }, { merge: true });
 }
 
 // Reads one day cell. Returns data object or null if the document doesn't exist.
-export async function readCell(uid, weekId, student, dayIndex, subject) {
-  const snap = await getDoc(doc(db, cellPath(uid, weekId, student, dayIndex, subject)));
+export async function readCell(uid, weekId, studentId, dayIndex, subject) {
+  const snap = await getDoc(doc(db, cellPath(uid, weekId, studentId, dayIndex, subject)));
   return snap.exists() ? snap.data() : null;
 }
 
 // Deletes a cell document — removes a subject from a specific day only.
-export function deleteCell(uid, weekId, student, dayIndex, subject) {
-  return deleteDoc(doc(db, cellPath(uid, weekId, student, dayIndex, subject)));
+export function deleteCell(uid, weekId, studentId, dayIndex, subject) {
+  return deleteDoc(doc(db, cellPath(uid, weekId, studentId, dayIndex, subject)));
 }
 
 // Deletes all cell documents for every day of a week for one student.
 // Queries all 5 days in parallel, then deletes all found docs in parallel.
-export async function deleteWeek(uid, weekId, student) {
+export async function deleteWeek(uid, weekId, studentId) {
   const snapshots = await Promise.all(
     [0, 1, 2, 3, 4].map(i =>
-      getDocs(collection(db, daySubjectsPath(uid, weekId, student, i)))
+      getDocs(collection(db, daySubjectsPath(uid, weekId, studentId, i)))
     )
   );
   return Promise.all(
@@ -53,14 +53,14 @@ export async function deleteWeek(uid, weekId, student) {
 
 // Writes a sick day marker for a specific date.
 // dateString: "YYYY-MM-DD", subjectsShifted: string[]
-export function writeSickDay(uid, dateString, student, subjectsShifted) {
-  return setDoc(doc(db, sickDayPath(uid, dateString)), { student, date: dateString, subjectsShifted });
+export function writeSickDay(uid, dateString, studentId, subjectsShifted) {
+  return setDoc(doc(db, sickDayPath(uid, dateString)), { studentId, date: dateString, subjectsShifted });
 }
 
 // Reads all subjects present on a specific day as a one-time snapshot (not reactive).
 // Returns: { [subject]: { lesson, note, done, flag } }
-export async function readDaySubjectsOnce(uid, weekId, student, dayIndex) {
-  const snap = await getDocs(collection(db, daySubjectsPath(uid, weekId, student, dayIndex)));
+export async function readDaySubjectsOnce(uid, weekId, studentId, dayIndex) {
+  const snap = await getDocs(collection(db, daySubjectsPath(uid, weekId, studentId, dayIndex)));
   const data = {};
   snap.forEach(d => { data[d.id] = d.data(); });
   return data;
@@ -120,15 +120,15 @@ export async function migrateBadWeeks(uid) {
     const key = `weekMigration_${bad}`;
     if (localStorage.getItem(key) === 'done') continue;
 
-    for (const student of students) {
+    for (const studentId of students) {
       for (let dayIndex = 0; dayIndex <= 4; dayIndex++) {
-        const subjects = await readDaySubjectsOnce(uid, bad, student, dayIndex);
+        const subjects = await readDaySubjectsOnce(uid, bad, studentId, dayIndex);
         for (const [subject, data] of Object.entries(subjects)) {
-          const existing = await readCell(uid, good, student, dayIndex, subject);
-          if (!existing) await updateCell(uid, good, student, subject, dayIndex, data);
+          const existing = await readCell(uid, good, studentId, dayIndex, subject);
+          if (!existing) await updateCell(uid, good, studentId, subject, dayIndex, data);
         }
       }
-      await deleteWeek(uid, bad, student);
+      await deleteWeek(uid, bad, studentId);
     }
     localStorage.setItem(key, 'done');
   }
