@@ -26,7 +26,7 @@ export default function PlannerTab({ student, setStudent, students, subjectsBySt
   // Fall back to first student if the selected one was removed.
   useEffect(() => {
     if (!students || students.length === 0) return;
-    if (!students.includes(student)) setStudent(students[0]);
+    if (!students.some(s => s.studentId === student)) setStudent(students[0]?.studentId);
   }, [students, student]);
 
   if (!user) return null;

@@ -1,7 +1,7 @@
-# HANDOFF — v0.42.2 React #31 crash fix complete
+# HANDOFF — v0.42.3 Header.jsx crash fix + PlannerTab guard fix complete
 
 ## Current version
-v0.42.2
+v0.42.3
 
 ## What is complete
 
@@ -17,16 +17,16 @@ v0.42.2
 - v0.42.0 — Settings student management rewritten to /students/ subcollection
 - v0.42.1 — Onboarding add form labels + step indicator cleanup
 - v0.42.2 — Fix React error #31: DayStrip + AddSubjectSheet student object crash
-  - DayStrip.jsx: was mapping students as string[], now maps as objects.
+- v0.42.3 — Fix React error #31: Header.jsx + PlannerTab.jsx student object crash
+  - Header.jsx: was mapping students as string[], now maps as objects.
     key=s.studentId, compare student===s.studentId, render {s.name},
-    call onStudentChange(s.studentId). 63 lines.
-  - AddSubjectSheet.jsx: same migration. Removed hardcoded STUDENT_EMOJI map.
-    key/Set/toggleStudent all use s.studentId; emoji from s.emoji; name from
-    s.name. studentsSummary maps Set of studentIds to names via students.find.
-    232 lines.
+    call onStudentChange(s.studentId). 67 lines.
+  - PlannerTab.jsx: students.includes(student) → students.some(s =>
+    s.studentId === student); students[0] → students[0]?.studentId. 61 lines.
 
 ## What is broken right now
-- Nothing known. App is self-bootstrapping for new families.
+- Nothing known. All student-object render sites in the planner are now fixed.
+  App is self-bootstrapping for new families.
 - One document in /users/{uid}/students/ has empty name (from a test run).
   Rob to delete manually in Firebase console — no code change needed.
 
@@ -47,6 +47,6 @@ v0.42.2
 ## Next session start steps
 1. Read CLAUDE.md and HANDOFF.md in full
 2. git checkout main && git pull origin main
-3. Confirm version is 0.42.2
+3. Confirm version is 0.42.3
 4. Confirm with Rob what to build next (Session 9 candidates:
    home tab zero/zero fix, 175-day hardcode, or Phase 5 month view)
