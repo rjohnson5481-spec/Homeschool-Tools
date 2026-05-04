@@ -10,7 +10,7 @@ const TABS = [
 ];
 
 // Props: activeTab (string), onTabChange (fn),
-//        students (string[]), activeStudent (string), onStudentChange (fn).
+//        students ({studentId, name, emoji}[]), activeStudent (studentId string), onStudentChange (fn).
 // The student section renders only when activeTab === 'planner' and only
 // on desktop (hidden on mobile via CSS). The footer shows only the version
 // on desktop — dark-mode toggle + sign-out moved into the Settings tab.
@@ -64,13 +64,13 @@ export default function BottomNav({
       {showStudents && (
         <div className="bn-students">
           <div className="bn-students-label">Student</div>
-          {students.map(name => (
+          {students.map(s => (
             <button
-              key={name}
-              className={`bn-student-btn${name === activeStudent ? ' bn-student-btn--active' : ''}`}
-              onClick={() => onStudentChange(name)}
+              key={s.studentId}
+              className={`bn-student-btn${s.studentId === activeStudent ? ' bn-student-btn--active' : ''}`}
+              onClick={() => onStudentChange(s.studentId)}
             >
-              {name}
+              {s.emoji ? `${s.emoji} ` : ''}{s.name}
             </button>
           ))}
         </div>

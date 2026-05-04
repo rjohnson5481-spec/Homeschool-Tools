@@ -7,17 +7,18 @@ import PlannerTab          from './tabs/PlannerTab';
 import AcademicRecordsTab  from './tabs/AcademicRecordsTab';
 import SettingsTab         from './tabs/SettingsTab';
 import { useSettings }     from './tools/planner/hooks/useSettings.js';
+import { useStudents }     from './hooks/useStudents.js';
 import { useDarkMode }     from './hooks/useDarkMode.js';
 
 export default function App() {
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
-  // Planner student is lifted here so the desktop sidebar can show a
-  // student selector when the planner tab is active. Mobile planner
-  // header still uses these same props — behavior is unchanged.
+  // plannerStudent stores a studentId. Lifted here so the desktop sidebar
+  // can show a student selector when the planner tab is active.
   const [plannerStudent, setPlannerStudent] = useState('');
-  const { students, subjectsByStudent } = useSettings(user?.uid, plannerStudent);
-  useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0]); }, [students, plannerStudent]);
+  const { students } = useStudents(user?.uid);
+  const { subjectsByStudent } = useSettings(user?.uid, plannerStudent);
+  useEffect(() => { if (!plannerStudent && students.length > 0) setPlannerStudent(students[0].studentId); }, [students, plannerStudent]);
   // Dark-mode state lives at the shell so the Settings tab (and the
   // BottomNav sidebar, if ever needed again) can share a single source
   // of truth. The hook writes to `localStorage.color-mode` and the
