@@ -1,15 +1,12 @@
-# HANDOFF — v0.44.6
+# HANDOFF — v0.44.7
 
 ## Completed this session
-Bug fix: Onboarding flash root cause — pre-auth empty state was wiping the localStorage flag.
+Bug fix: Compliance required days not saving — setDoc with dot-notation keys was writing literal flat field names instead of nested paths.
 
 ### What was done
+**firebase/compliance.js** — Added `updateDoc` to the Firestore import. Changed `saveCompliance` from `setDoc(..., { merge: true })` to `updateDoc(...)`. The root cause: `setDoc` with `merge: true` treats dot-notation keys (e.g. `"requiredByStudent.abc123.requiredDays"`) as literal field names, not nested path references. Only `updateDoc` correctly interprets dot-notation as nested paths. The compliance doc is always created by the toggle handlers (which use `setDoc + merge: true`), so `updateDoc` is safe for all subsequent granular saves.
 
-**App.jsx** — Added `if (loading || !user) return` guard at the top of the cache sync useEffect. Previously, `useStudents(undefined)` would set `studentsLoading=false` with empty students before Firebase Auth resolved, causing the effect to call `localStorage.removeItem(HAS_STUDENTS_KEY)`. The flag was gone by the time auth resolved, so the fast path was never taken. Also added `loading` and `user` to the dependency array.
-
-**useStudents.js** — Replaced two separate `useState` declarations with a single uid-tagged `state` object. Derived `students` and `loading` from the state only when `state.uid === uid`, so stale pre-auth state can never satisfy the load gate on a uid transition. `loading` is `true` any time `uid` is truthy but the state hasn't caught up yet.
-
-**useSchoolSettings.js** — Same uid-tagged pattern applied. State object carries `{ uid, schoolName, tagline, loading }`. Derived values fall back to defaults when `state.uid !== uid`.
+**constants/compliance.js** — Updated stale comment from `[name]` to `[studentId]` in the data model doc for both `requiredByStudent` and `hoursByStudent` maps.
 
 ## What is broken right now
 Nothing known.
@@ -19,6 +16,5 @@ Nothing known.
 2. Confirm task with Rob
 
 ## Key files changed this session
-- `packages/dashboard/src/App.jsx` (116 lines)
-- `packages/dashboard/src/hooks/useStudents.js` (42 lines)
-- `packages/dashboard/src/hooks/useSchoolSettings.js` (39 lines)
+- `packages/dashboard/src/firebase/compliance.js` (56 lines)
+- `packages/dashboard/src/constants/compliance.js` (29 lines)

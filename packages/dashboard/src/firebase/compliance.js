@@ -3,7 +3,7 @@
 // constants/compliance.js.
 
 import {
-  collection, doc, onSnapshot, setDoc, query, where, documentId,
+  collection, doc, onSnapshot, setDoc, updateDoc, query, where, documentId,
 } from 'firebase/firestore';
 import { db } from '@homeschool/shared';
 import {
@@ -20,13 +20,13 @@ export function subscribeCompliance(uid, cb) {
   });
 }
 
-// Partial-update writer for the compliance settings doc. setDoc + merge:true
-// creates the doc on first save (fresh accounts) and merges on subsequent
-// saves. Values may include FieldValue.deleteField() to remove deprecated
-// fields. Used by ComplianceSheet's per-input granular saves and the lazy
-// contract migration of the deprecated top-level requiredDays / requiredHours.
+// Partial-update writer for the compliance settings doc. updateDoc correctly
+// interprets dot-notation keys (e.g. "requiredByStudent.abc123.requiredDays")
+// as nested path references. The doc is always created first by the toggle
+// handlers (setDoc + merge:true), so updateDoc is safe here. Values may
+// include FieldValue.deleteField() to remove deprecated fields.
 export function saveCompliance(uid, partial) {
-  return setDoc(doc(db, compliancePath(uid)), partial, { merge: true });
+  return updateDoc(doc(db, compliancePath(uid)), partial);
 }
 
 // Writes hours for a single student on a single date. setDoc + merge:true
