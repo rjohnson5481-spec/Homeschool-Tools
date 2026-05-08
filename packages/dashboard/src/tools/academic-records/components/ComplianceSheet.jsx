@@ -6,6 +6,32 @@ import './ComplianceSheet.css';
 
 const SAVE_DEBOUNCE_MS = 500;
 
+// Counts weekdays from schoolYear.startDate through yesterday, excluding any
+// days that fall inside a break period. Returns 0 if start is in the future.
+function calcStartingDays(schoolYear) {
+  if (!schoolYear?.startDate) return 0;
+  const start = new Date(schoolYear.startDate + 'T12:00:00');
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setHours(12, 0, 0, 0);
+  if (start > yesterday) return 0;
+
+  const breaks = schoolYear.breaks ?? [];
+  let count = 0;
+  const cursor = new Date(start);
+
+  while (cursor <= yesterday) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 6) {
+      const cursorStr = cursor.toISOString().slice(0, 10);
+      const inBreak = breaks.some(b => b.startDate <= cursorStr && cursorStr <= b.endDate);
+      if (!inBreak) count++;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return count;
+}
+
 // Per-student compliance configuration sheet. Open/close lives in
 // AcademicRecordsTab. Each input handler queues a granular partial-update;
 // the accumulated patch flushes to Firestore 500ms after the last change.
@@ -13,7 +39,8 @@ const SAVE_DEBOUNCE_MS = 500;
 // requiredDays / requiredHours — the lazy contract half of the Session 4.1
 // expand-then-contract migration. Idempotent once the fields are gone.
 // students prop: [{ studentId, name, emoji }] — passed from AcademicRecordsTab via useStudents
-export default function ComplianceSheet({ open, onClose, uid, students = [] }) {
+// activeSchoolYear: { id, label, startDate, endDate, breaks: [...] } | null
+export default function ComplianceSheet({ open, onClose, uid, students = [], activeSchoolYear = null }) {
   const [settings, setSettings]       = useState(COMPLIANCE_DEFAULTS);
   const [pendingPatch, setPendingPatch] = useState(null);
   const saveTimer                     = useRef(null);
@@ -76,6 +103,9 @@ export default function ComplianceSheet({ open, onClose, uid, students = [] }) {
   if (!open) return null;
 
   const noStudents = students.length === 0;
+  const autoCalc = !!settings.autoCalcStartingDays;
+  const hasSchoolYear = !!activeSchoolYear?.startDate;
+  const autoCalcValue = hasSchoolYear ? calcStartingDays(activeSchoolYear) : 0;
 
   return (
     <div className="cs-sheet-overlay" onClick={onClose}>
@@ -124,15 +154,33 @@ export default function ComplianceSheet({ open, onClose, uid, students = [] }) {
                 ))}
                 <label className="sc-field">
                   <span className="sc-field-label">Starting days completed</span>
-                  <input type="number" min="0" step="1" className="sc-input"
-                    value={settings.startingDays ?? 0}
-                    onChange={e => setField('startingDays', parseInt(e.target.value, 10) || 0)} />
+                  <input
+                    type="number" min="0" step="1"
+                    className={`sc-input${autoCalc ? ' sc-input--readonly' : ''}`}
+                    value={autoCalc ? autoCalcValue : (settings.startingDays ?? 0)}
+                    readOnly={autoCalc}
+                    onChange={e => !autoCalc && setField('startingDays', parseInt(e.target.value, 10) || 0)}
+                  />
                   <span className="sc-field-help">
                     Total school days you have already completed this school
                     year before enabling tracking. Leave at 0 if you have been
                     using this planner since the school year started.
                   </span>
                 </label>
+                {hasSchoolYear && (
+                  <div className="st-row sc-autocalc-row">
+                    <div className="st-row-body">
+                      <span className="st-row-title">Auto-calculate from calendar</span>
+                      <span className="st-row-sub">Counts weekdays from year start to yesterday, minus breaks</span>
+                    </div>
+                    <button
+                      className={`st-toggle${autoCalc ? ' st-toggle--on' : ''}`}
+                      onClick={() => setField('autoCalcStartingDays', !autoCalc)}
+                      aria-label="Toggle auto-calculate starting days"
+                      aria-pressed={autoCalc}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
