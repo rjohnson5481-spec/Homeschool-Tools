@@ -131,6 +131,20 @@
   font-size: 13px; color: var(--text-muted); font-style: italic;
 }
 
+/* Auto-calculate toggle row — inside sc-fields, no icon column */
+.sc-autocalc-row {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Read-only state when auto-calculate is active */
+.sc-input--readonly {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 @media (min-width: 400px) and (max-width: 809px) {
   .cs-sheet-title { font-size: 17px; }
   .cs-sheet-body  { padding: 20px; }

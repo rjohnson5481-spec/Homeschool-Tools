@@ -1,6 +1,8 @@
 // All Firestore path builders for the School Days Compliance feature.
 // Data model:
-//   /users/{uid}/settings/compliance              → { daysEnabled, hoursEnabled, startingDays, startingHours, requiredByStudent: { [studentId]: { requiredDays, requiredHours } } }
+//   /users/{uid}/settings/compliance              → { daysEnabled, hoursEnabled, startingDays, startingHours,
+//                                                      autoCalcStartingDays,
+//                                                      requiredByStudent: { [studentId]: { requiredDays, requiredHours } } }
 //   /users/{uid}/schoolDays/{dateString}          → { hoursByStudent: { [studentId]: number } }
 // dateString format: "YYYY-MM-DD" (matches sickDayPath / weekId convention).
 
@@ -23,6 +25,7 @@ export const COMPLIANCE_DEFAULTS = {
   daysEnabled: false,
   requiredDays: 0,
   startingDays: 0,
+  autoCalcStartingDays: false,
   hoursEnabled: false,
   requiredHours: 0,
   startingHours: 0,
