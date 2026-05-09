@@ -3,6 +3,7 @@ import { collection, collectionGroup, getDocs, onSnapshot, orderBy, query, where
 import { db } from '@homeschool/shared';
 import { subscribeCompliance, subscribeSchoolDays } from '../firebase/compliance.js';
 import { COMPLIANCE_DEFAULTS } from '../constants/compliance.js';
+import { calcStartingDays } from '../utils/calcStartingDays.js';
 
 // Per-student school-year-wide compliance metrics for downstream UI.
 //
@@ -84,7 +85,14 @@ export function useComplianceSummary(uid) {
         const fallback = years.length
           ? [...years].sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? '')).pop()
           : null;
-        setActiveSchoolYear(inRange ?? fallback ?? null);
+        let chosen = inRange ?? fallback ?? null;
+        if (chosen) {
+          const breaksSnap = await getDocs(
+            collection(db, 'users', uid, 'schoolYears', chosen.id, 'breaks'),
+          );
+          chosen = { ...chosen, breaks: breaksSnap.docs.map(d => ({ id: d.id, ...d.data() })) };
+        }
+        setActiveSchoolYear(chosen);
       } catch (err) {
         if (!cancelled) setError(err?.message ?? 'Failed to load school years');
       } finally {
@@ -145,12 +153,15 @@ export function useComplianceSummary(uid) {
   // year, returns startingDays for every student (cells subscription bails).
   const daysCompletedByStudent = useMemo(() => {
     if (!settings.daysEnabled) return {};
+    const startingDays = settings.autoCalcStartingDays
+      ? calcStartingDays(activeSchoolYear)
+      : (settings.startingDays ?? 0);
     const out = {};
     for (const studentId of students) {
-      out[studentId] = (settings.startingDays ?? 0) + (studentDateSets[studentId]?.size ?? 0);
+      out[studentId] = startingDays + (studentDateSets[studentId]?.size ?? 0);
     }
     return out;
-  }, [settings.daysEnabled, students, settings.startingDays, studentDateSets]);
+  }, [settings.daysEnabled, settings.autoCalcStartingDays, settings.startingDays, activeSchoolYear, students, studentDateSets]);
 
   const hoursCompletedByStudent = useMemo(() => {
     if (!settings.hoursEnabled) return {};
