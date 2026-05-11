@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
+import { compressImage } from '../../../utils/compressImage.js';
 import './CalendarImportSheet.css';
 
 // Bottom sheet that accepts an iCal, PDF, or image of a school calendar,
-// sends it to the Anthropic API (browser-direct, same pattern as TE Extractor),
-// and parses out school breaks. User reviews the results before confirming.
+// sends it to the parse-calendar Netlify Function, and parses out school
+// breaks. User reviews the results before confirming.
 //
 // Props:
 //   open           — boolean
@@ -11,6 +12,7 @@ import './CalendarImportSheet.css';
 //   onImport       — (breaks: Array<{ label, startDate, endDate }>) => Promise
 //   yearLabel      — string, displayed in the header for context
 //   existingBreaks — Array<{ startDate, endDate }>, used for dedup in preview
+//   uid            — string, Firebase user ID (required for rate limiting)
 
 const ACCEPT = '.ics,.ical,.pdf,.png,.jpg,.jpeg,.webp';
 
@@ -64,15 +66,7 @@ function buildCalendarLog({ file, startTime, endTime, rawText, parsed, existingB
   return lines.join('\n');
 }
 
-const SYSTEM_PROMPT = `You are a school calendar parser. Extract all school breaks, holidays, and non-school days from the provided calendar.
-
-Return ONLY a JSON array. Each element: { "label": "Break Name", "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }.
-For single-day holidays, startDate and endDate should be the same date.
-Combine consecutive days under the same break label into one range.
-Do not include weekends unless they are explicitly part of a named break.
-Do not include any explanation — only the JSON array.`;
-
-export default function CalendarImportSheet({ open, onClose, onImport, yearLabel, existingBreaks }) {
+export default function CalendarImportSheet({ open, onClose, onImport, yearLabel, existingBreaks, uid }) {
   const fileRef = useRef(null);
   const [file, setFile]           = useState(null);
   const [importing, setImporting] = useState(false);
@@ -90,36 +84,27 @@ export default function CalendarImportSheet({ open, onClose, onImport, yearLabel
     const startTime = Date.now();
     let rawText = '';
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-      if (!apiKey) throw new Error('Anthropic API key not configured');
-      const base64 = await readFileAsBase64(file);
-      const mediaType = mediaTypeFor(file);
-      const isImage = mediaType.startsWith('image/');
-      const isPdf = mediaType === 'application/pdf';
-      const contentBlock = (isImage || isPdf)
-        ? { type: isImage ? 'image' : 'document', source: { type: 'base64', media_type: mediaType, data: base64 } }
-        : { type: 'text', text: atob(base64) };
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const processedFile = file.type.startsWith('image/') ? await compressImage(file) : file;
+      const base64 = await readFileAsBase64(processedFile);
+      const mediaType = mediaTypeFor(processedFile);
+
+      const resp = await fetch('/.netlify/functions/parse-calendar', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 4096, system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: [
-            contentBlock,
-            { type: 'text', text: `Extract all school breaks and holidays from this calendar. File: ${file.name}` },
-          ] }],
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, mediaType, fileName: file.name, uid }),
       });
-      if (!resp.ok) { const body = await resp.text(); throw new Error(`API error ${resp.status}: ${body.slice(0, 200)}`); }
+
+      if (resp.status === 429) {
+        throw new Error('Daily import limit reached (5/day). Try again tomorrow.');
+      }
+      if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(`API error ${resp.status}: ${body.slice(0, 200)}`);
+      }
+
       const data = await resp.json();
-      rawText = data.content?.[0]?.text ?? '';
-      let text = rawText.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(text);
+      const parsed = data.breaks;
+      rawText = JSON.stringify(parsed);
       if (!Array.isArray(parsed)) throw new Error('Expected an array of breaks');
       const endTime = Date.now();
       setResults(parsed);

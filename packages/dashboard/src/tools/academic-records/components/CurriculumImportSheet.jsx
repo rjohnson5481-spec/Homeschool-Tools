@@ -1,5 +1,13 @@
 import { useState, useRef } from 'react';
+import { compressImage } from '../../../utils/compressImage.js';
 import './CurriculumImportSheet.css';
+
+// Props:
+//   open     — boolean
+//   onClose  — () => void
+//   onImport — (courses: Array<{ name, curriculum, gradingType }>) => Promise
+//   courses  — Array, existing courses for dedup
+//   uid      — string, Firebase user ID (required for rate limiting)
 
 const ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp';
 
@@ -22,7 +30,7 @@ function fileTypeLabel(file) {
 }
 
 function isDuplicate(parsed, existing) {
-  const pn = parsed.name.toLowerCase();
+  const pn = parsed.name?.toLowerCase() ?? parsed.title?.toLowerCase() ?? '';
   return (existing ?? []).some(c => {
     const en = c.name.toLowerCase();
     return en === pn || en.includes(pn) || pn.includes(en);
@@ -45,20 +53,14 @@ function buildCurriculumLog({ file, startTime, endTime, rawText, parsed, courses
   lines.push('');
   (parsed ?? []).forEach(c => {
     const tag = isDuplicate(c, courses) ? ' [DUPLICATE]' : '';
-    lines.push(`${c.name} — ${c.curriculum || '(no curriculum)'} [${c.gradingType}]${tag}`);
+    const name = c.name ?? c.title ?? '(unnamed)';
+    const pub = c.curriculum ?? c.publisher ?? '(no publisher)';
+    lines.push(`${name} — ${pub}${tag}`);
   });
   return lines.join('\n');
 }
 
-const CURRICULUM_SYSTEM_PROMPT = `You are a curriculum receipt and catalog parser for a homeschool. Extract all curriculum items, courses, and subjects from the provided document or image.
-Return ONLY a JSON array with no markdown, no preamble, and no explanation. Each item must have exactly these fields:
-name (string — course or subject name, e.g. 'Reading 3', 'Mathematics 4', 'Science 3'),
-curriculum (string — publisher or curriculum provider, e.g. 'BJU Press', 'Saxon Math', or empty string if unknown),
-gradingType (string — must be exactly 'letter' or 'esnu'. Use 'letter' for academic subjects. Use 'esnu' for non-academic subjects like Bible, PE, Art. Default to 'letter' if unclear),
-gradeLevel (string — grade level if detectable, e.g. '3', 'K', or empty string if unknown).
-If no curriculum items are found return an empty array.`;
-
-export default function CurriculumImportSheet({ open, onClose, onImport, courses }) {
+export default function CurriculumImportSheet({ open, onClose, onImport, courses, uid }) {
   const fileRef = useRef(null);
   const [file, setFile]         = useState(null);
   const [parsing, setParsing]   = useState(false);
@@ -76,25 +78,33 @@ export default function CurriculumImportSheet({ open, onClose, onImport, courses
     setParsing(true); setError(null); setResults(null); setRemoved(new Set()); setDebugLog(''); setShowLog(false);
     const startTime = Date.now(); let rawText = '';
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-      if (!apiKey) throw new Error('Anthropic API key not configured');
-      const base64 = await readFileAsBase64(file);
-      const mediaType = mediaTypeFor(file);
-      const isImage = mediaType.startsWith('image/');
-      const contentBlock = isImage
-        ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } }
-        : { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64 } };
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const processedFile = file.type.startsWith('image/') ? await compressImage(file) : file;
+      const base64 = await readFileAsBase64(processedFile);
+      const mediaType = mediaTypeFor(processedFile);
+
+      const resp = await fetch('/.netlify/functions/parse-curriculum', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: CURRICULUM_SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: [contentBlock, { type: 'text', text: `Extract all curriculum courses from this document. File: ${file.name}` }] }] }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, mediaType, fileName: file.name, uid }),
       });
-      if (!resp.ok) { const body = await resp.text(); throw new Error(`API error ${resp.status}: ${body.slice(0, 200)}`); }
+
+      if (resp.status === 429) {
+        throw new Error('Daily import limit reached (5/day). Try again tomorrow.');
+      }
+      if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(`API error ${resp.status}: ${body.slice(0, 200)}`);
+      }
+
       const data = await resp.json();
-      rawText = data.content?.[0]?.text ?? '';
-      let text = rawText.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(text);
+      rawText = JSON.stringify(data.courses);
+      // Function returns { title, publisher }; normalize to { name, curriculum }
+      const parsed = (data.courses ?? []).map(c => ({
+        name: c.title ?? c.name ?? '',
+        curriculum: c.publisher ?? c.curriculum ?? '',
+        gradingType: c.gradingType ?? 'letter',
+        gradeLevel: c.gradeLevel ?? '',
+      }));
       if (!Array.isArray(parsed)) throw new Error('Expected an array of courses');
       const endTime = Date.now();
       setResults(parsed);

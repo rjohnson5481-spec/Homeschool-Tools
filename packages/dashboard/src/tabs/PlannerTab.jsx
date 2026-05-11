@@ -21,7 +21,7 @@ export default function PlannerTab({ student, setStudent, students, subjectsBySt
     performSickDay, performUndoSickDay,
     loadWeekDataFrom,
   } = useSubjects(user?.uid, weekId, student, ui.day);
-  const pdfImport = usePdfImport();
+  const pdfImport = usePdfImport(user?.uid);
 
   // Fall back to first student if the selected one was removed.
   useEffect(() => {

@@ -46,7 +46,7 @@ export default function AcademicRecordsSheets(p) {
         onSave={p.handleSaveGrades} enrollments={p.studentEnrollments} courses={p.courses}
         grades={p.grades} selectedQuarterId={p.selectedQuarterId} quarterLabel={p.activeQuarterLabel} />
       <CalendarImportSheet open={p.calendarImportOpen} onClose={p.closeCalendarImport}
-        onImport={p.handleCalendarImport}
+        onImport={p.handleCalendarImport} uid={p.uid}
         yearLabel={p.activeSchoolYear?.label} existingBreaks={p.activeSchoolYear?.breaks ?? []} />
       <AttendanceDetailSheet open={p.attendanceDetailOpen} onClose={p.closeAttendanceDetail}
         attendanceDays={p.attendanceDays} schoolYearLabel={p.activeSchoolYear?.label ?? '—'}
@@ -71,7 +71,7 @@ export default function AcademicRecordsSheets(p) {
         studentName={(p.students ?? []).find(s => s.studentId === p.activityStudent)?.name ?? ''}
         activity={p.editingActivity} />
       <CurriculumImportSheet open={p.curriculumImportOpen} onClose={p.closeCurriculumImport}
-        onImport={p.handleCurriculumImport} courses={p.courses} />
+        onImport={p.handleCurriculumImport} courses={p.courses} uid={p.uid} />
       <ComplianceSheet open={p.complianceSheetOpen} onClose={p.closeCompliance}
         uid={p.uid} students={p.students} activeSchoolYear={p.activeSchoolYear} />
     </>

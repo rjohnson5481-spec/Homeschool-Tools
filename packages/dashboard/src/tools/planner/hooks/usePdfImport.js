@@ -42,7 +42,7 @@ function dedupeSubjects(days) {
 
 // Manages PDF import state, the fetch call to /api/parse-schedule, and an
 // import debug log. Never calls the Anthropic API directly.
-export function usePdfImport() {
+export function usePdfImport(uid) {
   const [file, setFile]           = useState(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult]       = useState(null);
@@ -75,7 +75,7 @@ export function usePdfImport() {
       const res = await fetch('/api/parse-schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, mediaType: file.type }),
+        body: JSON.stringify({ file: base64, mediaType: file.type, uid }),
       });
       const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
       addLog(`Response: ${res.status} ${res.statusText} (${elapsed}s)`);

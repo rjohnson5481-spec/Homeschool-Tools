@@ -63,13 +63,12 @@ Order required — never reorder. No base directory; build runs from repo root v
 ---
 
 ## Environment variables (Netlify dashboard only — never in code)
-- ANTHROPIC_API_KEY — Netlify Functions only
-- VITE_ANTHROPIC_API_KEY — CalendarImportSheet + CurriculumImportSheet (intentional exception; Netlify Function proxy hit 60s timeouts)
+- ANTHROPIC_API_KEY — Netlify Functions only (parse-schedule, parse-calendar, parse-curriculum)
 - VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_APP_ID
 - VITE_FIREBASE_STORAGE_BUCKET — homeschool-tools-ff73c.firebasestorage.app
 - FIREBASE_SERVICE_ACCOUNT — scheduled-backup.js
 
-Anthropic functions: parse-schedule.js (POST /api/parse-schedule, returns {student, weekId, days}), scheduled-backup.js (every 6 hours → Netlify Blobs).
+Anthropic functions: parse-schedule.js (POST /api/parse-schedule, returns {student, weekId, days}), parse-calendar.js (POST /.netlify/functions/parse-calendar, returns {breaks}), parse-curriculum.js (POST /.netlify/functions/parse-curriculum, returns {courses}). All rate-limited per uid via users/{uid}/aiUsage/{schedule|calendar|curriculum}. scheduled-backup.js (every 6 hours → Netlify Blobs).
 
 ---
 
@@ -113,6 +112,11 @@ Compliance is per-student (required values, hours logging, day completion counts
 
 Firebase Storage: users/{uid}/reports/{reportId}.pdf
 
+### AI Rate Limiting
+/users/{uid}/aiUsage/schedule   → { callsToday: number, lastCallDate: YYYY-MM-DD }
+/users/{uid}/aiUsage/calendar   → { callsToday: number, lastCallDate: YYYY-MM-DD }
+/users/{uid}/aiUsage/curriculum → { callsToday: number, lastCallDate: YYYY-MM-DD }
+
 ### Firestore Security Rules
 match /users/{userId}/{document=**} { allow read, write: if request.auth.uid == userId; }
 match /{path=**}/subjects/{subjectId} { allow read: if request.auth != null && resource.data.uid == request.auth.uid; }
@@ -151,6 +155,8 @@ packages/dashboard/src/
 
 netlify/functions/
 ├── parse-schedule.js
+├── parse-calendar.js
+├── parse-curriculum.js
 └── scheduled-backup.js
 
 ---
@@ -302,7 +308,7 @@ Always work directly on main. Never create feature branches. Commit and push aft
 - collectionGroup('settings') for user discovery
 - R2 read rule never removed (collectionGroup support); uid-scoped as of v0.36.0
 - Reward Tracker + TE Extractor removed v0.30.0; tabs are exactly Home/Planner/Records/Settings
-- CalendarImportSheet + CurriculumImportSheet call Anthropic directly (Netlify proxy timeouts)
+- All Anthropic API calls go through Netlify Functions (ANTHROPIC_API_KEY server-side only); VITE_ANTHROPIC_API_KEY removed in v0.46.0 security fix
 - Settings tab owns settings except compliance (Compliance lives in Records as Quick Action sheet)
 - Student state lifted to App.jsx
 - Work directly on main, no feature branches

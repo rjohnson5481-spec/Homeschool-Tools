@@ -1,9 +1,35 @@
 // Netlify Function: parse-schedule
-// Accepts POST { file: base64, mediaType } from the planner client.
+// Accepts POST { file: base64, mediaType, uid } from the planner client.
 // Proxies to the Anthropic API using the server-side API key.
-// ANTHROPIC_API_KEY must be set in the Netlify dashboard — never in client code.
+// Rate-limited 10/day per user via users/{uid}/aiUsage/schedule.
+// ANTHROPIC_API_KEY and FIREBASE_SERVICE_ACCOUNT must be set in Netlify dashboard.
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { initializeApp, cert, getApps } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+
+function getDb() {
+  if (!getApps().length) {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    initializeApp({ credential: cert(serviceAccount) });
+  }
+  return getFirestore();
+}
+
+function todayString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function checkRateLimit(db, uid) {
+  const ref = db.doc(`users/${uid}/aiUsage/schedule`);
+  const snap = await ref.get();
+  const today = todayString();
+  const data = snap.exists ? snap.data() : {};
+  const callsToday = (data.lastCallDate === today) ? (data.callsToday ?? 0) : 0;
+  if (callsToday >= 10) return false;
+  await ref.set({ callsToday: callsToday + 1, lastCallDate: today });
+  return true;
+}
 
 const SYSTEM_PROMPT = `You are parsing a BJU Homeschool Hub "Print By Day" weekly schedule PDF.
 
@@ -62,9 +88,22 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Request body must be valid JSON' }) };
   }
 
-  const { file, mediaType } = body;
-  if (!file || !mediaType) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields: file, mediaType' }) };
+  const { file, mediaType, uid } = body;
+  if (!file || !mediaType || !uid) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields: file, mediaType, uid' }) };
+  }
+
+  try {
+    const db = getDb();
+    const allowed = await checkRateLimit(db, uid);
+    if (!allowed) {
+      return {
+        statusCode: 429,
+        body: JSON.stringify({ error: 'Daily limit reached. You can import up to 10 schedules per day.' }),
+      };
+    }
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ error: 'Rate limit check failed: ' + err.message }) };
   }
 
   try {
